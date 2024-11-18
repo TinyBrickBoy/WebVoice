@@ -14,20 +14,28 @@ if (!token) {
         <h1>Voicechat</h1>
         <span>Token: <code>{token}</code></span>
         <span id="state"></span>
-        <button id="connect">Verbinden</button>
+        <x-connect data-token={token}>
+            <button>Verbinden</button>
+        </x-connect>
     </main>
-    <script is:inline define:vars={{token}}>
-        const container = document.getElementById("container")
-        /** @type {HTMLSpanElement} **/
-        const span = document.getElementById("state")
-        /** @type {HTMLButtonElement} **/
-        const btn = document.getElementById("connect")
+    <script>
+        import {buildSocket} from "../scripts/socket.ts";
 
-        const connect = () => {
+        const span = document.getElementById("state")!! as HTMLSpanElement
+
+        const connect = (btn: HTMLButtonElement, token: string) => {
             btn.disabled = true;
             span.textContent = "connecting..."
+            console.log(buildSocket(token))
         }
 
-        btn.addEventListener("click", connect);
+        class ConnectButton extends HTMLElement {
+            connectedCallback() {
+                const token = this.dataset.token!!
+                const button = this.querySelector("button")!!
+                button.addEventListener("click", () => connect(button, token))
+            }
+        }
+        customElements.define("x-connect", ConnectButton)
     </script>
 </Layout>
