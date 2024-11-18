@@ -1,8 +1,6 @@
-export const buildSocket = (token: string) => {
+export const buildSocket = (token: string, open: () => void) => {
     const socket = new WebSocket("wss://voice.tjcserver.net", [token])
-    socket.addEventListener("open", (event) => {
-        console.log("open", event)
-    })
+    socket.addEventListener("open", open)
     socket.addEventListener("message", (event) => {
         console.log("message", event)
     })

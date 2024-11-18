@@ -25,8 +25,9 @@ if (!token) {
 
         const connect = (btn: HTMLButtonElement, token: string) => {
             btn.disabled = true;
-            span.textContent = "connecting..."
-            console.log(buildSocket(token))
+            span.textContent = "Connecting..."
+            console.log(buildSocket(token,
+                () => span.textContent = "Connected!"))
         }
 
         class ConnectButton extends HTMLElement {
@@ -36,6 +37,7 @@ if (!token) {
                 button.addEventListener("click", () => connect(button, token))
             }
         }
+
         customElements.define("x-connect", ConnectButton)
     </script>
 </Layout>
