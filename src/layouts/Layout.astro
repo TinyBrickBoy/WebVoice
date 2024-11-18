@@ -1,0 +1,20 @@
+---
+import type {HeadProps} from "../components/BaseHead.astro";
+import BaseHead from "../components/BaseHead.astro";
+
+interface Props extends HeadProps {
+}
+---
+
+<!doctype html>
+<html lang="de">
+<head>
+    <BaseHead {...Astro.props}/>
+    <slot name="head"/>
+</head>
+<body>
+<div id="page-content">
+    <slot/>
+</div>
+</body>
+</html>

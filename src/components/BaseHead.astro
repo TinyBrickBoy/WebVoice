@@ -1,0 +1,66 @@
+---
+// global stylesheets
+import "../styles/globals.css";
+
+export interface HeadProps {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+}
+interface Props extends HeadProps {
+}
+
+const {
+    title = "Audio",
+    description = "Das deutsche Minecraft Netzwerk rund um TheJoCraft",
+    keywords = []
+} = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+keywords.push("Minecraft", "Minecraft Server", "TheJoCraft", "TheJoCraft Server", "TheJoCraft Minecraft Server", "TheJoCraft MC Server", "TJC Server", "TJC Minecraft Server", "TJC MC Server", "TJC", "TheJoCraft.net", "Community", "Community Server", "Audio", "Voicechat");
+---
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="HandheldFriendly" content="True"/>
+
+<meta name="generator" content={Astro.generator}/>
+
+<link rel="canonical" href={canonicalURL}/>
+
+<title>{title} - thejocraft.net</title>
+<meta itemprop="name" content={title}/>
+<meta name="title" content={`${title} - thejocraft.net`}/>
+<meta itemprop="description" content={description}/>
+<meta name="description" content={description}/>
+<meta name="keywords" content={keywords.join(", ")}/>
+
+<meta property="og:type" content="website"/>
+<meta property="og:url" content={Astro.url}/>
+<meta property="og:title" content={title}/>
+<meta property="og:description" content={description}/>
+<meta property="og:site_name" content="TheJoCraft.NET"/>
+<meta property="og:image" content="/assets/logo.png"/>
+
+<meta property="twitter:card" content="summary"/>
+<meta property="twitter:site" content="TheJoCraft.NET"/>
+<meta property="twitter:domain" content={import.meta.env.SITE}/>
+<meta property="twitter:url" content={Astro.url}/>
+<meta property="twitter:title" content={title}/>
+<meta property="twitter:description" content={description}/>
+<meta property="twitter:image" content="/assets/logo.png"/>
+
+<meta name="google" content="nositelinkssearchbox">
+
+<link rel="apple-touch-icon" sizes="180x180" href="https://thejocraft.net/assets/favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://thejocraft.net/assets/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://thejocraft.net/assets/favicon/favicon-16x16.png">
+<link rel="manifest" href="https://thejocraft.net/assets/favicon/site.webmanifest">
+<link rel="mask-icon" href="https://thejocraft.net/assets/favicon/safari-pinned-tab.svg" color="#333333">
+<link rel="shortcut icon" href="https://thejocraft.net/assets/favicon/favicon.ico">
+<meta name="msapplication-TileColor" content="#603cba">
+<meta name="msapplication-config" content="/assets/favicon/browserconfig.xml">
+<meta name="theme-color" content="#333333">
+<meta name="color-scheme" content="dark">
+<meta name="darkreader-lock">

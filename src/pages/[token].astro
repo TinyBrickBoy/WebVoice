@@ -1,0 +1,33 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+export const prerender = false;
+const {token} = Astro.params
+
+if (!token) {
+    Astro.redirect("/", 303)
+}
+---
+
+<Layout>
+    <main id="container" style="display: flex; flex-direction: column; max-width: 30%; gap: 0.5em">
+        <h1>Voicechat</h1>
+        <span>Token: <code>{token}</code></span>
+        <span id="state"></span>
+        <button id="connect">Verbinden</button>
+    </main>
+    <script is:inline define:vars={{token}}>
+        const container = document.getElementById("container")
+        /** @type {HTMLSpanElement} **/
+        const span = document.getElementById("state")
+        /** @type {HTMLButtonElement} **/
+        const btn = document.getElementById("connect")
+
+        const connect = () => {
+            btn.disabled = true;
+            span.textContent = "connecting..."
+        }
+
+        btn.addEventListener("click", connect);
+    </script>
+</Layout>
