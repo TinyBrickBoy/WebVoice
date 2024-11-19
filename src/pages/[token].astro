@@ -13,7 +13,7 @@ if (!token) {
     <main id="container" style="display: flex; flex-direction: column; max-width: 30%; gap: 0.5em">
         <h1>Voicechat</h1>
         <span>Token: <code>{token}</code></span>
-        <span id="state"></span>
+        <span id="state">Disconnected</span>
         <x-connect data-token={token}>
             <button>Verbinden</button>
         </x-connect>
@@ -27,7 +27,11 @@ if (!token) {
             btn.disabled = true;
             span.textContent = "Connecting..."
             console.log(buildSocket(token,
-                () => span.textContent = "Connected!"))
+                () => span.textContent = "Connected!",
+                () => {
+                    span.textContent = "Disconnected"
+                    btn.disabled = false;
+                }))
         }
 
         class ConnectButton extends HTMLElement {
