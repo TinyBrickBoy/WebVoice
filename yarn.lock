@@ -1176,6 +1176,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^22.9.1":
+  version: 22.9.1
+  resolution: "@types/node@npm:22.9.1"
+  dependencies:
+    undici-types: "npm:~6.19.8"
+  checksum: 10c0/ea489ae603aa8874e4e88980aab6f2dad09c755da779c88dd142983bfe9609803c89415ca7781f723072934066f63daf2b3339ef084a8ad1a8079cf3958be243
+  languageName: node
+  linkType: hard
+
 "@types/unist@npm:*, @types/unist@npm:^3.0.0":
   version: 3.0.3
   resolution: "@types/unist@npm:3.0.3"
@@ -4472,6 +4481,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sockette@npm:^2.0.6":
+  version: 2.0.6
+  resolution: "sockette@npm:2.0.6"
+  checksum: 10c0/4be255da2b4d2ae6a14aa5cd1e57a96dfc541f673d4b60ff199d30911c882a9e32c11cf6853418b24ec8e467f5bc70fde0c96270d0c40dd0a464e308e66206e1
+  languageName: node
+  linkType: hard
+
 "socks-proxy-agent@npm:^8.0.3":
   version: 8.0.4
   resolution: "socks-proxy-agent@npm:8.0.4"
@@ -4625,7 +4641,9 @@ __metadata:
   dependencies:
     "@astrojs/check": "npm:^0.9.4"
     "@astrojs/node": "npm:^8.3.4"
+    "@types/node": "npm:^22.9.1"
     astro: "npm:^4.16.13"
+    sockette: "npm:^2.0.6"
     typescript: "npm:^5.6.3"
   languageName: unknown
   linkType: soft
@@ -4742,6 +4760,13 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/7c9d2e07c81226d60435939618c91ec2ff0b75fbfa106eec3430f0fcf93a584bc6c73176676f532d78c3594fe28a54b36eb40b3d75593071a7ec91301533ace7
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.19.8":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
   languageName: node
   linkType: hard
 
