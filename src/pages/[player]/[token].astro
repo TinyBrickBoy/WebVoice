@@ -25,26 +25,26 @@ if (!player || !token || player.length !== 36 || token.length !== 36) {
 
         const span = document.getElementById("state")!! as HTMLSpanElement
         const logs = document.getElementById("logs")!! as HTMLPreElement
-        window.lllog = (line: string) => {
+        const lllog = (line: string) => {
             console.log(line)
             const prevContent = logs.textContent || ""
             logs.textContent = prevContent + "\n" + line;
         }
 
         const connect = (btn: HTMLButtonElement, player: string, token: string) => {
-            window.lllog("button")
             btn.disabled = true;
             span.textContent = "Connecting..."
             const socket = new VoiceSocket(player)
-            socket.on("open", () => span.textContent = "Connected!")
-            socket.on("reconnect", () => span.textContent = "Reconnecting...")
-            socket.on("maximum", () => span.textContent = "Disconnected")
+            socket.register("open", () => span.textContent = "Connected!")
+            socket.register("close", (event: CloseEvent) => span.textContent = "Failed to connect #" + event.code)
+            socket.register("error", event => console.error(event))
+            socket.register("reconnect", () => span.textContent = "Reconnecting...")
+            socket.register("maximum", () => span.textContent = "Disconnected")
             socket.open(token)
         }
 
         class ConnectButton extends HTMLElement {
             connectedCallback() {
-                window.lllog("callback")
                 const player = this.dataset.player!!
                 const token = this.dataset.token!!
                 const button = this.querySelector("button")!!

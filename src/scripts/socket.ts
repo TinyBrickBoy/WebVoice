@@ -1,9 +1,9 @@
 import Sockette from "sockette"
-import EventEmitter from "node:events"
+import { EventManager } from "./events";
 
 const WEBSOCKET_SERVER = "wss://voice.tjcserver.net"
 
-export class VoiceSocket extends EventEmitter {
+export class VoiceSocket extends EventManager {
 
     public socket: Sockette;
 
@@ -11,13 +11,13 @@ export class VoiceSocket extends EventEmitter {
         super();
         this.socket = new Sockette(WEBSOCKET_SERVER, {
             timeout: 10e3,
-            maxAttempts: 10,
-            onopen: event => window.lllog("open", event),
-            onmessage: event => window.lllog("message", event),
-            onreconnect: event => window.lllog("reconnect", event),
-            onmaximum: event => window.lllog("maximum", event),
-            onclose: event => window.lllog("close", event),
-            onerror: event => window.lllog("error", event),
+            maxAttempts: 2,
+            onopen: event => this.fire(event),
+            onmessage: event => this.fire(event),
+            onreconnect: event => this.fire(event),
+            onmaximum: event => this.fire(event),
+            onclose: event => this.fire(event),
+            onerror: event => this.fire(event),
             protocols: [ player ],
         })
     }
