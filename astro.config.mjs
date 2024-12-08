@@ -1,6 +1,6 @@
 import {defineConfig} from "astro/config";
-
 import node from "@astrojs/node";
+import preact from "@astrojs/preact";
 
 // https://astro.build/config
 export default defineConfig({
@@ -8,7 +8,7 @@ export default defineConfig({
     output: "server",
     compressHTML: process.env.NODE_ENV === "production",
     trailingSlash: "ignore",
-    integrations: [],
+    integrations: [preact()],
     adapter: node({
         mode: "standalone",
     }),
