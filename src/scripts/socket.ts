@@ -1,5 +1,5 @@
 import Sockette from "sockette"
-import { EventManager } from "./events";
+import {EventManager} from "./events";
 
 const WEBSOCKET_SERVER = "wss://voice.tjcserver.net"
 
@@ -7,7 +7,7 @@ export class VoiceSocket extends EventManager {
 
     public socket: Sockette;
 
-    public constructor(player: string) {
+    public constructor() {
         super();
         this.socket = new Sockette(WEBSOCKET_SERVER, {
             timeout: 10e3,
@@ -18,12 +18,18 @@ export class VoiceSocket extends EventManager {
             onmaximum: event => this.fire(event),
             onclose: event => this.fire(event),
             onerror: event => this.fire(event),
-            protocols: [ player ],
         })
     }
 
-    public open(token: string) {
+    public registerToken(token: string) {
+        this.register("open", () => this.socket.json({key: "auth", packet: {token}}));
+    }
+
+    public open() {
         this.socket.open();
-        this.socket.json({ key: "auth", packet: { token } })
+    }
+
+    public close(code: number = 1002) {
+        this.socket.close(code)
     }
 }

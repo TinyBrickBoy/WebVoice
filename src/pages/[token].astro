@@ -1,0 +1,19 @@
+---
+import Layout from "../layouts/Layout.astro";
+import VoiceContainer from "../components/VoiceContainer";
+
+export const prerender = false;
+const {token} = Astro.params
+
+if (!token || token.length !== 36) {
+    return Astro.redirect("/", 303)
+}
+---
+
+<Layout>
+    <main id="container" style="display: flex; flex-direction: column; max-width: 50%; gap: 0.5em">
+        <h1>Voicechat</h1>
+        <VoiceContainer client:load token={token}></VoiceContainer>
+        <pre id="logs"></pre>
+    </main>
+</Layout>

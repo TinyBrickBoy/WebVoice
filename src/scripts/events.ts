@@ -1,9 +1,7 @@
-import EventEmitter from "node:events";
-
-export type EventListener = (event: any) => void 
+export type EventListener = (event: any) => void
 
 export class EventManager {
-    private listeners: {[type: string]: EventListener[]} = {};
+    private listeners: { [type: string]: EventListener[] } = {};
 
     public fire(event: Event): boolean {
         const listeners = this.listeners[event.type] || []
