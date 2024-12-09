@@ -1,35 +1,33 @@
-import Sockette from "sockette"
 import {EventManager} from "./events";
 
-const WEBSOCKET_SERVER = "wss://voice.tjcserver.net"
+const WEBSOCKET_SERVER = "ws://localhost:38048"
 
 export class VoiceSocket extends EventManager {
 
-    public socket: Sockette;
-
-    public constructor() {
-        super();
-        this.socket = new Sockette(WEBSOCKET_SERVER, {
-            timeout: 10e3,
-            maxAttempts: 2,
-            onopen: event => this.fire(event),
-            onmessage: event => this.fire(event),
-            onreconnect: event => this.fire(event),
-            onmaximum: event => this.fire(event),
-            onclose: event => this.fire(event),
-            onerror: event => this.fire(event),
-        })
-    }
+    public socket?: WebSocket;
 
     public registerToken(token: string) {
-        this.register("open", () => this.socket.json({key: "auth", packet: {token}}));
+        this.register("open", () => this.json({key: "tjcsonus:auth", packet: {token}}));
+    }
+
+    public json(data: any) {
+        this.send(JSON.stringify(data))
+    }
+
+    public send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
+        this.socket!!.send(data)
     }
 
     public open() {
-        this.socket.open();
+        const socket = new WebSocket(WEBSOCKET_SERVER, []);
+        socket.onmessage = event => this.fire(event);
+        socket.onopen = event => this.fire(event);
+        socket.onclose = event => this.fire(event);
+        socket.onerror = event => this.fire(event);
+        this.socket = socket;
     }
 
     public close(code: number = 1002) {
-        this.socket.close(code)
+        this.socket?.close(code)
     }
 }

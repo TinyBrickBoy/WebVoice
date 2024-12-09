@@ -4875,13 +4875,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sockette@npm:^2.0.6":
-  version: 2.0.6
-  resolution: "sockette@npm:2.0.6"
-  checksum: 10c0/4be255da2b4d2ae6a14aa5cd1e57a96dfc541f673d4b60ff199d30911c882a9e32c11cf6853418b24ec8e467f5bc70fde0c96270d0c40dd0a464e308e66206e1
-  languageName: node
-  linkType: hard
-
 "socks-proxy-agent@npm:^8.0.3":
   version: 8.0.4
   resolution: "socks-proxy-agent@npm:8.0.4"
@@ -5046,7 +5039,6 @@ __metadata:
     "@types/node": "npm:^22.9.1"
     astro: "npm:5.0.4"
     preact: "npm:^10.25.1"
-    sockette: "npm:^2.0.6"
     typescript: "npm:^5.6.3"
   languageName: unknown
   linkType: soft
