@@ -14,11 +14,16 @@ const VoiceContainer = (props: Props) => {
 
     const openSocket = (socket?: VoiceSocket) => {
         if (socket) {
-            socket.register("error", console.error)
-            socket.register("close", console.error)
+            setState("Connecting...")
+            socket.register("open", () => setState("Connected"))
+            socket.register("error", console.error);
+            socket.register("close", (event: CloseEvent) => {
+                console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
+                setState(`Disconnected: ${event.reason} (${event.code})`)
+            });
 
-            socket.registerToken(props.token)
-            socket.open()
+            socket.registerToken(props.token);
+            socket.open();
         }
         setSocket(socket)
     }
