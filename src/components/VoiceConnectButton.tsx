@@ -14,18 +14,10 @@ const VoiceConnectButton = (props: Props) => {
 
         const socket = new VoiceSocket();
         socket.register("open", () => {
-            console.error("OPENED")
             setConnected(true);
             setConnecting(false);
         });
-        socket.register("close", () => {
-            console.log("CLOSED")
-            setConnected(false)
-        })
-        socket.register("error", () => {
-            console.log("ERRORED")
-        })
-        console.log("FIRE")
+        socket.register("close", () => setConnected(false))
         props.setSocket(socket);
     }, [])
 
