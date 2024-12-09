@@ -5,7 +5,7 @@ import VoiceContainer from "../components/VoiceContainer";
 export const prerender = false;
 const {token} = Astro.params
 
-if (!token || token.length !== 36) {
+if (!token || token.length !== 20) {
     return Astro.redirect("/", 303)
 }
 ---
