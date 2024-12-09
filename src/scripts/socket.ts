@@ -1,6 +1,6 @@
 import {EventManager} from "./events";
 
-const WEBSOCKET_SERVER = "ws://localhost:38048"
+const WEBSOCKET_SERVER = "wss://voice.tjcserver.net"
 
 export class VoiceSocket extends EventManager {
 
