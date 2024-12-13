@@ -7,7 +7,7 @@ import type {
     PacketPlayerState, PlayerStatePacket,
     PlayerStatesPacket,
     SonusInfoPacket,
-    PacketVoiceCategory,
+    PacketVoiceCategory, RemoveCategoryPacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
@@ -47,12 +47,19 @@ const VoiceContainer = (props: Props) => {
     }, [socket]);
 
     useEffect(() => {
-        return socket.register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
-            const prevCategory = categories.get(event.detail.id);
-            const volume = prevCategory?.volume || 1;
-            categories.set(event.detail.id, {volume, ...event.detail});
-            setCategories(categories);
-        });
+        return socket
+            .registers()
+            .register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
+                const prevCategory = categories.get(event.detail.id);
+                const volume = prevCategory?.volume || 1;
+                categories.set(event.detail.id, {volume, ...event.detail});
+                setCategories(categories);
+            })
+            .register("voicechat:remove_category", (event: CustomEvent<RemoveCategoryPacket>) => {
+                categories.delete(event.detail.categoryId);
+                setCategories(categories);
+            })
+            .callback();
     }, [socket, categories]);
 
     useEffect(() => {

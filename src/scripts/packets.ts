@@ -15,6 +15,9 @@ export type SonusInfoPacket = {
     username: string;
 }
 export type AddCategoryPacket = PacketVoiceCategory
+export type RemoveCategoryPacket = {
+    categoryId: string;
+}
 export type PlayerStatesPacket = {
     states: PacketPlayerState[];
 }
