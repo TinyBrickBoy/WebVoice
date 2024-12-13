@@ -5,10 +5,15 @@ interface Props {
 }
 
 const VoiceInfo = (props: Props) => {
-    return <>
-        <span>Player: <code>{props.player || "Unknown"}</code></span>
-        <span>Token: <code>{props.token}</code></span>
-        <span style={{textTransform: "capitalize"}}>{props.state}</span>
-    </>
-}
+    return (
+        <>
+            <h2 style={{marginBottom: "0"}}>Status</h2>
+            <div style={{display: "flex", flexDirection: "column", gap: "0.2em", marginTop: "1em"}}>
+                <span>Player: <code>{props.player || "Unknown"}</code></span>
+                <span>Token: <code>{props.token}</code></span>
+                <span style={{textTransform: "capitalize"}}>{props.state}</span>
+            </div>
+        </>
+    );
+};
 export default VoiceInfo;
