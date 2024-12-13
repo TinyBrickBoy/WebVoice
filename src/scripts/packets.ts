@@ -3,6 +3,7 @@ export type PacketPlayerState = {
     name: string;
     disabled: boolean;
     disconnected: boolean;
+    groupId?: string;
 }
 export type PacketVoiceCategory = {
     id: string;
@@ -22,3 +23,7 @@ export type PlayerStatesPacket = {
     states: PacketPlayerState[];
 }
 export type PlayerStatePacket = PacketPlayerState
+
+export type UpdateStatePacket = {
+    disabled: boolean;
+}

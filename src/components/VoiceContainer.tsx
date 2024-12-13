@@ -7,11 +7,11 @@ import type {
     PacketPlayerState, PlayerStatePacket,
     PlayerStatesPacket,
     SonusInfoPacket,
-    PacketVoiceCategory, RemoveCategoryPacket,
+    PacketVoiceCategory, RemoveCategoryPacket, UpdateStatePacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
-import {getMapValues} from "../scripts/util.ts";
+import VoiceCategory from "./VoiceCategory.tsx";
 
 interface Props {
     token: string;
@@ -29,8 +29,8 @@ const VoiceContainer = (props: Props) => {
     const [player, setPlayer] = useState<string | undefined>();
     const [state, setState] = useState<string>("disconnected");
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket());
-    const [categories, setCategories] = useState<Map<string, VoiceCategory>>(new Map());
-    const [players, setPlayers] = useState<Map<string, PlayerState>>(new Map());
+    const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
+    const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
 
     useEffect(() => {
         return socket.registers()
@@ -42,45 +42,46 @@ const VoiceContainer = (props: Props) => {
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
                 setPlayer(`${event.detail.username} (${event.detail.player})`);
+                socket.json({key: "voicechat:update_state", packet: {disabled: false} as UpdateStatePacket});
+            })
+            .register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
+                setCategories(categories => {
+                    const prevCategory = categories[event.detail.id];
+                    const volume = prevCategory?.volume || 1;
+                    const newCategories = Object.assign({}, categories);
+                    newCategories[event.detail.id] = {volume, ...event.detail};
+                    return newCategories;
+                });
+            })
+            .register("voicechat:remove_category", (event: CustomEvent<RemoveCategoryPacket>) => {
+                setCategories(categories => {
+                    const newCategories = Object.assign({}, categories);
+                    delete newCategories[event.detail.categoryId];
+                    return newCategories;
+                });
+            })
+            .register("voicechat:player_states", (event: CustomEvent<PlayerStatesPacket>) => {
+                setPlayers(players => {
+                    const newPlayers = Object.assign({}, players);
+                    event.detail.states.forEach(state => {
+                        const prevState = newPlayers[state.playerId];
+                        const volume = prevState?.volume || 1;
+                        newPlayers[state.playerId] = {volume, ...state};
+                    });
+                    return newPlayers;
+                });
+            })
+            .register("voicechat:player_state", (event: CustomEvent<PlayerStatePacket>) => {
+                setPlayers(players => {
+                    const newPlayers = Object.assign({}, players);
+                    const prevState = newPlayers[event.detail.playerId];
+                    const volume = prevState?.volume || 1;
+                    newPlayers[event.detail.playerId] = {volume, ...event.detail};
+                    return newPlayers;
+                });
             })
             .callback();
     }, [socket]);
-
-    useEffect(() => {
-        return socket
-            .registers()
-            .register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
-                const prevCategory = categories.get(event.detail.id);
-                const volume = prevCategory?.volume || 1;
-                categories.set(event.detail.id, {volume, ...event.detail});
-                setCategories(categories);
-            })
-            .register("voicechat:remove_category", (event: CustomEvent<RemoveCategoryPacket>) => {
-                categories.delete(event.detail.categoryId);
-                setCategories(categories);
-            })
-            .callback();
-    }, [socket, categories]);
-
-    useEffect(() => {
-        return socket
-            .registers()
-            .register("voicechat:player_states", (event: CustomEvent<PlayerStatesPacket>) => {
-                event.detail.states.forEach(state => {
-                    const prevState = players.get(state.playerId);
-                    const volume = prevState?.volume || 1;
-                    players.set(state.playerId, {volume, ...state});
-                });
-                setPlayers(players);
-            })
-            .register("voicechat:player_state", (event: CustomEvent<PlayerStatePacket>) => {
-                const prevState = players.get(event.detail.playerId);
-                const volume = prevState?.volume || 1;
-                players.set(event.detail.playerId, {volume, ...event.detail});
-                setPlayers(players);
-            })
-            .callback();
-    }, [socket, players]);
 
     const openSocket = useCallback(() => {
         setState("Disconnected");
@@ -97,8 +98,8 @@ const VoiceContainer = (props: Props) => {
         <>
             <VoiceInfo player={player} token={props.token} state={state}/>
             <VoiceConnectButton socket={socket} openSocket={openSocket}/>
-            <VoiceCategories categories={getMapValues(categories)}/>
-            <PlayerInfos states={getMapValues(players)}/>
+            <VoiceCategories categories={Object.values(categories)}/>
+            <PlayerInfos states={Object.values(players)}/>
         </>
     );
 };
