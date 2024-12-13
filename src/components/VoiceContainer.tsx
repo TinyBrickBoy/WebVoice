@@ -11,6 +11,7 @@ import type {
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
+import {getMapValues} from "../scripts/util.ts";
 
 interface Props {
     token: string;
@@ -28,7 +29,7 @@ const VoiceContainer = (props: Props) => {
     const [player, setPlayer] = useState<string | undefined>();
     const [state, setState] = useState<string>("disconnected");
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket());
-    const [categories, setCategories] = useState<VoiceCategory[]>([]);
+    const [categories, setCategories] = useState<Map<string, VoiceCategory>>(new Map());
     const [players, setPlayers] = useState<Map<string, PlayerState>>(new Map());
 
     useEffect(() => {
@@ -47,7 +48,10 @@ const VoiceContainer = (props: Props) => {
 
     useEffect(() => {
         return socket.register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
-            setCategories([...categories, {volume: 1, ...event.detail}]);
+            const prevCategory = categories.get(event.detail.id);
+            const volume = prevCategory?.volume || 1;
+            categories.set(event.detail.id, {volume, ...event.detail});
+            setCategories(categories);
         });
     }, [socket, categories]);
 
@@ -86,8 +90,8 @@ const VoiceContainer = (props: Props) => {
         <>
             <VoiceInfo player={player} token={props.token} state={state}/>
             <VoiceConnectButton socket={socket} openSocket={openSocket}/>
-            <VoiceCategories categories={categories}/>
-            <PlayerInfos states={players.values().toArray()}/>
+            <VoiceCategories categories={getMapValues(categories)}/>
+            <PlayerInfos states={getMapValues(players)}/>
         </>
     );
 };
