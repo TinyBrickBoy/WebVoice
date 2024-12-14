@@ -7,7 +7,7 @@ import type {
     PacketPlayerState, PlayerStatePacket,
     PlayerStatesPacket,
     SonusInfoPacket,
-    PacketVoiceCategory, RemoveCategoryPacket, UpdateStatePacket, AuthenticatePacket,
+    PacketVoiceCategory, RemoveCategoryPacket, UpdateStatePacket, AuthenticatePacket, KeepAlivePacket, PingPacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
@@ -85,6 +85,12 @@ const VoiceContainer = (props: Props) => {
             })
             .register("connection_check_ack", () => {
                 socket.sendMeta("voicechat:update_state", {disabled: false} as UpdateStatePacket);
+            })
+            .register("keep_alive", (event: CustomEvent<KeepAlivePacket>) => {
+                socket.sendVoice("keep_alive", event.detail);
+            })
+            .register("ping", (event: CustomEvent<PingPacket>) => {
+                socket.sendVoice("ping", event.detail);
             })
             .callback();
     }, [socket]);
