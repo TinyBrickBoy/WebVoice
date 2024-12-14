@@ -4,10 +4,17 @@ import VoiceConnectButton from "./VoiceConnectButton.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
 import type {
     AddCategoryPacket,
-    PacketPlayerState, PlayerStatePacket,
+    PacketPlayerState,
+    PlayerStatePacket,
     PlayerStatesPacket,
     SonusInfoPacket,
-    PacketVoiceCategory, RemoveCategoryPacket, UpdateStatePacket, AuthenticatePacket, KeepAlivePacket, PingPacket,
+    PacketVoiceCategory,
+    RemoveCategoryPacket,
+    UpdateStatePacket,
+    AuthenticatePacket,
+    KeepAlivePacket,
+    PingPacket,
+    ConnectionCheckAckPacket, SonusResetPacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
@@ -32,6 +39,11 @@ const VoiceContainer = (props: Props) => {
     const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
 
+    const invalidateState = useCallback(() => {
+        setCategories({});
+        setPlayers({});
+    }, []);
+
     useEffect(() => {
         return socket.registers()
             .register("open", () => setState("Connected"))
@@ -40,10 +52,11 @@ const VoiceContainer = (props: Props) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
                 setState(`Disconnected: ${event.reason} (${event.code})`);
 
-                // invalidate previous state
-                setCategories({});
-                setPlayers({});
+                invalidateState();
                 setSocket(new VoiceSocket());
+            })
+            .register("tjcsonus:reset", (_event: CustomEvent<SonusResetPacket>) => {
+                invalidateState();
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
                 setPlayer(`${event.detail.username} (${event.detail.player.name})`);
@@ -88,7 +101,7 @@ const VoiceContainer = (props: Props) => {
                     return newPlayers;
                 });
             })
-            .register("connection_check_ack", () => {
+            .register("connection_check_ack", (_event: CustomEvent<ConnectionCheckAckPacket>) => {
                 socket.sendMeta("voicechat:update_state", {disabled: false} as UpdateStatePacket);
             })
             .register("keep_alive", (event: CustomEvent<KeepAlivePacket>) => {

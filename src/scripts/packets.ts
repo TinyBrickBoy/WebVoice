@@ -16,23 +16,25 @@ export type PacketVoiceCategory = {
     description?: string;
 }
 
-export type SonusAuthPacket = {
+export type SonusAuthPacket = { // tjcsonus:auth
     token: string;
 }
-export type SonusInfoPacket = {
+export type SonusInfoPacket = { // tjcsonus:info
     player: UUID;
     username: string;
     image?: string;
     secret: UUID;
 }
-export type AddCategoryPacket = PacketVoiceCategory
-export type RemoveCategoryPacket = {
+export type SonusResetPacket = { // tjcsonus:reset
+}
+export type AddCategoryPacket = PacketVoiceCategory // voicechat:add_category
+export type RemoveCategoryPacket = { // voicechat:remove_category
     categoryId: string;
 }
-export type PlayerStatesPacket = {
+export type PlayerStatesPacket = { // voicechat:player_states
     states: PacketPlayerState[];
 }
-export type PlayerStatePacket = PacketPlayerState
+export type PlayerStatePacket = PacketPlayerState // voicechat:player_state
 
 // voice
 
