@@ -39,6 +39,11 @@ const VoiceContainer = (props: Props) => {
             .register("close", (event: CloseEvent) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
                 setState(`Disconnected: ${event.reason} (${event.code})`);
+
+                // invalidate previous state
+                setCategories({});
+                setPlayers({});
+                setSocket(new VoiceSocket());
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
                 setPlayer(`${event.detail.username} (${event.detail.player.name})`);
