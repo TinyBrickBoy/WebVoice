@@ -20,18 +20,18 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
     "voicechat:add_category": (json: any): AddCategoryPacket => json,
     "voicechat:player_state": (json: any): PlayerStatePacket => {
         return {
+            ...json,
             playerId: uuidFromString(json.playerId),
             groupId: json.groupId ? uuidFromString(json.groupId) : undefined,
-            ...json,
         };
     },
     "voicechat:player_states": (json: any): PlayerStatesPacket => {
         return {
             states: json.states.map((state: any) => {
                 return {
+                    ...json,
                     playerId: uuidFromString(state.playerId),
                     groupId: json.groupId ? uuidFromString(state.groupId) : undefined,
-                    ...json,
                 };
             }),
         };
@@ -39,9 +39,9 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
     "voicechat:remove_category": (json: any): RemoveCategoryPacket => json,
     "tjcsonus:info": (json: any): SonusInfoPacket => {
         return {
+            ...json,
             player: uuidFromString(json.player),
             secret: uuidFromString(json.secret),
-            ...json,
         };
     },
 };
