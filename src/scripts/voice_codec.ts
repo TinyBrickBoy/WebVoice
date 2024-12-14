@@ -144,9 +144,9 @@ export const encodeVoiceBuffer = (buf: ByteBuffer, packet: { key: string; packet
 };
 export const decodeVoiceBuffer = (buf: ByteBuffer): { key: string; packet: any } => {
     const packetId = buf.readByte();
-    const decoder = decoderList[packetId];
+    const decoder = decoderList[packetId - 1];
     if (!decoder) {
-        throw new Error("No decoder registered for voice packet with id 0x" + packetId.toString(16));
+        throw new Error("No decoder registered for voice packet with id 0x" + packetId.toString(16).toUpperCase());
     }
     const packet = decoder.decoder ? decoder.decoder(buf) : {};
     return {key: decoder.key, packet};
