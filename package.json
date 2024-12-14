@@ -14,8 +14,10 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/node": "9.0.0",
     "@astrojs/preact": "4.0.0",
+    "@types/bytebuffer": "^5.0.49",
     "@types/node": "^22.9.1",
     "astro": "5.0.4",
+    "bytebuffer": "^5.0.1",
     "preact": "^10.25.1",
     "typescript": "^5.6.3"
   },

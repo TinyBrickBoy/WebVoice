@@ -14,7 +14,7 @@ const PlayerInfos = (props: Props) => {
                     <PlayerInfo
                         {...state}
                         setVolume={volume => state.volume = volume}
-                        key={state.playerId}
+                        key={state.playerId.name}
                     />
                 ))}
             </div>

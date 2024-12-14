@@ -1,4 +1,6 @@
 import {EventManager} from "./events";
+import ByteBuffer from "bytebuffer";
+import {decodeVoiceBuffer, encodeVoiceBuffer} from "./codec.ts";
 
 const WEBSOCKET_SERVER = "wss://voice.tjcserver.net";
 
@@ -10,20 +12,31 @@ export class VoiceSocket extends EventManager {
         super();
 
         this.register("message", (event: MessageEvent) => {
+            let message: { key: string; packet: any };
             if (typeof event.data === "string") {
                 // meta packet (json encoded)
-                const message = JSON.parse(event.data);
-                console.log(message.key, message.packet)
-                this.fire(new CustomEvent(message.key, {detail: message.packet}));
+                message = JSON.parse(event.data);
+            } else if (event.data instanceof ArrayBuffer) {
+                message = decodeVoiceBuffer(ByteBuffer.wrap(event.data));
+            } else {
+                return;
             }
+            console.log(message.key, message.packet);
+            this.fire(new CustomEvent(message.key, {detail: message.packet}));
         });
     }
 
     public registerToken(token: string) {
-        this.register("open", () => this.json({key: "tjcsonus:auth", packet: {token}}));
+        this.register("open", () => this.sendMeta({key: "tjcsonus:auth", packet: {token}}));
     }
 
-    public json(data: any) {
+    public sendVoice(data: { key: string, packet: any }) {
+        const buf = ByteBuffer.allocate();
+        encodeVoiceBuffer(buf, data);
+        this.send(buf.buffer);
+    }
+
+    public sendMeta(data: any) {
         this.send(JSON.stringify(data));
     }
 

@@ -7,7 +7,7 @@ import type {
     PacketPlayerState, PlayerStatePacket,
     PlayerStatesPacket,
     SonusInfoPacket,
-    PacketVoiceCategory, RemoveCategoryPacket, UpdateStatePacket,
+    PacketVoiceCategory, RemoveCategoryPacket, UpdateStatePacket, AuthenticatePacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
@@ -41,8 +41,14 @@ const VoiceContainer = (props: Props) => {
                 setState(`Disconnected: ${event.reason} (${event.code})`);
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
-                setPlayer(`${event.detail.username} (${event.detail.player})`);
-                socket.json({key: "voicechat:update_state", packet: {disabled: false} as UpdateStatePacket});
+                setPlayer(`${event.detail.username} (${event.detail.player.name})`);
+                socket.sendVoice({
+                    key: "authenticate",
+                    packet: {
+                        player: event.detail.player,
+                        secret: event.detail.secret,
+                    } as AuthenticatePacket,
+                });
             })
             .register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
                 setCategories(categories => {
@@ -64,9 +70,9 @@ const VoiceContainer = (props: Props) => {
                 setPlayers(players => {
                     const newPlayers = Object.assign({}, players);
                     event.detail.states.forEach(state => {
-                        const prevState = newPlayers[state.playerId];
+                        const prevState = newPlayers[state.playerId.name];
                         const volume = prevState?.volume || 1;
-                        newPlayers[state.playerId] = {volume, ...state};
+                        newPlayers[state.playerId.name] = {volume, ...state};
                     });
                     return newPlayers;
                 });
@@ -74,11 +80,14 @@ const VoiceContainer = (props: Props) => {
             .register("voicechat:player_state", (event: CustomEvent<PlayerStatePacket>) => {
                 setPlayers(players => {
                     const newPlayers = Object.assign({}, players);
-                    const prevState = newPlayers[event.detail.playerId];
+                    const prevState = newPlayers[event.detail.playerId.name];
                     const volume = prevState?.volume || 1;
-                    newPlayers[event.detail.playerId] = {volume, ...event.detail};
+                    newPlayers[event.detail.playerId.name] = {volume, ...event.detail};
                     return newPlayers;
                 });
+            })
+            .register("connection_check_ack", () => {
+                socket.sendMeta({key: "voicechat:update_state", packet: {disabled: false} as UpdateStatePacket});
             })
             .callback();
     }, [socket]);

@@ -1,12 +1,14 @@
+import type {UUID} from "../scripts/uuid.ts";
+
 interface Props {
-    uuid: string;
+    uuid: UUID;
     size: number;
 }
 
 const CraftHead = (props: Props) => {
     return <img
-        alt={"Head of " + props.uuid}
-        src={`https://crafthead.net/helm/${props.uuid}/8`}
+        alt={"Head of " + props.uuid.name}
+        src={`https://crafthead.net/helm/${props.uuid.name}/8`}
         style={{
             imageRendering: "pixelated",
             width: `${props.size}px`,

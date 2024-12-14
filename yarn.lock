@@ -1372,6 +1372,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bytebuffer@npm:^5.0.49":
+  version: 5.0.49
+  resolution: "@types/bytebuffer@npm:5.0.49"
+  dependencies:
+    "@types/long": "npm:^3.0.0"
+    "@types/node": "npm:*"
+  checksum: 10c0/7cb21e6479d887c192c5f05341c8f9f1293d3eb5573e608e4076a0734c544be0a9fa6b4d47ac64eb29bf0f0b345443683603c9fbe166c737584e41f6e0989e0b
+  languageName: node
+  linkType: hard
+
 "@types/cookie@npm:^0.6.0":
   version: 0.6.0
   resolution: "@types/cookie@npm:0.6.0"
@@ -1404,6 +1414,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/long@npm:^3.0.0":
+  version: 3.0.32
+  resolution: "@types/long@npm:3.0.32"
+  checksum: 10c0/996d0efc4fd6e7c0a61cf675f2e92c4a6c7bf15a72acaa1ebe16b8e9486d8a30cbf2072d2bde950f98ed5a23808e828a9aeddfe9807fd8e53764edfe2aba0f9d
+  languageName: node
+  linkType: hard
+
 "@types/mdast@npm:^4.0.0":
   version: 4.0.4
   resolution: "@types/mdast@npm:4.0.4"
@@ -1426,6 +1443,15 @@ __metadata:
   dependencies:
     "@types/unist": "npm:*"
   checksum: 10c0/d83549aaee59681ae8fa2a78d8a1b968a41eb7c0422773dff12acbf3661e4b2b2859740c3effdad9d0cd12ea14a0ec33ca302da12106476b627e09d2a029d3c1
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:*":
+  version: 22.10.2
+  resolution: "@types/node@npm:22.10.2"
+  dependencies:
+    undici-types: "npm:~6.20.0"
+  checksum: 10c0/2c7b71a040f1ef5320938eca8ebc946e6905caa9bbf3d5665d9b3774a8d15ea9fab1582b849a6d28c7fc80756a62c5666bc66b69f42f4d5dafd1ccb193cdb4ac
   languageName: node
   linkType: hard
 
@@ -1820,6 +1846,15 @@ __metadata:
   bin:
     browserslist: cli.js
   checksum: 10c0/d747c9fb65ed7b4f1abcae4959405707ed9a7b835639f8a9ba0da2911995a6ab9b0648fd05baf2a4d4e3cf7f9fdbad56d3753f91881e365992c1d49c8d88ff7a
+  languageName: node
+  linkType: hard
+
+"bytebuffer@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "bytebuffer@npm:5.0.1"
+  dependencies:
+    long: "npm:~3"
+  checksum: 10c0/d2f1342ac50a047e50ebaea7c3b73751c113aec84baddda0849e7cf2beb9feb52c93fd67425630976bdb7d801f048f47003a07f83dcda59f1c49ec6eb4e106bb
   languageName: node
   linkType: hard
 
@@ -3238,6 +3273,13 @@ __metadata:
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 10c0/d8cbea072bb08655bb4c989da418994b073a608dffa608b09ac04b43a791b12aeae7cd7ad919aa4c925f33b48490b5cfe6c1f71d827956071dae2e7bb3a6b74c
+  languageName: node
+  linkType: hard
+
+"long@npm:~3":
+  version: 3.2.0
+  resolution: "long@npm:3.2.0"
+  checksum: 10c0/03884ad097403bda356228899c8397d7e4e2cd26489983034faa8e52ab9f18df4539de548571ad2f574ecf78454fc377bbcd2ba8ba76d567bf973345aefcbdb2
   languageName: node
   linkType: hard
 
@@ -5036,8 +5078,10 @@ __metadata:
     "@astrojs/check": "npm:^0.9.4"
     "@astrojs/node": "npm:9.0.0"
     "@astrojs/preact": "npm:4.0.0"
+    "@types/bytebuffer": "npm:^5.0.49"
     "@types/node": "npm:^22.9.1"
     astro: "npm:5.0.4"
+    bytebuffer: "npm:^5.0.1"
     preact: "npm:^10.25.1"
     typescript: "npm:^5.6.3"
   languageName: unknown
@@ -5169,6 +5213,13 @@ __metadata:
   version: 6.19.8
   resolution: "undici-types@npm:6.19.8"
   checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.20.0":
+  version: 6.20.0
+  resolution: "undici-types@npm:6.20.0"
+  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
   languageName: node
   linkType: hard
 

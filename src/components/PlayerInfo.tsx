@@ -1,8 +1,9 @@
 import CraftHead from "./CraftHead.tsx";
 import VolumeSlider from "./VolumeSlider.tsx";
+import type {UUID} from "../scripts/uuid.ts";
 
 interface Props {
-    playerId: string;
+    playerId: UUID;
     name: string;
     disabled: boolean;
     disconnected: boolean;
