@@ -35,7 +35,10 @@ export class VoiceSocket extends EventManager {
         console.log("Sending socket message", key, packet);
         const buf = ByteBuffer.allocate();
         encodeVoiceBuffer(buf, {key, packet});
-        this.send(buf.buffer);
+
+        buf.limit = buf.offset;
+        buf.reset();
+        this.send(buf.toArrayBuffer());
     }
 
     public sendMeta(key: string, packet: any) {
