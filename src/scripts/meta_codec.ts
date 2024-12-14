@@ -29,7 +29,7 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
         return {
             states: json.states.map((state: any) => {
                 return {
-                    ...json,
+                    ...state,
                     playerId: uuidFromString(state.playerId),
                     groupId: json.groupId ? uuidFromString(state.groupId) : undefined,
                 };
