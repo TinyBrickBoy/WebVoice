@@ -21,6 +21,7 @@ import PlayerInfos from "./PlayerInfos.tsx";
 import VoiceCategory from "./VoiceCategory.tsx";
 
 interface Props {
+    socket: URL;
     token: string;
 }
 
@@ -35,7 +36,7 @@ export interface PlayerState extends PacketPlayerState {
 const VoiceContainer = (props: Props) => {
     const [player, setPlayer] = useState<string | undefined>();
     const [state, setState] = useState<string>("disconnected");
-    const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket());
+    const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(props.socket));
     const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
 
@@ -53,7 +54,7 @@ const VoiceContainer = (props: Props) => {
                 setState(`Disconnected: ${event.reason} (${event.code})`);
 
                 invalidateState();
-                setSocket(new VoiceSocket());
+                setSocket(new VoiceSocket(props.socket));
             })
             .register("tjcsonus:reset", (_event: CustomEvent<SonusResetPacket>) => {
                 invalidateState();
@@ -118,7 +119,7 @@ const VoiceContainer = (props: Props) => {
         socket.close();
 
         setState("Connecting...");
-        const newSocket = new VoiceSocket();
+        const newSocket = new VoiceSocket(props.socket);
         newSocket.registerToken(props.token);
         newSocket.open();
         setSocket(newSocket);
@@ -126,7 +127,7 @@ const VoiceContainer = (props: Props) => {
 
     return (
         <>
-            <VoiceInfo player={player} token={props.token} state={state}/>
+            <VoiceInfo player={player} token={props.token} socket={props.socket} state={state}/>
             <VoiceConnectButton socket={socket} openSocket={openSocket}/>
             <VoiceCategories categories={Object.values(categories)}/>
             <PlayerInfos states={Object.values(players)}/>

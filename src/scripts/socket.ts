@@ -4,14 +4,14 @@ import {decodeVoiceBuffer, encodeVoiceBuffer} from "./voice_codec.ts";
 import {decodeMetaJson, encodeMetaJson} from "./meta_codec.ts";
 import type {SonusAuthPacket} from "./packets.ts";
 
-const WEBSOCKET_SERVER = "wss://voice.tjcserver.net";
-
 export class VoiceSocket extends EventManager {
 
+    public readonly socketUrl: URL;
     public socket?: WebSocket;
 
-    constructor() {
+    constructor(socketUrl: URL) {
         super();
+        this.socketUrl = socketUrl;
 
         this.register("message", (event: MessageEvent) => {
             let message: { key: string; packet: any };
@@ -51,7 +51,7 @@ export class VoiceSocket extends EventManager {
     }
 
     public open() {
-        const socket = new WebSocket(WEBSOCKET_SERVER, []);
+        const socket = new WebSocket(this.socketUrl.toString(), []);
         socket.binaryType = "arraybuffer";
         socket.onmessage = event => this.fire(event);
         socket.onopen = event => this.fire(event);

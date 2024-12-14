@@ -1,0 +1,19 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import VoiceContainer from "../../components/VoiceContainer";
+import {constructSocketUrl} from "../../scripts/util";
+
+export const prerender = false;
+const {token} = Astro.params;
+
+if (!token || token.length !== 20) {
+    return Astro.redirect("/", 303);
+}
+---
+
+<Layout>
+    <main id="container" style="display: flex; flex-direction: column; max-width: 50%; gap: 0.5em">
+        <h1 style={{marginBottom: "0"}}>Voicechat</h1>
+        <VoiceContainer client:only socket={constructSocketUrl(Astro.url)} token={token}></VoiceContainer>
+    </main>
+</Layout>
