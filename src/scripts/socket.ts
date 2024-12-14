@@ -1,6 +1,8 @@
 import {EventManager} from "./events";
 import ByteBuffer from "bytebuffer";
-import {decodeVoiceBuffer, encodeVoiceBuffer} from "./codec.ts";
+import {decodeVoiceBuffer, encodeVoiceBuffer} from "./voice_codec.ts";
+import {decodeMetaJson, encodeMetaJson} from "./meta_codec.ts";
+import type {SonusAuthPacket} from "./packets.ts";
 
 const WEBSOCKET_SERVER = "wss://voice.tjcserver.net";
 
@@ -14,8 +16,7 @@ export class VoiceSocket extends EventManager {
         this.register("message", (event: MessageEvent) => {
             let message: { key: string; packet: any };
             if (typeof event.data === "string") {
-                // meta packet (json encoded)
-                message = JSON.parse(event.data);
+                message = decodeMetaJson(JSON.parse(event.data));
             } else if (event.data instanceof ArrayBuffer) {
                 message = decodeVoiceBuffer(ByteBuffer.wrap(event.data));
             } else {
@@ -27,17 +28,17 @@ export class VoiceSocket extends EventManager {
     }
 
     public registerToken(token: string) {
-        this.register("open", () => this.sendMeta({key: "tjcsonus:auth", packet: {token}}));
+        this.register("open", () => this.sendMeta("tjcsonus:auth", {token} as SonusAuthPacket));
     }
 
-    public sendVoice(data: { key: string, packet: any }) {
+    public sendVoice(key: string, packet: any) {
         const buf = ByteBuffer.allocate();
-        encodeVoiceBuffer(buf, data);
+        encodeVoiceBuffer(buf, {key, packet});
         this.send(buf.buffer);
     }
 
-    public sendMeta(data: any) {
-        this.send(JSON.stringify(data));
+    public sendMeta(key: string, packet: any) {
+        this.send(JSON.stringify(encodeMetaJson({key, packet})));
     }
 
     public send(data: string | ArrayBufferLike | ArrayBufferView) {

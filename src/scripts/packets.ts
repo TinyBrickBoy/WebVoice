@@ -8,7 +8,7 @@ export type PacketPlayerState = {
     name: string;
     disabled: boolean;
     disconnected: boolean;
-    groupId?: string;
+    groupId?: UUID;
 }
 export type PacketVoiceCategory = {
     id: string;
@@ -16,6 +16,9 @@ export type PacketVoiceCategory = {
     description?: string;
 }
 
+export type SonusAuthPacket = {
+    token: string;
+}
 export type SonusInfoPacket = {
     player: UUID;
     username: string;

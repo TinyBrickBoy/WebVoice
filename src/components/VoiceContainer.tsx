@@ -42,13 +42,10 @@ const VoiceContainer = (props: Props) => {
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
                 setPlayer(`${event.detail.username} (${event.detail.player.name})`);
-                socket.sendVoice({
-                    key: "authenticate",
-                    packet: {
-                        player: event.detail.player,
-                        secret: event.detail.secret,
-                    } as AuthenticatePacket,
-                });
+                socket.sendVoice("authenticate", {
+                    player: event.detail.player,
+                    secret: event.detail.secret,
+                } as AuthenticatePacket);
             })
             .register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
                 setCategories(categories => {
@@ -87,7 +84,7 @@ const VoiceContainer = (props: Props) => {
                 });
             })
             .register("connection_check_ack", () => {
-                socket.sendMeta({key: "voicechat:update_state", packet: {disabled: false} as UpdateStatePacket});
+                socket.sendMeta("voicechat:update_state", {disabled: false} as UpdateStatePacket);
             })
             .callback();
     }, [socket]);
