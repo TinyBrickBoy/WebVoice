@@ -125,11 +125,12 @@ const decoderList: ({ key: string; decoder?: Decoder<any> } | undefined)[] = [
 ];
 
 const encoders: { [key: string]: { packetId: number; encoder?: Encoder<any> } | undefined } = {};
-encoderList
-    .filter(entry => entry)
-    .forEach((entry, index) => {
-        encoders[entry!!.key] = {packetId: index, encoder: entry!!.encoder};
-    });
+encoderList.forEach((entry, index) => {
+    if (entry) {
+        const packetId = index + 1;
+        encoders[entry.key] = {packetId: packetId, encoder: entry.encoder};
+    }
+});
 
 export const encodeVoiceBuffer = (buf: ByteBuffer, packet: { key: string; packet: any }) => {
     const entry = encoders[packet.key];
