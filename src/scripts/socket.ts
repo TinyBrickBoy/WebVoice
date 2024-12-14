@@ -22,7 +22,7 @@ export class VoiceSocket extends EventManager {
             } else {
                 return;
             }
-            console.log(message.key, message.packet);
+            console.log("Received socket message", message.key, message.packet);
             this.fire(new CustomEvent(message.key, {detail: message.packet}));
         });
     }
@@ -32,12 +32,14 @@ export class VoiceSocket extends EventManager {
     }
 
     public sendVoice(key: string, packet: any) {
+        console.log("Sending socket message", key, packet);
         const buf = ByteBuffer.allocate();
         encodeVoiceBuffer(buf, {key, packet});
         this.send(buf.buffer);
     }
 
     public sendMeta(key: string, packet: any) {
+        console.log("Sending socket message", key, packet);
         this.send(JSON.stringify(encodeMetaJson({key, packet})));
     }
 
