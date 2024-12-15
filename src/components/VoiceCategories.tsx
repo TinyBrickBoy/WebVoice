@@ -11,11 +11,7 @@ const VoiceCategories = (props: Props) => {
             <h2 style={{marginBottom: "0"}}>Categories</h2>
             <div>
                 {props.categories.map(category => (
-                    <Category
-                        {...category}
-                        setVolume={volume => category.volume = volume}
-                        key={category.id}
-                    />
+                    <Category key={category.id} {...category} />
                 ))}
             </div>
         </> : <></>;

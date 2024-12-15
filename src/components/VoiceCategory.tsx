@@ -1,10 +1,9 @@
 import VolumeSlider from "./VolumeSlider.tsx";
 
 interface Props {
+    id: string;
     name: string;
     description?: string;
-    volume: number;
-    setVolume: (volume: number) => void;
 }
 
 const Category = (props: Props) => {
@@ -12,7 +11,7 @@ const Category = (props: Props) => {
         <div style={{display: "flex", flexDirection: "column", gap: "0.2em", marginTop: "1em"}}>
             <span>Category: {props.name}</span>
             {props.description && <span>Description: {props.description}</span>}
-            <VolumeSlider {...props}/>
+            <VolumeSlider type={"category"} name={props.name}/>
         </div>
     );
 };

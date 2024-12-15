@@ -41,7 +41,7 @@ export type PlayerStatePacket = PacketPlayerState // voicechat:player_state
 export type SoundPacket = {
     channelId: UUID;
     sender: UUID;
-    data: ArrayBuffer;
+    data: Float32Array;
     sequenceNumber: Long;
     category?: string;
 }
@@ -56,7 +56,7 @@ export type UpdateStatePacket = {
 }
 
 export type MicPacket = { // 0x01
-    data: ArrayBuffer;
+    data: Float32Array;
     whispering: boolean;
     sequenceNumber: Long;
 }

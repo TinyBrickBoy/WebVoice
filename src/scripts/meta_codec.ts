@@ -4,7 +4,7 @@ import type {
     PlayerStatesPacket,
     RemoveCategoryPacket,
     SonusAuthPacket,
-    SonusInfoPacket,
+    SonusInfoPacket, SonusResetPacket,
     UpdateStatePacket,
 } from "./packets.ts";
 import {uuidFromString} from "./uuid.ts";
@@ -44,6 +44,7 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
             secret: uuidFromString(json.secret),
         };
     },
+    "tjcsonus:reset": (json: any): SonusResetPacket => json,
 };
 
 export const encodeMetaJson = (packet: { key: string; packet: any }): any => {

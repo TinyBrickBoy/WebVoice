@@ -7,8 +7,6 @@ interface Props {
     name: string;
     disabled: boolean;
     disconnected: boolean;
-    volume: number;
-    setVolume: (volume: number) => void;
 }
 
 const PlayerInfo = (props: Props) => {
@@ -18,7 +16,7 @@ const PlayerInfo = (props: Props) => {
                 <CraftHead uuid={props.playerId} size={24}/>
                 <span>{props.name}{props.disabled && " (disabled)"}{props.disconnected && (" (disconnected)")}</span>
             </div>
-            <VolumeSlider {...props}/>
+            <VolumeSlider type={"player"} name={props.playerId.name}/>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "preact/hooks";
+import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
 import VoiceInfo from "./VoiceInfo.tsx";
 import VoiceConnectButton from "./VoiceConnectButton.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
@@ -14,11 +14,13 @@ import type {
     AuthenticatePacket,
     KeepAlivePacket,
     PingPacket,
-    ConnectionCheckAckPacket, SonusResetPacket,
+    ConnectionCheckAckPacket, SonusResetPacket, PlayerSoundPacket, GroupSoundPacket, LocationSoundPacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
 import VoiceCategory from "./VoiceCategory.tsx";
+import AudioPlayer from "../scripts/audio.ts";
+import {getVolume} from "../scripts/volumes.ts";
 
 interface Props {
     socket: URL;
@@ -39,6 +41,7 @@ const VoiceContainer = (props: Props) => {
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(props.socket));
     const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
+    const audio = useMemo(() => new AudioPlayer(), []);
 
     const invalidateState = useCallback(() => {
         setCategories({});
@@ -56,8 +59,9 @@ const VoiceContainer = (props: Props) => {
                 invalidateState();
                 setSocket(new VoiceSocket(props.socket));
             })
-            .register("tjcsonus:reset", (_event: CustomEvent<SonusResetPacket>) => {
+            .register("tjcsonus:reset", async (_event: CustomEvent<SonusResetPacket>) => {
                 invalidateState();
+                await audio.startContext();
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
                 setPlayer(`${event.detail.username} (${event.detail.player.name})`);
@@ -110,6 +114,21 @@ const VoiceContainer = (props: Props) => {
             })
             .register("ping", (event: CustomEvent<PingPacket>) => {
                 socket.sendVoice("ping", event.detail);
+            })
+            .register("player_sound", (event: CustomEvent<PlayerSoundPacket>) => {
+                const playerVolume = getVolume("player", event.detail.sender.name);
+                const categoryVolume = getVolume("category", event.detail.category);
+                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
+            })
+            .register("group_sound", (event: CustomEvent<GroupSoundPacket>) => {
+                const playerVolume = getVolume("player", event.detail.sender.name);
+                const categoryVolume = getVolume("category", event.detail.category);
+                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
+            })
+            .register("location_sound", (event: CustomEvent<LocationSoundPacket>) => {
+                const playerVolume = getVolume("player", event.detail.sender.name);
+                const categoryVolume = getVolume("category", event.detail.category);
+                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
             })
             .callback();
     }, [socket]);

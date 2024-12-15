@@ -11,11 +11,7 @@ const PlayerInfos = (props: Props) => {
             <h2 style={{marginBottom: "0"}}>Players</h2>
             <div>
                 {props.states.map(state => (
-                    <PlayerInfo
-                        {...state}
-                        setVolume={volume => state.volume = volume}
-                        key={state.playerId.name}
-                    />
+                    <PlayerInfo key={state.playerId.name} {...state} />
                 ))}
             </div>
         </> : <></>;
