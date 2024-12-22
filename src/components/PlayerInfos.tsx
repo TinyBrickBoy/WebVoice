@@ -10,7 +10,7 @@ const PlayerInfos = (props: Props) => {
         <>
             <h2 style={{marginBottom: "0"}}>Players</h2>
             <div>
-                {props.states.map(state => (
+                {props.states.filter(state => !state.disconnected).map(state => (
                     <PlayerInfo key={state.playerId.name} {...state} />
                 ))}
             </div>
