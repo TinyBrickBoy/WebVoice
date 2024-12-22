@@ -1,4 +1,5 @@
 import workletUrl from "./audio_processor.ts?worker&url";
+import {OpusDecoder, OpusDecoderWebWorker} from "opus-decoder";
 
 const SAMPLE_RATE = 48_000; // samples per second
 const FRAME_DURATION = 20 / 1000; // seconds
@@ -14,6 +15,7 @@ export type AudioFrame = {
 
 export default class AudioPlayer {
 
+    private decoder?: OpusDecoderWebWorker<48_000>;
     private ctx?: AudioContext;
     private readonly worklets: { [channel: string]: MessagePort } = {};
 
@@ -25,11 +27,19 @@ export default class AudioPlayer {
                 delete this.worklets[channel];
             });
             await this.ctx.suspend();
+            this.decoder?.free();
+            this.decoder = undefined;
         }
         this.ctx = new AudioContext({
             sampleRate: SAMPLE_RATE,
             latencyHint: "balanced",
         });
+        this.decoder = new OpusDecoderWebWorker<48_000>({
+            sampleRate: 48_000,
+            channels: 1,
+            streamCount: 1,
+        });
+        await this.decoder.ready;
         await this.ctx.audioWorklet.addModule(workletUrl);
     }
 
@@ -44,10 +54,13 @@ export default class AudioPlayer {
         return node.port;
     }
 
-    public playFrame(channel: string, volume: number, samples: Float32Array) {
+    public playFrame(channel: string, volume: number, samples: Uint8Array) {
         if (!this.ctx) {
             throw new Error("Can't play frame before creation of audio context");
         }
-        this.resolveWorklet(channel).postMessage({samples, volume} as AudioFrame);
+        this.decoder?.decodeFrame(samples).then(data => {
+            const frame = {samples: data.channelData[0], volume} as AudioFrame;
+            this.resolveWorklet(channel).postMessage(frame);
+        });
     }
 }

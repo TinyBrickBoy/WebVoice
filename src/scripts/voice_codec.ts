@@ -10,9 +10,11 @@ import type {
 import {
     readString,
     readUniqueId,
-    readVector3d, readVoiceData,
+    readVector3d,
+    readByteArray,
     writeBoolean,
-    writeUniqueId, writeVoiceData,
+    writeUniqueId,
+    writeByteArray,
 } from "./buffer.ts";
 
 type Encoder<T> = (buf: ByteBuffer, data: T) => void
@@ -25,7 +27,7 @@ const encoderList: ({ key: string; encoder?: Encoder<any> } | undefined)[] = [
     {
         key: "mic", // 0x01
         encoder: (buf, data: MicPacket) => {
-            writeVoiceData(buf, data.data);
+            writeByteArray(buf, data.data);
             writeBoolean(buf, data.whispering);
             buf.writeLong(data.sequenceNumber);
         },
@@ -63,7 +65,7 @@ const decoderList: ({ key: string; decoder?: Decoder<any> } | undefined)[] = [
         decoder: (buf): PlayerSoundPacket => {
             const channelId = readUniqueId(buf);
             const sender = readUniqueId(buf);
-            const data = readVoiceData(buf);
+            const data = readByteArray(buf);
             const sequenceNumber = buf.readLong();
             const distance = buf.readFloat();
 
@@ -78,7 +80,7 @@ const decoderList: ({ key: string; decoder?: Decoder<any> } | undefined)[] = [
         decoder: (buf): GroupSoundPacket => {
             const channelId = readUniqueId(buf);
             const sender = readUniqueId(buf);
-            const data = readVoiceData(buf);
+            const data = readByteArray(buf);
             const sequenceNumber = buf.readLong();
 
             const flag = buf.readByte();
@@ -92,7 +94,7 @@ const decoderList: ({ key: string; decoder?: Decoder<any> } | undefined)[] = [
             const channelId = readUniqueId(buf);
             const sender = readUniqueId(buf);
             const location = readVector3d(buf);
-            const data = readVoiceData(buf);
+            const data = readByteArray(buf);
             const sequenceNumber = buf.readLong();
             const distance = buf.readFloat();
 

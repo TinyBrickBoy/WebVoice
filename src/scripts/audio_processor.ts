@@ -1,4 +1,4 @@
-import type {AudioFrame, WorkletDestructor} from "./audio.ts";
+import type {AudioFrame} from "./audio.ts";
 
 class PCMProcessor extends AudioWorkletProcessor {
 
@@ -7,15 +7,17 @@ class PCMProcessor extends AudioWorkletProcessor {
 
     constructor() {
         super();
-        this.port.onmessage = (event: MessageEvent<any>) => {
+        this.port.onmessage = async (event: MessageEvent<any>) => {
             if (typeof event.data.destruct !== "undefined") {
                 this.destruct = event.data.destruct;
-            } else {
-                // append new audio samples to the queue
-                const frame = event.data as AudioFrame;
-                this.transformVolume(frame.samples, frame.volume);
-                this.samplesQueue.push(...frame.samples);
+                return;
             }
+            // decode with opus codec
+            const frame = event.data as AudioFrame;
+            // transform volume after decoding
+            this.transformVolume(frame.samples, frame.volume);
+            // append new audio samples to the queue
+            this.samplesQueue.push(...frame.samples);
         };
     }
 

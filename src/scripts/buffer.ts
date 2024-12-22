@@ -76,22 +76,17 @@ export const writeBoolean = (buf: ByteBuffer, value: boolean) => {
     buf.writeByte(value ? 1 : 0);
 };
 
-const VOICE_CONVERSION_FACTOR = 1 << 15;
-export const readVoiceData = (buf: ByteBuffer): Float32Array => {
-    const length = readVarInt(buf) / 2;
-    const array = new Float32Array(length);
-    buf.LE();
+export const readByteArray = (buf: ByteBuffer): Uint8Array => {
+    const length = readVarInt(buf);
+    const array = new Uint8Array(length);
     for (let i = 0; i < length; ++i) {
-        array[i] = buf.readShort() / VOICE_CONVERSION_FACTOR;
+        array[i] = buf.readUint8();
     }
-    buf.BE();
     return array;
 };
-export const writeVoiceData = (buf: ByteBuffer, value: Float32Array) => {
-    writeVarInt(buf, value.length * 2);
-    buf.LE();
+export const writeByteArray = (buf: ByteBuffer, value: Uint8Array) => {
+    writeVarInt(buf, value.length);
     for (let i = 0; i < value.length; ++i) {
-        buf.writeShort(value[i] * VOICE_CONVERSION_FACTOR);
+        buf.writeUint8(value[i]);
     }
-    buf.BE();
 };

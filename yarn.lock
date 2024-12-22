@@ -787,6 +787,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@eshaz/web-worker@npm:1.2.2":
+  version: 1.2.2
+  resolution: "@eshaz/web-worker@npm:1.2.2"
+  checksum: 10c0/4f1ad8287587d294af3c9dabfa88f7ffea54b958cf89ee50d928406436f10b7c4d733bf47e6566a57988c24f3773144fc1ba540dc4a7dd8031e6abb85ba76ba2
+  languageName: node
+  linkType: hard
+
 "@img/sharp-darwin-arm64@npm:0.33.5":
   version: 0.33.5
   resolution: "@img/sharp-darwin-arm64@npm:0.33.5"
@@ -1580,6 +1587,16 @@ __metadata:
   version: 0.0.18
   resolution: "@vscode/l10n@npm:0.0.18"
   checksum: 10c0/d1fc797001f7d508ab3fa91175f7a50ea98516c4e47830ff2be79163cde9279279514a167a3bad15b7ab7fc243e7808d8f32d3eb41f4a7d6721d9dfdbb38d89e
+  languageName: node
+  linkType: hard
+
+"@wasm-audio-decoders/common@npm:9.0.5":
+  version: 9.0.5
+  resolution: "@wasm-audio-decoders/common@npm:9.0.5"
+  dependencies:
+    "@eshaz/web-worker": "npm:1.2.2"
+    simple-yenc: "npm:^1.0.4"
+  checksum: 10c0/59e72231bee7ba5f01fd4f812b626248a1772b5a0fa1e602bbeb66745ee7618209ee9d35e93fb4c1ac586cde6bf00aeb6c5adcb69db9644dc82fd6673c808f52
   languageName: node
   linkType: hard
 
@@ -4150,6 +4167,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"opus-decoder@npm:^0.7.7":
+  version: 0.7.7
+  resolution: "opus-decoder@npm:0.7.7"
+  dependencies:
+    "@wasm-audio-decoders/common": "npm:9.0.5"
+  checksum: 10c0/35cd037b75183db8859eafdf65080c097117192b1284dd8abc3ffbd7b896f9a92c3f307dd8f17b83ce9d0d58cc388fe4fc629e0f509b1b8cf10347a6fb3152a7
+  languageName: node
+  linkType: hard
+
 "p-limit@npm:^2.2.0":
   version: 2.3.0
   resolution: "p-limit@npm:2.3.0"
@@ -4924,6 +4950,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"simple-yenc@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "simple-yenc@npm:1.0.4"
+  checksum: 10c0/5a476cf328e5e5b6006ac44af01daeda8a9832d3d2205c80d71fbdf3a9ff1ee5092ed41b909c77532c80b9f6db65b577e2c1283fcbb5a9b194f1e96b0077de73
+  languageName: node
+  linkType: hard
+
 "sisteransi@npm:^1.0.5":
   version: 1.0.5
   resolution: "sisteransi@npm:1.0.5"
@@ -5106,6 +5139,7 @@ __metadata:
     astro: "npm:5.0.4"
     bytebuffer: "npm:^5.0.1"
     howler: "npm:^2.2.4"
+    opus-decoder: "npm:^0.7.7"
     preact: "npm:^10.25.1"
     typescript: "npm:^5.6.3"
   languageName: unknown
