@@ -1,5 +1,5 @@
 export type VolumeType = "category" | "player"
-type VolumeStorage = { [type in VolumeType]?: { [id: string]: number; }; };
+type VolumeStorage = { [type in VolumeType]?: { [id: string]: number | undefined; }; };
 
 const loadVolumes = (): VolumeStorage => {
     const volumes = localStorage.getItem("volumes");
@@ -15,7 +15,8 @@ let volumes = loadVolumes();
 
 export const getVolume = (type: VolumeType, id?: string): number => {
     const typeData = volumes[type];
-    return typeData && id ? typeData[id] || 100 : 100;
+    const volume = typeData && id ? typeData[id] : 100;
+    return typeof volume == "undefined" ? 100 : volume;
 };
 export const setVolume = (type: VolumeType, id: string, volume: number, save: boolean = true) => {
     let typeData = volumes[type];
