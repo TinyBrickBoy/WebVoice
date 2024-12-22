@@ -1,7 +1,7 @@
 import workletUrl from "./audio_processor.ts?worker&url";
-import {OpusDecoder, OpusDecoderWebWorker} from "opus-decoder";
+import {type OpusDecoderSampleRate, OpusDecoderWebWorker} from "opus-decoder";
 
-const SAMPLE_RATE = 48_000; // samples per second
+const SAMPLE_RATE = 48000 as OpusDecoderSampleRate; // samples per second
 const FRAME_DURATION = 20 / 1000; // seconds
 const FRAME_SIZE = SAMPLE_RATE * FRAME_DURATION;
 
@@ -15,7 +15,7 @@ export type AudioFrame = {
 
 export default class AudioPlayer {
 
-    private decoder?: OpusDecoderWebWorker<48_000>;
+    private decoder?: OpusDecoderWebWorker<typeof SAMPLE_RATE>;
     private ctx?: AudioContext;
     private readonly worklets: { [channel: string]: MessagePort } = {};
 
@@ -34,8 +34,8 @@ export default class AudioPlayer {
             sampleRate: SAMPLE_RATE,
             latencyHint: "balanced",
         });
-        this.decoder = new OpusDecoderWebWorker<48_000>({
-            sampleRate: 48_000,
+        this.decoder = new OpusDecoderWebWorker<typeof SAMPLE_RATE>({
+            sampleRate: SAMPLE_RATE,
             channels: 1,
             streamCount: 1,
         });
@@ -48,7 +48,11 @@ export default class AudioPlayer {
         if (worklet) {
             return worklet;
         }
-        const node = new AudioWorkletNode(this.ctx!!, "pcm-processor");
+        const node = new AudioWorkletNode(this.ctx!!, "pcm-processor", {
+            numberOfInputs: 0,
+            numberOfOutputs: 1,
+            outputChannelCount: [1],
+        });
         node.connect(this.ctx!!.destination);
         this.worklets[channel] = node.port;
         return node.port;
