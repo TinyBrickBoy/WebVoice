@@ -62,7 +62,11 @@ export default class AudioPlayer {
         if (!this.ctx) {
             throw new Error("Can't play frame before creation of audio context");
         }
+        if (samples.length < 100) {
+            return; // what the fuck?
+        }
         this.decoder?.decodeFrame(samples).then(data => {
+            // console.log("Turned " + samples.length + " opus bytes into " + data.channelData[0].length + " samples")
             const frame = {samples: data.channelData[0], volume} as AudioFrame;
             this.resolveWorklet(channel).postMessage(frame);
         });

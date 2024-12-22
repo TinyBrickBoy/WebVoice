@@ -22,7 +22,7 @@ export class VoiceSocket extends EventManager {
             } else {
                 return;
             }
-            console.log("Received socket message", message.key, message.packet);
+            // console.log("Received socket message", message.key, message.packet);
             this.fire(new CustomEvent(message.key, {detail: message.packet}));
         });
     }
