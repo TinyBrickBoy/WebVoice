@@ -116,18 +116,18 @@ const VoiceContainer = (props: Props) => {
                 socket.sendVoice("ping", event.detail);
             })
             .register("player_sound", (event: CustomEvent<PlayerSoundPacket>) => {
-                const playerVolume = getVolume("player", event.detail.sender.name);
-                const categoryVolume = getVolume("category", event.detail.category);
+                const playerVolume = getVolume("player", event.detail.sender.name) / 100;
+                const categoryVolume = getVolume("category", event.detail.category) / 100;
                 audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
             })
             .register("group_sound", (event: CustomEvent<GroupSoundPacket>) => {
-                const playerVolume = getVolume("player", event.detail.sender.name);
-                const categoryVolume = getVolume("category", event.detail.category);
+                const playerVolume = getVolume("player", event.detail.sender.name) / 100;
+                const categoryVolume = getVolume("category", event.detail.category) / 100;
                 audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
             })
             .register("location_sound", (event: CustomEvent<LocationSoundPacket>) => {
-                const playerVolume = getVolume("player", event.detail.sender.name);
-                const categoryVolume = getVolume("category", event.detail.category);
+                const playerVolume = getVolume("player", event.detail.sender.name) / 100;
+                const categoryVolume = getVolume("category", event.detail.category) / 100;
                 audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
             })
             .callback();
