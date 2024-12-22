@@ -9,9 +9,9 @@ interface Props {
 const Category = (props: Props) => {
     return (
         <div style={{display: "flex", flexDirection: "column", gap: "0.2em", marginTop: "1em"}}>
-            <span>Category: {props.name}</span>
+            <span>Category: {props.name} / {props.id}</span>
             {props.description && <span>Description: {props.description}</span>}
-            <VolumeSlider type={"category"} name={props.name}/>
+            <VolumeSlider type={"category"} name={props.id}/>
         </div>
     );
 };
