@@ -22,8 +22,9 @@ class PCMProcessor extends AudioWorkletProcessor {
     }
 
     private transformVolume(data: Float32Array, volume: number) {
+        volume *= 5;
         for (let i = 0, len = data.length; i < len; ++i) {
-            data[i] *= volume * 10;
+            data[i] *= volume;
         }
     }
 
@@ -34,8 +35,10 @@ class PCMProcessor extends AudioWorkletProcessor {
         const output = outputs[0][0]; // single channel output
         // fill the output buffer with queued samples or silence
         for (let i = 0; i < output.length; i++) {
-            const sample =  this.samplesQueue.shift()
-            if (!sample) break;
+            const sample = this.samplesQueue.shift();
+            if (!sample) {
+                break;
+            }
             output[i] = sample;
         }
         return !this.destruct;
