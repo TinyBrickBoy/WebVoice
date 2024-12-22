@@ -12,63 +12,68 @@ export type AudioFrame = {
     samples: Float32Array,
     volume: number,
 }
+type ChannelData = {
+    worklet: MessagePort;
+    decoder: OpusDecoderWebWorker<typeof SAMPLE_RATE>;
+}
 
 export default class AudioPlayer {
 
-    private decoder?: OpusDecoderWebWorker<typeof SAMPLE_RATE>;
     private ctx?: AudioContext;
-    private readonly worklets: { [channel: string]: MessagePort } = {};
+    private readonly channels: { [channel: string]: ChannelData } = {};
 
     public async startContext() {
         if (this.ctx) {
-            Object.keys(this.worklets).forEach(channel => {
-                const port = this.worklets[channel];
-                port.postMessage({destruct: true} as WorkletDestructor);
-                delete this.worklets[channel];
+            Object.keys(this.channels).forEach(channel => {
+                const data = this.channels[channel];
+                data.worklet.postMessage({destruct: true} as WorkletDestructor);
+                data.decoder.free();
+                delete this.channels[channel];
             });
             await this.ctx.suspend();
-            this.decoder?.free();
-            this.decoder = undefined;
         }
         this.ctx = new AudioContext({
             sampleRate: SAMPLE_RATE,
             latencyHint: "balanced",
         });
-        this.decoder = new OpusDecoderWebWorker<typeof SAMPLE_RATE>({
-            sampleRate: SAMPLE_RATE,
-            channels: 1,
-            streamCount: 1,
-        });
-        await this.decoder.ready;
         await this.ctx.audioWorklet.addModule(workletUrl);
     }
 
-    private resolveWorklet(channel: string): MessagePort {
-        const worklet = this.worklets[channel];
-        if (worklet) {
-            return worklet;
+    private async resolveChannel(channel: string): Promise<ChannelData> {
+        const existingData = this.channels[channel];
+        if (existingData) {
+            return existingData;
         }
+        // create audio worklet node for separate thread
         const node = new AudioWorkletNode(this.ctx!!, "pcm-processor", {
             numberOfInputs: 0,
             numberOfOutputs: 1,
             outputChannelCount: [1],
         });
-        node.connect(this.ctx!!.destination);
-        this.worklets[channel] = node.port;
-        return node.port;
+        node.connect(this.ctx!!.destination); // connect to default speaker
+        // create opus decoder for a separate thread
+        // each channel needs its own decoder, as the decoder keeps track of a state
+        const decoder = new OpusDecoderWebWorker<typeof SAMPLE_RATE>({
+            sampleRate: SAMPLE_RATE,
+            channels: 1,
+            streamCount: 1,
+        });
+        // reduce chance of race condition by saving data BEFORE waiting for WASM
+        const data = {worklet: node.port, decoder};
+        this.channels[channel] = data;
+        await decoder.ready; // wait for opus decoder WASM to load
+        return data;
     }
 
-    public playFrame(channel: string, volume: number, samples: Uint8Array) {
+    public async playFrame(channel: string, volume: number, opus: Uint8Array) {
         if (!this.ctx) {
             throw new Error("Can't play frame before creation of audio context");
         }
-        if (samples.length < 100) {
-            return; // what the fuck?
-        }
-        this.decoder?.decodeFrame(samples).then(data => {
-            // console.log("Turned " + samples.length + " opus bytes into " + data.channelData[0].length + " samples")
-            const frame = {samples: data.channelData[0], volume} as AudioFrame;
-            this.resolveWorklet(channel).postMessage(frame);
-        });
+        const data = await this.resolveChannel(channel);
+        const audio = await data.decoder.decodeFrame(opus);
+
+        // console.log("Turned " + opus.length + " opus bytes into " + audio.channelData[0].length + " samples");
+        const frame = {samples: audio.channelData[0], volume} as AudioFrame;
+        data.worklet.postMessage(frame);
     }
 }
