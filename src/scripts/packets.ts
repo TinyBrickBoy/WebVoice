@@ -48,12 +48,16 @@ export type AddGroupPacket = PacketClientGroup; // voicechat:add_group
 export type RemoveGroupPacket = { // voicechat:remove_group
     groupId: UUID;
 }
+export type JoinedGroupPacket = { // voicechat:joined_group
+    groupId?: UUID;
+    wrongPassword: boolean;
+}
 export type CreateGroupPacket = { // voicechat:create_group
     name: string;
     password?: string;
     type: PacketClientGroupType;
 }
-export type JoinedGroupPacket = { // voicechat:joined_group
+export type JoinGroupPacket = { // voicechat:set_group
     groupId: UUID;
     password?: string;
 }

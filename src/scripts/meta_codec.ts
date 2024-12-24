@@ -1,8 +1,8 @@
 import type {
     AddCategoryPacket,
     AddGroupPacket,
-    CreateGroupPacket,
-    JoinedGroupPacket,
+    CreateGroupPacket, JoinedGroupPacket,
+    JoinGroupPacket,
     LeaveGroupPacket,
     PlayerStatePacket,
     PlayerStatesPacket,
@@ -21,7 +21,7 @@ type Decoder<T> = (json: any) => T
 const encoders: ({ [key: string]: Encoder<any> } | undefined) = {
     "voicechat:update_state": (data: UpdateStatePacket) => data,
     "voicechat:create_group": (data: CreateGroupPacket) => data,
-    "voicechat:joined_group": (data: JoinedGroupPacket) => {
+    "voicechat:set_group": (data: JoinGroupPacket) => {
         return {
             ...data,
             groupId: data.groupId.name,
@@ -45,7 +45,7 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
                 return {
                     ...state,
                     playerId: uuidFromString(state.playerId),
-                    groupId: json.groupId ? uuidFromString(state.groupId) : undefined,
+                    groupId: state.groupId ? uuidFromString(state.groupId) : undefined,
                 };
             }),
         };
@@ -58,6 +58,12 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
         };
     },
     "voicechat:remove_group": (json: any): RemoveGroupPacket => {
+        return {
+            ...json,
+            groupId: uuidFromString(json.groupId),
+        };
+    },
+    "voicechat:joined_group": (json: any): JoinedGroupPacket => {
         return {
             ...json,
             groupId: uuidFromString(json.groupId),

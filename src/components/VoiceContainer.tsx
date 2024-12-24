@@ -28,6 +28,7 @@ import AudioPlayer from "../scripts/audio.ts";
 import {getVolume} from "../scripts/volumes.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
+import type {UUID} from "../scripts/uuid.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 
@@ -48,8 +49,13 @@ export interface GroupState extends PacketClientGroup {
     volume: number;
 }
 
+export interface PlayerInfo {
+    uuid: UUID;
+    name: string;
+}
+
 const VoiceContainer = (props: Props) => {
-    const [player, setPlayer] = useState<string | undefined>();
+    const [player, setPlayer] = useState<PlayerInfo | undefined>();
     const [state, setState] = useState<string>("disconnected");
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(props.socket));
     const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
@@ -85,7 +91,10 @@ const VoiceContainer = (props: Props) => {
                 await audio.startContext();
             })
             .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
-                setPlayer(`${event.detail.username} (${event.detail.player.name})`);
+                setPlayer({
+                    uuid: event.detail.player,
+                    name: event.detail.username,
+                });
                 socket.sendVoice("authenticate", {
                     player: event.detail.player,
                     secret: event.detail.secret,
@@ -220,7 +229,7 @@ const VoiceContainer = (props: Props) => {
                 flexDirection: "column",
                 gap: "0.5rem",
             }}>
-                {socket.isLoaded() &&
+                {(socket.isLoaded() && player) &&
                     <div className={"container"}>
                         <h2>Create Group</h2>
                         <CreateGroupForm createGroup={packet => socket.sendMeta("voicechat:create_group", packet)}/>
@@ -228,7 +237,13 @@ const VoiceContainer = (props: Props) => {
                 }
                 {Object.values(groups).length > 0 &&
                     <div className={"container"}>
-                        <ClientGroups players={Object.values(players)} groups={Object.values(groups)}/>
+                        <ClientGroups
+                            viewerId={player?.uuid}
+                            players={Object.values(players)}
+                            groups={Object.values(groups)}
+                            joinGroup={packet => socket.sendMeta("voicechat:set_group", packet)}
+                            leaveGroup={packet => socket.sendMeta("voicechat:leave_group", packet)}
+                        />
                     </div>
                 }
             </div>

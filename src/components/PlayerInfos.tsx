@@ -9,12 +9,12 @@ interface Props {
 const PlayerInfos = (props: Props) => {
     return props.states.length ?
         <>
-            <h2 style={{marginBottom: "0"}}>Players</h2>
+            <h2>Players</h2>
             <div>
                 {props.states.filter(state => !state.disconnected).map(state => (
                     <PlayerInfo
                         key={state.playerId.name} {...state}
-                        group={state.groupId ? props.groups[state.groupId.name]?.name : undefined}
+                        group={state.groupId?.name}
                     />
                 ))}
             </div>
