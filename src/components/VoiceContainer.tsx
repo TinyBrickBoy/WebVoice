@@ -22,6 +22,8 @@ import VoiceCategory from "./VoiceCategory.tsx";
 import AudioPlayer from "../scripts/audio.ts";
 import {getVolume} from "../scripts/volumes.ts";
 
+const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
+
 interface Props {
     socket: URL;
     token: string;
@@ -47,6 +49,11 @@ const VoiceContainer = (props: Props) => {
         setCategories({});
         setPlayers({});
     }, []);
+
+    useEffect(() => {
+        const timer = setInterval(() => audio.runGarbageCollector(), GARBAGE_COLLECTOR_INTERVAL);
+        return () => clearInterval(timer);
+    }, [audio]);
 
     useEffect(() => {
         return socket.registers()

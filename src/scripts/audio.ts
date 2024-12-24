@@ -5,6 +5,8 @@ const SAMPLE_RATE = 48000 as OpusDecoderSampleRate; // samples per second
 const FRAME_DURATION = 20 / 1000; // seconds
 const FRAME_SIZE = SAMPLE_RATE * FRAME_DURATION;
 
+const CHANNEL_TIMEOUT_TIME = 15 * 1000;
+
 export type WorkletDestructor = {
     destruct: boolean,
 }
@@ -15,6 +17,7 @@ export type AudioFrame = {
 type ChannelData = {
     worklet: MessagePort;
     decoder: OpusDecoderWebWorker<typeof SAMPLE_RATE>;
+    lastTouch: number;
 }
 
 export default class AudioPlayer {
@@ -22,14 +25,32 @@ export default class AudioPlayer {
     private ctx?: AudioContext;
     private readonly channels: { [channel: string]: ChannelData } = {};
 
+    private async closeChannel(channel: string) {
+        const data = this.channels[channel];
+        if (data) {
+            data.worklet.postMessage({destruct: true} as WorkletDestructor);
+            await data.decoder.free();
+            delete this.channels[channel];
+        }
+    }
+
+    // periodically clean up unused channels to reduce
+    // memory allocation and prevent accidental "leaks"
+    public async runGarbageCollector() {
+        const now = Date.now();
+        for (const channel of Object.keys(this.channels)) {
+            const data = this.channels[channel];
+            if (now - data.lastTouch > CHANNEL_TIMEOUT_TIME) {
+                await this.closeChannel(channel);
+            }
+        }
+    }
+
     public async startContext() {
         if (this.ctx) {
-            Object.keys(this.channels).forEach(channel => {
-                const data = this.channels[channel];
-                data.worklet.postMessage({destruct: true} as WorkletDestructor);
-                data.decoder.free();
-                delete this.channels[channel];
-            });
+            for (const channel of Object.keys(this.channels)) {
+                await this.closeChannel(channel);
+            }
             await this.ctx.suspend();
         }
         this.ctx = new AudioContext({
@@ -42,6 +63,7 @@ export default class AudioPlayer {
     private async resolveChannel(channel: string): Promise<ChannelData> {
         const existingData = this.channels[channel];
         if (existingData) {
+            existingData.lastTouch = Date.now();
             return existingData;
         }
         // create audio worklet node for separate thread
@@ -59,7 +81,7 @@ export default class AudioPlayer {
             streamCount: 1,
         });
         // reduce chance of race condition by saving data BEFORE waiting for WASM
-        const data = {worklet: node.port, decoder};
+        const data = {worklet: node.port, decoder, lastTouch: Date.now()};
         this.channels[channel] = data;
         await decoder.ready; // wait for opus decoder WASM to load
         return data;
