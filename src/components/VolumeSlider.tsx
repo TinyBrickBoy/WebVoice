@@ -10,7 +10,7 @@ const VolumeSlider = (props: Props) => {
     const volume = getVolume(props.type, props.name);
     const volumeRef = useRef<HTMLSpanElement>();
     return (
-        <div style={{display: "flex", flexDirection: "column", width: "30%"}}>
+        <div style={{display: "flex", flexDirection: "column"}}>
             { /* @ts-ignore null apparently isn't undefined... thanks JS */}
             <label for={props.name}>Volume: <span ref={volumeRef}>{volume}</span>%</label>
             <input

@@ -12,7 +12,7 @@ if (!token || token.length !== 20) {
 ---
 
 <Layout>
-    <main id="container" style="display: flex; flex-direction: column; max-width: 50%; gap: 0.5em">
+    <main id="container" style="display: flex; flex-direction: column; gap: 0.5em">
         <h1 style={{marginBottom: "0"}}>Voicechat</h1>
         <VoiceContainer client:only socket={constructSocketUrl(Astro.url)} token={token}></VoiceContainer>
     </main>

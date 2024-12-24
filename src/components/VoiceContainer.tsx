@@ -14,13 +14,20 @@ import type {
     AuthenticatePacket,
     KeepAlivePacket,
     PingPacket,
-    ConnectionCheckAckPacket, SonusResetPacket, PlayerSoundPacket, GroupSoundPacket, LocationSoundPacket,
+    ConnectionCheckAckPacket,
+    SonusResetPacket,
+    PlayerSoundPacket,
+    GroupSoundPacket,
+    LocationSoundPacket,
+    PacketClientGroup, AddGroupPacket, RemoveGroupPacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
 import VoiceCategory from "./VoiceCategory.tsx";
 import AudioPlayer from "../scripts/audio.ts";
 import {getVolume} from "../scripts/volumes.ts";
+import ClientGroups from "./ClientGroups.tsx";
+import CreateGroupForm from "./CreateGroupForm.tsx";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 
@@ -37,17 +44,23 @@ export interface PlayerState extends PacketPlayerState {
     volume: number;
 }
 
+export interface GroupState extends PacketClientGroup {
+    volume: number;
+}
+
 const VoiceContainer = (props: Props) => {
     const [player, setPlayer] = useState<string | undefined>();
     const [state, setState] = useState<string>("disconnected");
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(props.socket));
     const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
+    const [groups, setGroups] = useState<{ [id: string]: GroupState }>({});
     const audio = useMemo(() => new AudioPlayer(), []);
 
     const invalidateState = useCallback(() => {
         setCategories({});
         setPlayers({});
+        setGroups({});
     }, []);
 
     useEffect(() => {
@@ -66,6 +79,7 @@ const VoiceContainer = (props: Props) => {
                 invalidateState();
                 setSocket(new VoiceSocket(props.socket));
             })
+            // meta packets
             .register("tjcsonus:reset", async (_event: CustomEvent<SonusResetPacket>) => {
                 invalidateState();
                 await audio.startContext();
@@ -113,6 +127,23 @@ const VoiceContainer = (props: Props) => {
                     return newPlayers;
                 });
             })
+            .register("voicechat:add_group", (event: CustomEvent<AddGroupPacket>) => {
+                setGroups(groups => {
+                    const newGroups = Object.assign({}, groups);
+                    const prevState = newGroups[event.detail.groupId.name];
+                    const volume = prevState?.volume || 1;
+                    newGroups[event.detail.groupId.name] = {volume, ...event.detail};
+                    return newGroups;
+                });
+            })
+            .register("voicechat:remove_group", (event: CustomEvent<RemoveGroupPacket>) => {
+                setGroups(groups => {
+                    const newGroups = Object.assign({}, groups);
+                    delete newGroups[event.detail.groupId.name];
+                    return newGroups;
+                });
+            })
+            // voice packets
             .register("connection_check_ack", (_event: CustomEvent<ConnectionCheckAckPacket>) => {
                 socket.sendMeta("voicechat:update_state", {disabled: false} as UpdateStatePacket);
             })
@@ -152,12 +183,44 @@ const VoiceContainer = (props: Props) => {
     }, [socket]);
 
     return (
-        <>
-            <VoiceInfo player={player} token={props.token} socket={props.socket} state={state}/>
-            <VoiceConnectButton socket={socket} openSocket={openSocket}/>
-            <VoiceCategories categories={Object.values(categories)}/>
-            <PlayerInfos states={Object.values(players)}/>
-        </>
+        <div style={{
+            display: "flex",
+            gap: "0.5em",
+            alignItems: "flex-start",
+        }}>
+            <div
+                className={"container"}
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1em",
+                }}
+            >
+                <VoiceInfo player={player} token={props.token} socket={props.socket} state={state}/>
+                <VoiceConnectButton socket={socket} openSocket={openSocket}/>
+            </div>
+            {Object.values(categories).length > 0 &&
+                <div className={"container"}>
+                    <VoiceCategories categories={Object.values(categories)}/>
+                </div>
+            }
+            {Object.values(players).length > 0 &&
+                <div className={"container"}>
+                    <PlayerInfos states={Object.values(players)}/>
+                </div>
+            }
+            {Object.values(groups).length > 0 &&
+                <div className={"container"}>
+                    <ClientGroups groups={Object.values(groups)}/>
+                </div>
+            }
+            {socket.isLoaded() &&
+                <div className={"container"}>
+                    <h2>Create Group</h2>
+                    <CreateGroupForm createGroup={packet => socket.sendMeta("voicechat:create_group", packet)}/>
+                </div>
+            }
+        </div>
     );
 };
 export default VoiceContainer;

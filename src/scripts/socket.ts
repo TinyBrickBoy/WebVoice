@@ -63,4 +63,8 @@ export class VoiceSocket extends EventManager {
     public close(code: number = 1002) {
         this.socket?.close(code);
     }
+
+    public isLoaded() {
+        return !!this.socket;
+    }
 }
