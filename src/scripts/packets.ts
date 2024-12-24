@@ -15,6 +15,15 @@ export type PacketVoiceCategory = {
     name: string;
     description?: string;
 }
+export type PacketClientGroupType = "normal" | "open" | "isolated";
+export type PacketClientGroup = {
+    groupId: UUID;
+    name: string;
+    password: boolean;
+    persistent: boolean;
+    hidden: boolean;
+    type: PacketClientGroupType;
+}
 
 export type SonusAuthPacket = { // tjcsonus:auth
     token: string;
@@ -35,6 +44,21 @@ export type PlayerStatesPacket = { // voicechat:player_states
     states: PacketPlayerState[];
 }
 export type PlayerStatePacket = PacketPlayerState // voicechat:player_state
+export type AddGroupPacket = PacketClientGroup; // voicechat:add_group
+export type RemoveGroupPacket = { // voicechat:remove_group
+    groupId: UUID;
+}
+export type CreateGroupPacket = { // voicechat:create_group
+    name: string;
+    password?: string;
+    type: PacketClientGroupType;
+}
+export type JoinedGroupPacket = { // voicechat:joined_group
+    groupId: UUID;
+    password?: string;
+}
+export type LeaveGroupPacket = { // voicechat:leave_group
+}
 
 // voice
 

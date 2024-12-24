@@ -1,10 +1,16 @@
 import type {
     AddCategoryPacket,
+    AddGroupPacket,
+    CreateGroupPacket,
+    JoinedGroupPacket,
+    LeaveGroupPacket,
     PlayerStatePacket,
     PlayerStatesPacket,
     RemoveCategoryPacket,
+    RemoveGroupPacket,
     SonusAuthPacket,
-    SonusInfoPacket, SonusResetPacket,
+    SonusInfoPacket,
+    SonusResetPacket,
     UpdateStatePacket,
 } from "./packets.ts";
 import {uuidFromString} from "./uuid.ts";
@@ -14,6 +20,14 @@ type Decoder<T> = (json: any) => T
 
 const encoders: ({ [key: string]: Encoder<any> } | undefined) = {
     "voicechat:update_state": (data: UpdateStatePacket) => data,
+    "voicechat:create_group": (data: CreateGroupPacket) => data,
+    "voicechat:joined_group": (data: JoinedGroupPacket) => {
+        return {
+            ...data,
+            groupId: data.groupId.name,
+        };
+    },
+    "voicechat:leave_group": (data: LeaveGroupPacket) => data,
     "tjcsonus:auth": (data: SonusAuthPacket) => data,
 };
 const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
@@ -37,6 +51,18 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
         };
     },
     "voicechat:remove_category": (json: any): RemoveCategoryPacket => json,
+    "voicechat:add_group": (json: any): AddGroupPacket => {
+        return {
+            ...json,
+            groupId: uuidFromString(json.groupId),
+        };
+    },
+    "voicechat:remove_group": (json: any): RemoveGroupPacket => {
+        return {
+            ...json,
+            groupId: uuidFromString(json.groupId),
+        };
+    },
     "tjcsonus:info": (json: any): SonusInfoPacket => {
         return {
             ...json,
