@@ -48,7 +48,7 @@ const CreateGroupForm: FunctionComponent<{ createGroup: (packet: CreateGroupPack
                 <div className="input-entry">
                     <label>Password</label>
                     <input
-                        type="text" placeholder="Password (optional)" value={password}
+                        type="password" placeholder="Password (optional)" value={password}
                         onChange={event => setPassword(event.currentTarget.value)}
                     />
                 </div>

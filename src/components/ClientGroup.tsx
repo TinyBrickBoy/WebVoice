@@ -2,11 +2,13 @@ import type {UUID} from "../scripts/uuid.ts";
 import type {JoinGroupPacket, LeaveGroupPacket, PacketClientGroupType} from "../scripts/packets.ts";
 import type {PlayerState} from "./VoiceContainer.tsx";
 import PlayerInfo from "./PlayerInfo.tsx";
-import {useMemo} from "preact/hooks";
+import {useMemo, useState} from "preact/hooks";
 
 interface Props {
     groupId: UUID;
     name: String;
+    password: boolean;
+
     type: PacketClientGroupType;
 
     viewerId?: UUID;
@@ -17,6 +19,7 @@ interface Props {
 }
 
 const ClientGroup = (props: Props) => {
+    const [password, setPassword] = useState<string>("");
     const viewerMember = useMemo(() => {
         if (props.viewerId) {
             const viewerIdStr = props.viewerId.name;
@@ -56,11 +59,31 @@ const ClientGroup = (props: Props) => {
                     </ul>
                 </>
             }
-            <div style={{display: "flex", flexDirection: "row", gap: "0.5em", marginTop: "0.5em"}}>
+            {props.password &&
+                <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "stretch",
+                }}>
+                    <input
+                        onChange={event => setPassword(event.currentTarget.value)}
+                        type={"password"} disabled={viewerMember} placeholder="Password"
+                    />
+                </div>
+            }
+            <div style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: "0.5em",
+                marginTop: "0.5em",
+            }}>
                 <button
                     disabled={viewerMember}
                     style={{flex: 1}}
-                    onClick={() => props.joinGroup({groupId: props.groupId})}
+                    onClick={() => props.joinGroup({
+                        groupId: props.groupId,
+                        password: password ? password : undefined,
+                    })}
                 >
                     Join
                 </button>
