@@ -228,7 +228,7 @@ const VoiceContainer = (props: Props) => {
                 }
                 {Object.values(groups).length > 0 &&
                     <div className={"container"}>
-                        <ClientGroups groups={Object.values(groups)}/>
+                        <ClientGroups players={Object.values(players)} groups={Object.values(groups)}/>
                     </div>
                 }
             </div>
