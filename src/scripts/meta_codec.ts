@@ -66,7 +66,7 @@ const decoders: ({ [key: string]: Decoder<any> } | undefined) = {
     "voicechat:joined_group": (json: any): JoinedGroupPacket => {
         return {
             ...json,
-            groupId: uuidFromString(json.groupId),
+            groupId: json.groupId ? uuidFromString(json.groupId) : undefined,
         };
     },
     "tjcsonus:info": (json: any): SonusInfoPacket => {

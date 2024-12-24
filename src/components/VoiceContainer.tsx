@@ -19,7 +19,7 @@ import type {
     PlayerSoundPacket,
     GroupSoundPacket,
     LocationSoundPacket,
-    PacketClientGroup, AddGroupPacket, RemoveGroupPacket,
+    PacketClientGroup, AddGroupPacket, RemoveGroupPacket, JoinedGroupPacket,
 } from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
@@ -29,8 +29,10 @@ import {getVolume} from "../scripts/volumes.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
 import type {UUID} from "../scripts/uuid.ts";
+import {getCurrentTimeString} from "../scripts/util.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
+const INFO_DURATION = 10 * 1000;
 
 interface Props {
     socket: URL;
@@ -57,6 +59,7 @@ export interface PlayerInfo {
 const VoiceContainer = (props: Props) => {
     const [player, setPlayer] = useState<PlayerInfo | undefined>();
     const [state, setState] = useState<string>("disconnected");
+    const [info, setInfo] = useState<string | undefined>();
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(props.socket));
     const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
@@ -67,6 +70,7 @@ const VoiceContainer = (props: Props) => {
         setCategories({});
         setPlayers({});
         setGroups({});
+        setInfo(undefined);
     }, []);
 
     useEffect(() => {
@@ -152,6 +156,11 @@ const VoiceContainer = (props: Props) => {
                     return newGroups;
                 });
             })
+            .register("voicechat:joined_group", (event: CustomEvent<JoinedGroupPacket>) => {
+                if (event.detail.wrongPassword) {
+                    setInfo(`[${getCurrentTimeString()}] Wrong password, please try again!`);
+                }
+            })
             // voice packets
             .register("connection_check_ack", (_event: CustomEvent<ConnectionCheckAckPacket>) => {
                 socket.sendMeta("voicechat:update_state", {disabled: false} as UpdateStatePacket);
@@ -191,6 +200,13 @@ const VoiceContainer = (props: Props) => {
         setSocket(newSocket);
     }, [socket]);
 
+    // deactivate info after short period of time
+    useEffect(() => {
+        if (!info) return;
+        const timer = setTimeout(() => setInfo(undefined), INFO_DURATION);
+        return () => clearTimeout(timer);
+    }, [info]);
+
     return (
         <div style={{
             display: "flex",
@@ -211,6 +227,7 @@ const VoiceContainer = (props: Props) => {
                     }}
                 >
                     <VoiceInfo player={player} token={props.token} socket={props.socket} state={state}/>
+                    {info && <code>{info}</code>}
                     <VoiceConnectButton socket={socket} openSocket={openSocket}/>
                 </div>
                 {Object.values(categories).length > 0 &&
