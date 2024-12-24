@@ -7,7 +7,7 @@ interface Props {
     name: string;
     disabled: boolean;
     disconnected: boolean;
-    groupId?: UUID;
+    group?: string;
 }
 
 const PlayerInfo = (props: Props) => {
@@ -18,7 +18,7 @@ const PlayerInfo = (props: Props) => {
                 <span>{props.name}{props.disabled && " (disabled)"}{props.disconnected && (" (disconnected)")}</span>
             </div>
             <VolumeSlider type={"player"} name={props.playerId.name}/>
-            {!!props.groupId && <span>Group: <code>{props.groupId.name}</code></span>}
+            {!!props.group && <span>Group: <code>{props.group}</code></span>}
         </div>
     );
 };

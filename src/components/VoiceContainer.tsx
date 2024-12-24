@@ -185,41 +185,53 @@ const VoiceContainer = (props: Props) => {
     return (
         <div style={{
             display: "flex",
-            gap: "0.5em",
+            gap: "0.5rem",
             alignItems: "flex-start",
         }}>
-            <div
-                className={"container"}
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1em",
-                }}
-            >
-                <VoiceInfo player={player} token={props.token} socket={props.socket} state={state}/>
-                <VoiceConnectButton socket={socket} openSocket={openSocket}/>
-            </div>
-            {Object.values(categories).length > 0 &&
-                <div className={"container"}>
-                    <VoiceCategories categories={Object.values(categories)}/>
+            <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+            }}>
+                <div
+                    className={"container"}
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1em",
+                    }}
+                >
+                    <VoiceInfo player={player} token={props.token} socket={props.socket} state={state}/>
+                    <VoiceConnectButton socket={socket} openSocket={openSocket}/>
                 </div>
-            }
+                {Object.values(categories).length > 0 &&
+                    <div className={"container"}>
+                        <VoiceCategories categories={Object.values(categories)}/>
+                    </div>
+                }
+            </div>
             {Object.values(players).length > 0 &&
                 <div className={"container"}>
-                    <PlayerInfos states={Object.values(players)}/>
+                    <PlayerInfos states={Object.values(players)} groups={groups}/>
                 </div>
             }
-            {Object.values(groups).length > 0 &&
-                <div className={"container"}>
-                    <ClientGroups groups={Object.values(groups)}/>
-                </div>
-            }
-            {socket.isLoaded() &&
-                <div className={"container"}>
-                    <h2>Create Group</h2>
-                    <CreateGroupForm createGroup={packet => socket.sendMeta("voicechat:create_group", packet)}/>
-                </div>
-            }
+            <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+            }}>
+                {socket.isLoaded() &&
+                    <div className={"container"}>
+                        <h2>Create Group</h2>
+                        <CreateGroupForm createGroup={packet => socket.sendMeta("voicechat:create_group", packet)}/>
+                    </div>
+                }
+                {Object.values(groups).length > 0 &&
+                    <div className={"container"}>
+                        <ClientGroups groups={Object.values(groups)}/>
+                    </div>
+                }
+            </div>
         </div>
     );
 };
