@@ -26,7 +26,7 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined
     await ctx.audioWorklet.addModule(noiseGateWorkletPath);
     await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
 
-    // load microphone stream
+    // load microphone stream // TODO wrong device gets selected, maybe adjust constraint?
     const micStream = await navigator.mediaDevices!!
         .getUserMedia(deviceId ? {audio: true} : {audio: {deviceId}});
 
@@ -135,7 +135,7 @@ const MicContainer: FunctionComponent<{}> = (props) => {
 
         return () => {
             tearDown[0] = true;
-            audioCtx.close(); // TODO: doesnt work
+            audioCtx.close();
         };
     }, [canvasRef, deviceId]);
 
