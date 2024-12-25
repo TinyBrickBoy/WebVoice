@@ -98,11 +98,10 @@ const MicContainer: FunctionComponent<{}> = (props) => {
         const postGateAnalyzer = setupAudioAnalyzer(audioCtx);
 
         setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer]);
-        let tearDown = [false];
+        let frameId: (number | undefined)[] = [undefined];
 
         const draw = () => {
-            if (tearDown[0]) return;
-            requestAnimationFrame(draw);
+            frameId[0] = requestAnimationFrame(draw);
 
             const bufferLength = preNoiseAnalyzer.frequencyBinCount;
             const preNoiseData = new Uint8Array(bufferLength);
@@ -133,9 +132,11 @@ const MicContainer: FunctionComponent<{}> = (props) => {
         };
         draw();
 
-        return () => {
-            tearDown[0] = true;
-            audioCtx.close();
+        return async () => {
+            if (typeof frameId[0] !== "undefined") {
+                cancelAnimationFrame(frameId[0]);
+            }
+            await audioCtx.close();
         };
     }, [canvasRef, deviceId]);
 
