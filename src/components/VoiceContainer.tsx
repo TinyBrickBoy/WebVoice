@@ -233,7 +233,7 @@ const VoiceContainer = (props: Props) => {
                 </div>
                 {(socket.isLoaded() && player) &&
                     <div className={"container"}>
-                        <MicContainer/>
+                        <MicContainer sendMic={packet => socket.sendVoice("mic", packet)}/>
                     </div>
                 }
                 {Object.values(categories).length > 0 &&

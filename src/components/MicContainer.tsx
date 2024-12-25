@@ -2,10 +2,13 @@ import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWork
 import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
+import inputWorkletUrl from "../scripts/audio_input_processor.ts?worker&url";
 import type {FunctionComponent} from "preact";
-import {useEffect, useMemo, useRef, useState} from "preact/hooks";
+import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import VolumeSlider from "./VolumeSlider.tsx";
+import {SAMPLE_RATE} from "../scripts/audio_constants.ts";
+import type {MicPacket} from "../scripts/packets.ts";
 
 export type VisualizerInitMessage = {
     canvas: HTMLCanvasElement;
@@ -19,7 +22,12 @@ export type VisualizerMessage = VisualizerInitMessage | VisualizerFrameMessage;
 const GAIN_MULTIPLIER = 0.2;
 const DEFAULT_DEVICE_ID = "default";
 
-const setupAudioContext = async (ctx: AudioContext, deviceId: string, analyzers: AnalyserNode[]) => {
+const setupAudioContext = async (
+    ctx: AudioContext,
+    deviceId: string,
+    analyzers: AnalyserNode[],
+    sendMic: (packet: MicPacket) => void,
+) => {
     // load WASM
     const rnnoiseWasmBinary = await loadRnnoise({
         url: rnnoiseWasmPath,
@@ -29,9 +37,15 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string, analyzers:
     // load worker modules
     await ctx.audioWorklet.addModule(noiseGateWorkletPath);
     await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
+    await ctx.audioWorklet.addModule(inputWorkletUrl);
 
     // load microphone stream
-    const constraints: MediaStreamConstraints = {audio: {echoCancellation: false}};
+    const constraints: MediaStreamConstraints = {
+        audio: {
+            echoCancellation: false,
+            sampleRate: SAMPLE_RATE,
+        },
+    };
     if (deviceId !== DEFAULT_DEVICE_ID) (constraints.audio as MediaTrackConstraints).deviceId = deviceId;
     const micStream = await navigator.mediaDevices!!.getUserMedia(constraints);
 
@@ -66,6 +80,23 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string, analyzers:
     // apply "debug"
     gainedNode.connect(ctx.destination);
 
+    // send microphone input to server, opus-encoded
+    const inputNode = new AudioWorkletNode(ctx, "input-processor", {
+        numberOfInputs: 1,
+        numberOfOutputs: 0,
+    });
+    gainedNode.connect(inputNode);
+
+    // construct opus encoder web worker which encodes voice data asynchronously
+    // FIXME
+
+    // create communication channel for receiving voice data from worker
+    const channel = new MessageChannel();
+    inputNode.port.postMessage(undefined, [channel.port2]);
+    channel.port1.onmessage = (event: MessageEvent<number[]>) => {
+        console.log("received mic input", event.data); // FIXME pass through encoder and send packet
+    };
+
     // return volume control function
     return (volume: number) => gainNode.gain.value = (volume / 100) * GAIN_MULTIPLIER;
 };
@@ -78,7 +109,7 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
     return analyzer;
 };
 
-const MicContainer: FunctionComponent<{}> = (props) => {
+const MicContainer: FunctionComponent<{ sendMic: (packet: MicPacket) => void }> = ({sendMic}) => {
     const [deviceId, setDeviceId] = useState<string>(DEFAULT_DEVICE_ID);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [deviceRefresh, setDeviceRefresh] = useState<number>(0);
@@ -103,12 +134,15 @@ const MicContainer: FunctionComponent<{}> = (props) => {
         if (!canvasRef.current) return;
         const canvas = canvasRef.current;
 
-        const audioCtx = new AudioContext();
+        const audioCtx = new AudioContext({
+            sampleRate: SAMPLE_RATE,
+            latencyHint: "interactive",
+        });
         const preNoiseAnalyzer = setupAudioAnalyzer(audioCtx);
         const postNoiseAnalyzer = setupAudioAnalyzer(audioCtx);
         const postGateAnalyzer = setupAudioAnalyzer(audioCtx);
 
-        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer])
+        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], sendMic)
             .then(controller => {
                 setVolumeControl([controller]);
 

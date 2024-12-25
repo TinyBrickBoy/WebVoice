@@ -1,9 +1,6 @@
-import workletUrl from "./audio_processor.ts?worker&url";
-import {type OpusDecoderSampleRate, OpusDecoderWebWorker} from "opus-decoder";
-
-const SAMPLE_RATE = 48000 as OpusDecoderSampleRate; // samples per second
-const FRAME_DURATION = 20 / 1000; // seconds
-const FRAME_SIZE = SAMPLE_RATE * FRAME_DURATION;
+import workletUrl from "./audio_output_processor.ts?worker&url";
+import {OpusDecoderWebWorker} from "opus-decoder";
+import {SAMPLE_RATE} from "./audio_constants.ts";
 
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
 
@@ -51,7 +48,7 @@ export default class AudioPlayer {
             for (const channel of Object.keys(this.channels)) {
                 await this.closeChannel(channel);
             }
-            await this.ctx.suspend();
+            await this.ctx.close();
         }
         this.ctx = new AudioContext({
             sampleRate: SAMPLE_RATE,
@@ -67,7 +64,7 @@ export default class AudioPlayer {
             return existingData;
         }
         // create audio worklet node for separate thread
-        const node = new AudioWorkletNode(this.ctx!!, "pcm-processor", {
+        const node = new AudioWorkletNode(this.ctx!!, "output-processor", {
             numberOfInputs: 0,
             numberOfOutputs: 1,
             outputChannelCount: [1],

@@ -1,18 +1,17 @@
 import type {AudioFrame} from "./audio.ts";
 
-class PCMProcessor extends AudioWorkletProcessor {
+class AudioOutputProcessor extends AudioWorkletProcessor {
 
     private readonly samplesQueue: number[] = [];
     private destruct: boolean = false;
 
     constructor() {
         super();
-        this.port.onmessage = async (event: MessageEvent<any>) => {
+        this.port.onmessage = (event: MessageEvent<any>) => {
             if (typeof event.data.destruct !== "undefined") {
                 this.destruct = event.data.destruct;
                 return;
             }
-            // decode with opus codec
             const frame = event.data as AudioFrame;
             // transform volume after decoding
             this.transformVolume(frame.samples, frame.volume);
@@ -34,7 +33,7 @@ class PCMProcessor extends AudioWorkletProcessor {
     ): boolean {
         const output = outputs[0][0]; // single channel output
         // fill the output buffer with queued samples or silence
-        for (let i = 0; i < output.length; i++) {
+        for (let i = 0; i < output.length; ++i) {
             const sample = this.samplesQueue.shift();
             if (!sample) {
                 break;
@@ -45,4 +44,4 @@ class PCMProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor("pcm-processor", PCMProcessor);
+registerProcessor("output-processor", AudioOutputProcessor);
