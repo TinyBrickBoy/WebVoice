@@ -125,12 +125,12 @@ const MicContainer: FunctionComponent<{}> = (props) => {
                 const preNoiseHeight = preNoiseData[i];
                 const postNoiseHeight = postNoiseData[i];
                 const postGateHeight = postGateData[i];
-                ctx.fillStyle = "red";
-                ctx.fillRect(i * (barWidth - 1), canvas.height - preNoiseHeight, barWidth, preNoiseHeight - postNoiseHeight - postGateHeight);
-                ctx.fillStyle = "blue";
-                ctx.fillRect(i * (barWidth - 1), canvas.height - postNoiseHeight, barWidth, postNoiseHeight - postGateHeight);
-                ctx.fillStyle = "white";
-                ctx.fillRect(i * (barWidth - 1), canvas.height - postGateHeight, barWidth, postGateHeight);
+                ctx.fillStyle = "#f00";
+                ctx.fillRect(i * barWidth, canvas.height - preNoiseHeight, barWidth + 1, preNoiseHeight - postNoiseHeight);
+                ctx.fillStyle = "#0f0";
+                ctx.fillRect(i * barWidth, canvas.height - postNoiseHeight, barWidth + 1, postNoiseHeight - postGateHeight);
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(i * barWidth, canvas.height - postGateHeight, barWidth + 1, postGateHeight);
             }
         };
         draw();
