@@ -26,9 +26,10 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined
     await ctx.audioWorklet.addModule(noiseGateWorkletPath);
     await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
 
-    // load microphone stream // TODO wrong device gets selected, maybe adjust constraint?
-    const micStream = await navigator.mediaDevices!!
-        .getUserMedia(deviceId ? {audio: true} : {audio: {deviceId}});
+    // load microphone stream
+    const constraints: MediaStreamConstraints = {audio: {echoCancellation: false}};
+    if (deviceId) (constraints.audio as MediaTrackConstraints).deviceId = deviceId;
+    const micStream = await navigator.mediaDevices!!.getUserMedia(constraints);
 
     // convert to mono
     const mono = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
