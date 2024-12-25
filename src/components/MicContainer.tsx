@@ -3,7 +3,7 @@ import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
 import type {FunctionComponent} from "preact";
-import {useEffect, useRef} from "preact/hooks";
+import {useEffect, useMemo, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 
 export type VisualizerInitMessage = {
@@ -15,7 +15,7 @@ export type VisualizerFrameMessage = {
 }
 export type VisualizerMessage = VisualizerInitMessage | VisualizerFrameMessage;
 
-const setupAudioContext = async (ctx: AudioContext, analyzers: AnalyserNode[]) => {
+const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined, analyzers: AnalyserNode[]) => {
     // load WASM
     const rnnoiseWasmBinary = await loadRnnoise({
         url: rnnoiseWasmPath,
@@ -27,7 +27,8 @@ const setupAudioContext = async (ctx: AudioContext, analyzers: AnalyserNode[]) =
     await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
 
     // load microphone stream
-    const micStream = await navigator.mediaDevices!!.getUserMedia({audio: true});
+    const micStream = await navigator.mediaDevices!!
+        .getUserMedia(deviceId ? {audio: true} : {audio: {deviceId}});
 
     // convert to mono
     const mono = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
@@ -66,11 +67,25 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
     analyzer.fftSize = 256;
     analyzer.minDecibels = -90;
     analyzer.maxDecibels = -30;
-    analyzer.smoothingTimeConstant = 0.5;
+    analyzer.smoothingTimeConstant = 0.7;
     return analyzer;
 };
 
 const MicContainer: FunctionComponent<{}> = (props) => {
+    const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
+    const [devices, setDevices] = useState<MediaDeviceInfo[] | undefined>(undefined);
+
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            const foundDevices = await navigator.mediaDevices.enumerateDevices();
+            const filteredDevices = foundDevices
+                .filter(device => device.deviceId.length !== 0)
+                .filter(device => device.kind === "audioinput");
+            setDevices(filteredDevices);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, []);
+
     const canvasRef = useRef<HTMLCanvasElement>();
 
     useEffect(() => {
@@ -82,9 +97,11 @@ const MicContainer: FunctionComponent<{}> = (props) => {
         const postNoiseAnalyzer = setupAudioAnalyzer(audioCtx);
         const postGateAnalyzer = setupAudioAnalyzer(audioCtx);
 
-        setupAudioContext(audioCtx, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer]);
+        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer]);
+        let tearDown = [false];
 
         const draw = () => {
+            if (tearDown[0]) return;
             requestAnimationFrame(draw);
 
             const bufferLength = preNoiseAnalyzer.frequencyBinCount;
@@ -115,7 +132,12 @@ const MicContainer: FunctionComponent<{}> = (props) => {
             }
         };
         draw();
-    }, [canvasRef]);
+
+        return () => {
+            tearDown[0] = true;
+            audioCtx.close(); // TODO: doesnt work
+        };
+    }, [canvasRef, deviceId]);
 
     return (
         <>
@@ -123,9 +145,15 @@ const MicContainer: FunctionComponent<{}> = (props) => {
             <div style={{marginTop: "0.5em", display: "flex", flexDirection: "column", gap: "0.2em"}}>
                 <div className={"input-entry"}>
                     <label>Input device</label>
-                    <select>
-                        <option>Test</option>
-                    </select>
+                    {(!devices || devices.length < 1)
+                        ? <span><em>Loading devices...</em></span>
+                        :
+                        <select value={deviceId} onChange={event => setDeviceId(event.currentTarget.value)}>
+                            {devices.map(device => (
+                                <option value={device.deviceId} key={device.deviceId}>{device.label}</option>
+                            ))}
+                        </select>
+                    }
                 </div>
                 {/* @ts-ignore refs are broken*/}
                 <canvas style={{height: "2em", width: "100%", borderRadius: "0.3em"}} ref={canvasRef}/>
