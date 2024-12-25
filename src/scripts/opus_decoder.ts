@@ -1,27 +1,25 @@
-import type {AudioFrame} from "./audio.ts";
+import {CHANNEL_COUNT, type EncodedOpusData, FRAME_SIZE, SAMPLE_RATE} from "./audio_constants.ts";
+import {Decoder} from "@native-bindings/libopus";
 
-class AudioOutputProcessor extends AudioWorkletProcessor {
+class OpusDecoderProcessor extends AudioWorkletProcessor {
 
+    private readonly decoder = new Decoder(SAMPLE_RATE, CHANNEL_COUNT);
+    private readonly pcmSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
     private readonly samplesQueue: number[] = [];
-    private destruct: boolean = false;
 
     constructor() {
         super();
-        this.port.onmessage = (event: MessageEvent<any>) => {
-            if (typeof event.data.destruct !== "undefined") {
-                this.destruct = event.data.destruct;
-                return;
-            }
-            const frame = event.data as AudioFrame;
+        this.port.onmessage = (event: MessageEvent<EncodedOpusData>) => {
+            const data = event.data as EncodedOpusData;
+            this.decoder.decodeFloat(data.data, data.data.length, this.pcmSamples, FRAME_SIZE, 0);
             // transform volume after decoding
-            this.transformVolume(frame.samples, frame.volume);
+            this.transformVolume(this.pcmSamples, data.volume);
             // append new audio samples to the queue
-            this.samplesQueue.push(...frame.samples);
+            this.samplesQueue.push(...this.pcmSamples);
         };
     }
 
     private transformVolume(data: Float32Array, volume: number) {
-        volume *= 5;
         for (let i = 0, len = data.length; i < len; ++i) {
             data[i] *= volume;
         }
@@ -40,8 +38,8 @@ class AudioOutputProcessor extends AudioWorkletProcessor {
             }
             output[i] = sample;
         }
-        return !this.destruct;
+        return true; // do not GC!
     }
 }
 
-registerProcessor("output-processor", AudioOutputProcessor);
+registerProcessor("opus-decoder", OpusDecoderProcessor);

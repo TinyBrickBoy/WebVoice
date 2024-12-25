@@ -2,7 +2,7 @@ import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWork
 import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
-import inputWorkletUrl from "../scripts/audio_input_processor.ts?worker&url";
+import opusEncoderWorkletUrl from "../scripts/opus_encoder.ts?worker&url";
 import type {FunctionComponent} from "preact";
 import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
@@ -37,7 +37,7 @@ const setupAudioContext = async (
     // load worker modules
     await ctx.audioWorklet.addModule(noiseGateWorkletPath);
     await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
-    await ctx.audioWorklet.addModule(inputWorkletUrl);
+    await ctx.audioWorklet.addModule(opusEncoderWorkletUrl);
 
     // load microphone stream
     const constraints: MediaStreamConstraints = {
@@ -81,20 +81,17 @@ const setupAudioContext = async (
     gainedNode.connect(ctx.destination);
 
     // send microphone input to server, opus-encoded
-    const inputNode = new AudioWorkletNode(ctx, "input-processor", {
+    const inputNode = new AudioWorkletNode(ctx, "opus-encoder", {
         numberOfInputs: 1,
         numberOfOutputs: 0,
     });
     gainedNode.connect(inputNode);
 
-    // construct opus encoder web worker which encodes voice data asynchronously
-    // FIXME
-
     // create communication channel for receiving voice data from worker
     const channel = new MessageChannel();
     inputNode.port.postMessage(undefined, [channel.port2]);
-    channel.port1.onmessage = (event: MessageEvent<number[]>) => {
-        console.log("received mic input", event.data); // FIXME pass through encoder and send packet
+    channel.port1.onmessage = (event: MessageEvent<Uint8Array>) => {
+        console.log("received mic input", event.data); // FIXME test and send packet
     };
 
     // return volume control function

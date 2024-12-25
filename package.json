@@ -14,19 +14,15 @@
     "@astrojs/check": "^0.9.4",
     "@astrojs/node": "9.0.0",
     "@astrojs/preact": "4.0.1",
+    "@native-bindings/libopus": "^1.0.12",
     "@sapphi-red/web-noise-suppressor": "^0.3.5",
     "@types/audioworklet": "^0.0.65",
     "@types/bytebuffer": "^5.0.49",
     "@types/node": "^22.9.1",
     "astro": "5.1.1",
     "bytebuffer": "^5.0.1",
-    "howler": "^2.2.4",
-    "opus-decoder": "^0.7.7",
     "preact": "^10.25.1",
     "typescript": "^5.6.3"
   },
-  "packageManager": "yarn@4.5.3",
-  "devDependencies": {
-    "@types/howler": "^2.2.12"
-  }
+  "packageManager": "yarn@4.5.3"
 }
