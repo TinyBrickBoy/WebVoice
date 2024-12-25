@@ -75,6 +75,7 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
 const MicContainer: FunctionComponent<{}> = (props) => {
     const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
     const [devices, setDevices] = useState<MediaDeviceInfo[] | undefined>(undefined);
+    const [deviceRefresh, setDeviceRefresh] = useState<number>(0);
 
     useEffect(() => {
         const timer = setTimeout(async () => {
@@ -85,7 +86,7 @@ const MicContainer: FunctionComponent<{}> = (props) => {
             setDevices(filteredDevices);
         }, 500);
         return () => clearTimeout(timer);
-    }, []);
+    }, [deviceRefresh]);
 
     const canvasRef = useRef<HTMLCanvasElement>();
 
@@ -98,7 +99,8 @@ const MicContainer: FunctionComponent<{}> = (props) => {
         const postNoiseAnalyzer = setupAudioAnalyzer(audioCtx);
         const postGateAnalyzer = setupAudioAnalyzer(audioCtx);
 
-        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer]);
+        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer])
+            .then(() => setDeviceRefresh(i => i + 1));
         let frameId: (number | undefined)[] = [undefined];
 
         const draw = () => {
