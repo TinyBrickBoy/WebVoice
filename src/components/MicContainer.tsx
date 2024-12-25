@@ -5,6 +5,7 @@ import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.w
 import type {FunctionComponent} from "preact";
 import {useEffect, useMemo, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
+import VolumeSlider from "./VolumeSlider.tsx";
 
 export type VisualizerInitMessage = {
     canvas: HTMLCanvasElement;
@@ -15,7 +16,10 @@ export type VisualizerFrameMessage = {
 }
 export type VisualizerMessage = VisualizerInitMessage | VisualizerFrameMessage;
 
-const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined, analyzers: AnalyserNode[]) => {
+const GAIN_MULTIPLIER = 0.2;
+const DEFAULT_DEVICE_ID = "default";
+
+const setupAudioContext = async (ctx: AudioContext, deviceId: string, analyzers: AnalyserNode[]) => {
     // load WASM
     const rnnoiseWasmBinary = await loadRnnoise({
         url: rnnoiseWasmPath,
@@ -28,7 +32,7 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined
 
     // load microphone stream
     const constraints: MediaStreamConstraints = {audio: {echoCancellation: false}};
-    if (deviceId) (constraints.audio as MediaTrackConstraints).deviceId = deviceId;
+    if (deviceId !== DEFAULT_DEVICE_ID) (constraints.audio as MediaTrackConstraints).deviceId = deviceId;
     const micStream = await navigator.mediaDevices!!.getUserMedia(constraints);
 
     // convert to mono
@@ -37,12 +41,8 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined
     const monoNode = ctx.createMediaStreamSource(mono.stream)
         .connect(analyzers.shift()!!);
 
-    // change volume
-    const gainedNode = monoNode
-        .connect(new GainNode(ctx, {gain: 0.1}));
-
     // apply RNNoise
-    const noisedNode = gainedNode
+    const noisedNode = monoNode
         .connect(new RnnoiseWorkletNode(ctx, {
             wasmBinary: rnnoiseWasmBinary,
             maxChannels: 1,
@@ -56,12 +56,18 @@ const setupAudioContext = async (ctx: AudioContext, deviceId: string | undefined
             closeThreshold: -60,
             holdMs: 150,
             maxChannels: 1,
-        }))
-        .connect(new GainNode(ctx, {gain: 1}))
+        }));
+
+    // change volume
+    const gainNode = new GainNode(ctx, {gain: GAIN_MULTIPLIER});
+    const gainedNode = gatedNode.connect(gainNode)
         .connect(analyzers.shift()!!);
 
     // apply "debug"
-    // gatedNode.connect(ctx.destination);
+    gainedNode.connect(ctx.destination);
+
+    // return volume control function
+    return (volume: number) => gainNode.gain.value = (volume / 100) * GAIN_MULTIPLIER;
 };
 const setupAudioAnalyzer = (ctx: AudioContext) => {
     const analyzer = ctx.createAnalyser();
@@ -73,9 +79,12 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
 };
 
 const MicContainer: FunctionComponent<{}> = (props) => {
-    const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
-    const [devices, setDevices] = useState<MediaDeviceInfo[] | undefined>(undefined);
+    const [deviceId, setDeviceId] = useState<string>(DEFAULT_DEVICE_ID);
+    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [deviceRefresh, setDeviceRefresh] = useState<number>(0);
+
+    // apparently doesn't work when not saved wrapped inside an array... I don't know why
+    const [volumeControl, setVolumeControl] = useState<((volume: number) => void)[]>([]);
 
     useEffect(() => {
         const timer = setTimeout(async () => {
@@ -100,7 +109,12 @@ const MicContainer: FunctionComponent<{}> = (props) => {
         const postGateAnalyzer = setupAudioAnalyzer(audioCtx);
 
         setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer])
-            .then(() => setDeviceRefresh(i => i + 1));
+            .then(controller => {
+                setVolumeControl([controller]);
+
+                // trigger device refresh, more permissions may have been assigned
+                setDeviceRefresh(i => i + 1);
+            });
         let frameId: (number | undefined)[] = [undefined];
 
         const draw = () => {
@@ -149,16 +163,21 @@ const MicContainer: FunctionComponent<{}> = (props) => {
             <div style={{marginTop: "0.5em", display: "flex", flexDirection: "column", gap: "0.2em"}}>
                 <div className={"input-entry"}>
                     <label>Input device</label>
-                    {(!devices || devices.length < 1)
+                    {devices.length < 1
                         ? <span><em>Loading devices...</em></span>
-                        :
-                        <select value={deviceId} onChange={event => setDeviceId(event.currentTarget.value)}>
+                        : <select value={deviceId} onChange={event => setDeviceId(event.currentTarget.value)}>
+                            <option value={DEFAULT_DEVICE_ID}>Default Input Device</option>
                             {devices.map(device => (
                                 <option value={device.deviceId} key={device.deviceId}>{device.label}</option>
                             ))}
                         </select>
                     }
                 </div>
+                <VolumeSlider type={"input"} name={deviceId} onUpdate={volume => {
+                    if (volumeControl.length > 0) {
+                        volumeControl[0](volume);
+                    }
+                }}/>
                 {/* @ts-ignore refs are broken*/}
                 <canvas style={{height: "2em", width: "100%", borderRadius: "0.3em"}} ref={canvasRef}/>
             </div>

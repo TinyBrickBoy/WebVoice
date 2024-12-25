@@ -1,4 +1,4 @@
-export type VolumeType = "category" | "player" | "group"
+export type VolumeType = "category" | "player" | "group" | "input";
 type VolumeStorage = { [type in VolumeType]?: { [id: string]: number | undefined; }; };
 
 const loadVolumes = (): VolumeStorage => {
