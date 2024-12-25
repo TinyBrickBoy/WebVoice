@@ -7,7 +7,7 @@ interface Props {
 }
 
 const PlayerInfos = (props: Props) => {
-    return props.states.length ?
+    return (
         <>
             <h2>Players</h2>
             <div>
@@ -18,6 +18,7 @@ const PlayerInfos = (props: Props) => {
                     />
                 ))}
             </div>
-        </> : <></>;
+        </>
+    );
 };
 export default PlayerInfos;

@@ -30,6 +30,7 @@ import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
 import type {UUID} from "../scripts/uuid.ts";
 import {getCurrentTimeString} from "../scripts/util.ts";
+import MicContainer from "./MicContainer.tsx";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const INFO_DURATION = 10 * 1000;
@@ -230,6 +231,11 @@ const VoiceContainer = (props: Props) => {
                     {info && <code>{info}</code>}
                     <VoiceConnectButton socket={socket} openSocket={openSocket}/>
                 </div>
+                {(socket.isLoaded() && player) &&
+                    <div className={"container"}>
+                        <MicContainer/>
+                    </div>
+                }
                 {Object.values(categories).length > 0 &&
                     <div className={"container"}>
                         <VoiceCategories categories={Object.values(categories)}/>
