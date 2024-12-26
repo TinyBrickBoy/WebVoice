@@ -1,15 +1,14 @@
 import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "./audio_constants.ts";
-import {Encoder, constants as opus} from "@native-bindings/libopus";
+import {OpusApplication, OpusEncoder} from "@tjc/opus-encoder";
 
 class OpusEncoderProcessor extends AudioWorkletProcessor {
 
-    private readonly encoder = new Encoder(SAMPLE_RATE, CHANNEL_COUNT, opus.OPUS_APPLICATION_VOIP);
+    private readonly encoder = new OpusEncoder({sampleRate: SAMPLE_RATE, application: OpusApplication.VOIP});
     private readonly samplesQueue: number[] = [];
     private senderPort?: MessagePort;
 
     // pre-allocated, frequently written to
     private readonly frameSamples: Float32Array = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
-    private readonly opusData: Uint8Array = new Uint8Array(1024 * 2);
 
     constructor() {
         super();
@@ -18,8 +17,7 @@ class OpusEncoderProcessor extends AudioWorkletProcessor {
 
     private handleFrame(samples: number[]) {
         this.frameSamples.set(samples);
-        const encodedCount = this.encoder.encodeFloat(this.frameSamples, FRAME_SIZE, this.opusData, this.opusData.length);
-        this.senderPort!!.postMessage(new Uint8Array(this.opusData, 0, encodedCount)); // post copy
+        this.senderPort!!.postMessage(this.encoder.encodeFrame(this.frameSamples));
     }
 
     public process(
