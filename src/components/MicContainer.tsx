@@ -7,8 +7,9 @@ import type {FunctionComponent} from "preact";
 import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import VolumeSlider from "./VolumeSlider.tsx";
-import {SAMPLE_RATE} from "../scripts/audio_constants.ts";
+import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio_constants.ts";
 import type {MicPacket} from "../scripts/packets.ts";
+import {OpusApplication, OpusEncoderWebWorker} from "@tjc/opus-encoder";
 
 export type VisualizerInitMessage = {
     canvas: HTMLCanvasElement;
@@ -87,11 +88,18 @@ const setupAudioContext = async (
     });
     gainedNode.connect(inputNode);
 
+    // pre-allocate microphone opus encoder
+    const encoder = new OpusEncoderWebWorker({sampleRate: SAMPLE_RATE, application: OpusApplication.VOIP});
+    await encoder.ready;
+    const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
+
     // create communication channel for receiving voice data from worker
     const channel = new MessageChannel();
     inputNode.port.postMessage(undefined, [channel.port2]);
-    channel.port1.onmessage = (event: MessageEvent<Uint8Array>) => {
-        console.log("received mic input", event.data); // FIXME test and send packet
+    channel.port1.onmessage = (event: MessageEvent<number[]>) => {
+        frameSamples.set(event.data as number[]);
+        encoder.encodeFrame(frameSamples) // FIXME this is detected as an "object", chrome debugger says its a "Uint8Array" - HOW?
+            .then(opus => console.log("encoded mic", opus)); // FIXME test
     };
 
     // return volume control function

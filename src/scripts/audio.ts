@@ -1,10 +1,12 @@
 import opusDecoderWorkletUrl from "./opus_decoder.ts?worker&url";
-import {type EncodedOpusData, SAMPLE_RATE} from "./audio_constants.ts";
+import {CHANNEL_COUNT, type DecodedOpusData, SAMPLE_RATE} from "./audio_constants.ts";
+import {OpusDecoderWebWorker} from "opus-decoder";
 
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
 
 type ChannelData = {
     worklet: MessagePort;
+    decoder: OpusDecoderWebWorker<typeof SAMPLE_RATE>;
     node: AudioWorkletNode;
     lastTouch: number;
 }
@@ -61,9 +63,11 @@ export default class AudioPlayer {
             outputChannelCount: [1],
         });
         node.connect(this.ctx!!.destination); // connect to default speaker
+        const decoder = new OpusDecoderWebWorker({sampleRate: SAMPLE_RATE, channels: CHANNEL_COUNT});
         // reduce chance of race condition by saving data BEFORE waiting for WASM
-        const data = {worklet: node.port, node, lastTouch: Date.now()};
+        const data = {worklet: node.port, node, decoder, lastTouch: Date.now()};
         this.channels[channel] = data;
+        await decoder.ready;
         return data;
     }
 
@@ -72,7 +76,8 @@ export default class AudioPlayer {
             throw new Error("Can't play frame before creation of audio context");
         }
         const data = await this.resolveChannel(channel);
-        const frame = {data: opus, volume: volume * 5} as EncodedOpusData;
+        const pcmAudio = await data.decoder.decodeFrame(opus);
+        const frame = {data: pcmAudio.channelData[0], volume: volume * 5} as DecodedOpusData;
         data.worklet.postMessage(frame);
     }
 }

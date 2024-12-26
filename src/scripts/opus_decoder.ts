@@ -1,20 +1,17 @@
-import {CHANNEL_COUNT, type EncodedOpusData, SAMPLE_RATE} from "./audio_constants.ts";
-import {OpusDecoder} from "opus-decoder";
+import {type DecodedOpusData} from "./audio_constants.ts";
 
 class OpusDecoderProcessor extends AudioWorkletProcessor {
 
-    private readonly decoder = new OpusDecoder({sampleRate: SAMPLE_RATE, channels: CHANNEL_COUNT});
     private readonly samplesQueue: number[] = [];
 
     constructor() {
         super();
-        this.port.onmessage = (event: MessageEvent<EncodedOpusData>) => {
-            const data = event.data as EncodedOpusData;
-            const pcmSamples = this.decoder.decodeFrame(data.data).channelData[0];
+        this.port.onmessage = (event: MessageEvent<DecodedOpusData>) => {
+            const data = event.data as DecodedOpusData;
             // transform volume after decoding
-            this.transformVolume(pcmSamples, data.volume);
+            this.transformVolume(data.data, data.volume);
             // append new audio samples to the queue
-            this.samplesQueue.push(...pcmSamples);
+            this.samplesQueue.push(...data.data);
         };
     }
 
