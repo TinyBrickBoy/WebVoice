@@ -10,6 +10,8 @@ import VolumeSlider from "./VolumeSlider.tsx";
 import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio_constants.ts";
 import type {MicPacket} from "../scripts/packets.ts";
 import {OpusApplication, OpusEncoderWebWorker} from "@tjc/opus-encoder";
+import Long from "long";
+import {getHighestAudioPercent} from "../scripts/util.ts";
 
 export type VisualizerInitMessage = {
     canvas: HTMLCanvasElement;
@@ -79,7 +81,7 @@ const setupAudioContext = async (
         .connect(analyzers.shift()!!);
 
     // apply "debug"
-    gainedNode.connect(ctx.destination);
+    // gainedNode.connect(ctx.destination);
 
     // send microphone input to server, opus-encoded
     const inputNode = new AudioWorkletNode(ctx, "opus-encoder", {
@@ -96,10 +98,19 @@ const setupAudioContext = async (
     // create communication channel for receiving voice data from worker
     const channel = new MessageChannel();
     inputNode.port.postMessage(undefined, [channel.port2]);
-    channel.port1.onmessage = (event: MessageEvent<number[]>) => {
+    let sequenceNumber = new Long(0);
+    channel.port1.onmessage = async (event: MessageEvent<number[]>) => {
         frameSamples.set(event.data as number[]);
-        encoder.encodeFrame(frameSamples) // FIXME this is detected as an "object", chrome debugger says its a "Uint8Array" - HOW?
-            .then(opus => console.log("encoded mic", opus)); // FIXME test
+        const inputVol = getHighestAudioPercent(frameSamples);
+        if (inputVol < 0.01) { // skip if quieter than 1%
+            return;
+        }
+
+        const thisSequenceNumber = sequenceNumber.add(1);
+        sequenceNumber = thisSequenceNumber;
+
+        const opus = await encoder.encodeFrame(frameSamples);
+        sendMic({data: opus, whispering: false, sequenceNumber: thisSequenceNumber});
     };
 
     // return volume control function

@@ -28,8 +28,8 @@ const encoderList: ({ key: string; encoder?: Encoder<any> } | undefined)[] = [
         key: "mic", // 0x01
         encoder: (buf, data: MicPacket) => {
             writeByteArray(buf, data.data);
-            writeBoolean(buf, data.whispering);
             buf.writeLong(data.sequenceNumber);
+            writeBoolean(buf, data.whispering);
         },
     },
     undefined, // 0x02
