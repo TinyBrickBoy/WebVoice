@@ -113,8 +113,10 @@ const setupAudioContext = async (
         sendMic({data: opus, whispering: false, sequenceNumber: thisSequenceNumber});
     };
 
-    // return volume control function
-    return (volume: number) => gainNode.gain.value = (volume / 100) * GAIN_MULTIPLIER;
+    return {
+        setVolume: (volume: number) => gainNode.gain.value = (volume / 100) * GAIN_MULTIPLIER,
+        free: async () => await encoder.free(),
+    };
 };
 const setupAudioAnalyzer = (ctx: AudioContext) => {
     const analyzer = ctx.createAnalyser();
@@ -158,16 +160,31 @@ const MicContainer: FunctionComponent<{ sendMic: (packet: MicPacket) => void }> 
         const postNoiseAnalyzer = setupAudioAnalyzer(audioCtx);
         const postGateAnalyzer = setupAudioAnalyzer(audioCtx);
 
+        let tearDown = [false];
+        let tearDownCalls: (() => void)[] = [() => tearDown[0] = true];
+
         setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], sendMic)
-            .then(controller => {
-                setVolumeControl([controller]);
+            .then(async controller => {
+                // always free voice encoder
+                if (tearDown[0]) {
+                    return await controller.free();
+                }
+                setVolumeControl([controller.setVolume]);
+                tearDownCalls.push(controller.free);
 
                 // trigger device refresh, more permissions may have been assigned
                 setDeviceRefresh(i => i + 1);
             });
+
         let frameId: (number | undefined)[] = [undefined];
+        tearDownCalls.push(() => {
+            if (typeof frameId[0] !== "undefined") {
+                cancelAnimationFrame(frameId[0]);
+            }
+        });
 
         const draw = () => {
+            if (tearDown[0]) return;
             frameId[0] = requestAnimationFrame(draw);
 
             const bufferLength = preNoiseAnalyzer.frequencyBinCount;
@@ -200,9 +217,7 @@ const MicContainer: FunctionComponent<{ sendMic: (packet: MicPacket) => void }> 
         draw();
 
         return async () => {
-            if (typeof frameId[0] !== "undefined") {
-                cancelAnimationFrame(frameId[0]);
-            }
+            tearDownCalls.forEach(fn => fn());
             await audioCtx.close();
         };
     }, [canvasRef, deviceId]);
