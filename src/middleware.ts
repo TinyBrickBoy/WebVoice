@@ -1,5 +1,5 @@
 import {defineMiddleware} from "astro/middleware";
-import {respondRedirect} from "./scripts/util.ts";
+import {respondRedirect, TOKEN_LENGTH} from "./scripts/util.ts";
 
 export const onRequest = defineMiddleware((ctx, next) => {
     const token = ctx.params.token;
@@ -7,7 +7,7 @@ export const onRequest = defineMiddleware((ctx, next) => {
         return next();
     }
     // validate token length
-    if (token.length !== 20) {
+    if (token.length !== TOKEN_LENGTH) {
         return respondRedirect();
     }
     return next();

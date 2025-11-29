@@ -1,12 +1,12 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import VoiceContainer from "../../components/VoiceContainer";
-import {constructSocketUrl} from "../../scripts/util";
+import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util";
 
 export const prerender = false;
 const {token} = Astro.params;
 
-if (!token || token.length !== 16) {
+if (!token || token.length !== TOKEN_LENGTH) {
     return Astro.redirect("/", 303);
 }
 ---

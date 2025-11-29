@@ -2,6 +2,8 @@ export const respondRedirect = (path: string = "/", status: number = 303) => {
     return new Response(null, {status, headers: {Location: path}});
 };
 
+export const TOKEN_LENGTH = 16
+
 // TODO needs to be configurable
 const host = "audio.froglight.eu";
 const apiVersion = "v1";
