@@ -1,17 +1,14 @@
 import CraftHead from "./CraftHead.tsx";
 import VolumeSlider from "./VolumeSlider.tsx";
-import type {UUID} from "../scripts/uuid.ts";
+import type {PlayerState} from "../scripts/types.ts";
 
 interface Props {
-    playerId: UUID;
-    name: string;
-    disabled: boolean;
-    disconnected: boolean;
-    group?: string;
+    state: PlayerState;
     inline?: boolean;
 }
 
 const PlayerInfo = (props: Props) => {
+    const state = props.state;
     return (
         <div style={{
             display: "flex",
@@ -20,12 +17,12 @@ const PlayerInfo = (props: Props) => {
             marginTop: !props.inline ? "1em" : undefined,
         }}>
             <div style={{display: "flex", gap: "0.4em", alignItems: "center"}}>
-                <CraftHead uuid={props.playerId} size={24}/>
-                <span>{props.name}{props.disabled && " (disabled)"}{props.disconnected && (" (disconnected)")}</span>
+                <CraftHead uuid={state.uniqueId} size={24}/>
+                <span>{state.name}{state.muted && " (muted)"}{state.deafened && (" (deafened)")}</span>
             </div>
             {!props.inline && <>
-                <VolumeSlider type={"player"} name={props.playerId.name}/>
-                {!!props.group && <span>Group: <code>{props.group}</code></span>}
+                <VolumeSlider type={"player"} name={state.uniqueId.name}/>
+                {!!state.primaryRoomId && <span>Group: <code>{state.primaryRoomId.name}</code></span>}
             </>}
         </div>
     );

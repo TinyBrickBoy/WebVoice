@@ -270,6 +270,7 @@ export class RoomLeavePacket extends Packet {
     }
 }
 
+// TODO implement
 export class StateInfoPacket extends Packet {
 
     public readonly muted: boolean;

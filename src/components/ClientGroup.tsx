@@ -1,21 +1,15 @@
 import type {UUID} from "../scripts/uuid.ts";
-import type {JoinGroupPacket, LeaveGroupPacket, PacketClientGroupType} from "../scripts/packets.ts";
-import type {PlayerState} from "./VoiceContainer.tsx";
+import {Packet, RoomJoinRequestPacket, RoomLeavePacket} from "../scripts/packets.ts";
 import PlayerInfo from "./PlayerInfo.tsx";
 import {useMemo, useState} from "preact/hooks";
+import {type AudioRoom, PlayerState} from "../scripts/types.ts";
+import {renderComponent} from "../scripts/component.ts";
 
 interface Props {
-    groupId: UUID;
-    name: String;
-    password: boolean;
-
-    type: PacketClientGroupType;
-
+    room: AudioRoom;
     viewerId?: UUID;
     players: PlayerState[];
-
-    joinGroup: (packet: JoinGroupPacket) => void,
-    leaveGroup: (packet: LeaveGroupPacket) => void,
+    sendPacket: (packet: Packet) => void,
 }
 
 const ClientGroup = (props: Props) => {
@@ -23,7 +17,7 @@ const ClientGroup = (props: Props) => {
     const viewerMember = useMemo(() => {
         if (props.viewerId) {
             const viewerIdStr = props.viewerId.name;
-            const idx = props.players.findIndex(state => state.playerId.name === viewerIdStr);
+            const idx = props.players.findIndex(state => state.uniqueId.name === viewerIdStr);
             return idx >= 0;
         }
         return false;
@@ -36,15 +30,22 @@ const ClientGroup = (props: Props) => {
             marginTop: "1em",
             gap: "0.2em",
         }}>
-            <span>Id: <code>{props.groupId.name}</code></span>
-            <span>Name: <code>{props.name}</code></span>
-            <span>Type: <code style={{textTransform: "capitalize"}}>{props.type}</code></span>
+            <span>Id: <code>{props.room.uniqueId.name}</code></span>
+            <span>Name: <code>{renderComponent(props.room.name)}</code></span>
+            <span>
+                Speak Passthrough:
+                <code style={{textTransform: "capitalize"}}>{props.room.speakToOthers}</code>
+            </span>
+            <span>
+                Listen Passthrough:
+                <code style={{textTransform: "capitalize"}}>{props.room.listenToOthers}</code>
+            </span>
             {props.players.length > 0 &&
                 <>
                     <span style={{marginTop: "0.5em"}}><code>{props.players.length}</code> Members:</span>
                     <ul>
                         {props.players.map(state => (
-                            <li style={{listStyleType: "none"}} key={state.playerId}>
+                            <li style={{listStyleType: "none"}} key={state.uniqueId.name}>
                                 <div style={{
                                     display: "flex",
                                     gap: "0.5em",
@@ -52,14 +53,14 @@ const ClientGroup = (props: Props) => {
                                     alignItems: "center",
                                 }}>
                                     <span>•</span>
-                                    <PlayerInfo inline {...state}/>
+                                    <PlayerInfo state={state} inline/>
                                 </div>
                             </li>
                         ))}
                     </ul>
                 </>
             }
-            {props.password &&
+            {props.room.password &&
                 <div style={{
                     display: "flex",
                     flexDirection: "column",
@@ -80,17 +81,14 @@ const ClientGroup = (props: Props) => {
                 <button
                     disabled={viewerMember}
                     style={{flex: 1}}
-                    onClick={() => props.joinGroup({
-                        groupId: props.groupId,
-                        password: password ? password : undefined,
-                    })}
+                    onClick={() => props.sendPacket(new RoomJoinRequestPacket(props.room.uniqueId, password ? password : null))}
                 >
                     Join
                 </button>
                 <button
                     disabled={!viewerMember}
                     style={{flex: 1}}
-                    onClick={() => props.leaveGroup({})}
+                    onClick={() => props.sendPacket(new RoomLeavePacket(props.room.uniqueId))}
                 >
                     Leave
                 </button>

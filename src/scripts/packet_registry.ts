@@ -36,41 +36,43 @@ type EncodablePacket = {
     encode: (buf: ByteBuffer) => void
 }
 
+type PacketEntry = [string, PacketConstructor | DecodablePacketConstructor]
+
 const packetCtors = [
     // clientbound
-    AudioPacket,
-    CategoryAddPacket,
-    CategoryRemovePacket,
-    ConnectedPacket,
-    PositionUpdatePacket,
-    RoomAddPacket,
-    RoomJoinResponsePacket,
-    RoomRemovePacket,
-    StateRemovePacket,
-    StateUpdatePacket,
+    ["audio", AudioPacket],
+    ["category_add", CategoryAddPacket],
+    ["category_remove", CategoryRemovePacket],
+    ["connected", ConnectedPacket],
+    ["position_update", PositionUpdatePacket],
+    ["room_add", RoomAddPacket],
+    ["room_join_response", RoomJoinResponsePacket],
+    ["room_remove", RoomRemovePacket],
+    ["state_remove", StateRemovePacket],
+    ["state_update", StateUpdatePacket],
     // commonbound
-    KeepAlivePacket,
-    PingPacket,
+    ["keep_alive", KeepAlivePacket],
+    ["ping", PingPacket],
     // servicebound
-    InputSoundPacket,
-    RoomCreatePacket,
-    RoomJoinRequestPacket,
-    RoomLeavePacket,
-    StateInfoPacket,
-] as (PacketConstructor | DecodablePacketConstructor)[];
+    ["input_sound", InputSoundPacket],
+    ["room_create", RoomCreatePacket],
+    ["room_join_request", RoomJoinRequestPacket],
+    ["room_leave", RoomLeavePacket],
+    ["state_info", StateInfoPacket],
+] as PacketEntry[];
 
 // save packet id in packet constructor to use when writing the packet
-packetCtors.forEach((ctor, index) => ctor.packetId = index);
+packetCtors.forEach(([_, ctor], index) => ctor.packetId = index);
 
 export const readPacket = (buf: ByteBuffer) => {
     const packetId = readVarInt(buf);
-    const entry = packetCtors[packetId];
-    if (!entry) {
+    const [id, ctor] = packetCtors[packetId];
+    if (!id || !ctor) {
         throw new Error("Failed to find packet with id " + packetId + " in registry");
     }
     // ensure its a decodable packet
-    if (entry.prototype instanceof DecodablePacket) {
-        return new entry(buf);
+    if (ctor.prototype instanceof DecodablePacket) {
+        return {id, packet: new ctor(buf)};
     }
     throw new Error("Packet with id " + packetId + " is not decodable");
 };

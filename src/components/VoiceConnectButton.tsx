@@ -27,7 +27,7 @@ const VoiceConnectButton = (props: Props) => {
 
     return (
         <div>
-            <button disabled={connecting || connected} onClick={tryConnect}>Verbinden</button>
+            <button disabled={connecting || connected} onClick={tryConnect}>Connect</button>
         </div>
     );
 };

@@ -21,6 +21,7 @@ export class AudioCategory {
     public readonly uniqueId: UUID;
     public readonly name: Component;
     public readonly description: Component | null;
+    public volume: number = 1;
 
     constructor(buf: ByteBuffer) {
         this.uniqueId = readUniqueId(buf);
@@ -42,6 +43,7 @@ export class AudioRoom {
     public readonly joinable: boolean;
     public readonly speakToOthers: boolean;
     public readonly listenToOthers: boolean;
+    public volume: number = 1;
 
     constructor(buf: ByteBuffer) {
         this.uniqueId = readUniqueId(buf);
@@ -65,6 +67,7 @@ export class PlayerState {
     public readonly muted: boolean;
     public readonly deafened: boolean;
     public readonly primaryRoomId: UUID | null;
+    public volume: number = 1;
 
     constructor(buf: ByteBuffer) {
         this.uniqueId = readUniqueId(buf);

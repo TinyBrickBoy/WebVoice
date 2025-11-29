@@ -1,9 +1,8 @@
-import type {GroupState, PlayerState} from "./VoiceContainer.tsx";
 import PlayerInfo from "./PlayerInfo.tsx";
+import {type PlayerState} from "../scripts/types.ts";
 
 interface Props {
     states: PlayerState[];
-    groups: { [id: string]: GroupState };
 }
 
 const PlayerInfos = (props: Props) => {
@@ -11,11 +10,8 @@ const PlayerInfos = (props: Props) => {
         <>
             <h2>Players</h2>
             <div>
-                {props.states.filter(state => !state.disconnected).map(state => (
-                    <PlayerInfo
-                        key={state.playerId.name} {...state}
-                        group={state.groupId?.name}
-                    />
+                {props.states.filter(state => !state.deafened).map(state => (
+                    <PlayerInfo key={state.uniqueId.name} state={state}/>
                 ))}
             </div>
         </>

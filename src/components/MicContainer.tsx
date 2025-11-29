@@ -9,10 +9,9 @@ import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import VolumeSlider from "./VolumeSlider.tsx";
 import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio_constants.ts";
-import type {MicPacket} from "../scripts/packets.ts";
 import {OpusApplication, OpusEncoderWebWorker} from "@tjc/opus-encoder";
-import Long from "long";
 import {getHighestAudioPercent} from "../scripts/util.ts";
+import {InputSoundPacket, Packet} from "../scripts/packets.ts";
 
 export type VisualizerInitMessage = {
     canvas: HTMLCanvasElement;
@@ -30,7 +29,7 @@ const setupAudioContext = async (
     ctx: AudioContext,
     deviceId: string,
     analyzers: AnalyserNode[],
-    sendMic: (packet: MicPacket) => void,
+    sendPacket: (packet: Packet) => void,
 ) => {
     // load WASM
     const rnnoiseWasmBinary = await loadRnnoise({
@@ -100,7 +99,6 @@ const setupAudioContext = async (
     // create communication channel for receiving voice data from worker
     const channel = new MessageChannel();
     inputNode.port.postMessage(undefined, [channel.port2]);
-    let sequenceNumber = new Long(0);
     channel.port1.onmessage = async (event: MessageEvent<number[]>) => {
         frameSamples.set(event.data as number[]);
         const inputVol = getHighestAudioPercent(frameSamples);
@@ -108,11 +106,8 @@ const setupAudioContext = async (
             return;
         }
 
-        const thisSequenceNumber = sequenceNumber.add(1);
-        sequenceNumber = thisSequenceNumber;
-
         const opus = await encoder.encodeFrame(frameSamples);
-        sendMic({data: opus, whispering: false, sequenceNumber: thisSequenceNumber});
+        sendPacket(new InputSoundPacket(opus, true));
     };
 
     return {
@@ -129,7 +124,7 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
     return analyzer;
 };
 
-const MicContainer: FunctionComponent<{ sendMic: (packet: MicPacket) => void }> = ({sendMic}) => {
+const MicContainer: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = ({sendPacket}) => {
     const [deviceId, setDeviceId] = useState<string>(DEFAULT_DEVICE_ID);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [deviceRefresh, setDeviceRefresh] = useState<number>(0);
@@ -164,7 +159,7 @@ const MicContainer: FunctionComponent<{ sendMic: (packet: MicPacket) => void }> 
         let tearDown = [false];
         let tearDownCalls: (() => void)[] = [() => tearDown[0] = true];
 
-        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], sendMic)
+        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], sendPacket)
             .then(async controller => {
                 // always free voice encoder
                 if (tearDown[0]) {

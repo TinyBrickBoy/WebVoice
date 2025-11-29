@@ -1,11 +1,13 @@
 import type {FunctionComponent} from "preact";
 import {useState} from "preact/hooks";
-import type {CreateGroupPacket, PacketClientGroupType} from "../scripts/packets.ts";
+import {Packet, RoomCreatePacket} from "../scripts/packets.ts";
 
-const CreateGroupForm: FunctionComponent<{ createGroup: (packet: CreateGroupPacket) => void }> = (props) => {
+type GroupAudioType = "normal" | "open" | "isolated"
+
+const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = (props) => {
     const [name, setName] = useState<string>();
     const [password, setPassword] = useState<string>();
-    const [type, setType] = useState<PacketClientGroupType>("normal");
+    const [type, setType] = useState<GroupAudioType>("normal");
 
     const submitGroup = (event: SubmitEvent) => {
         event.preventDefault();
@@ -13,8 +15,10 @@ const CreateGroupForm: FunctionComponent<{ createGroup: (packet: CreateGroupPack
         if (!name) {
             return;
         }
-        const realPassword = password ? password : undefined;
-        props.createGroup({name, password: realPassword, type});
+        const realPassword = password ? password : null;
+        const speakToOthers = type === "open";
+        const listenToOthers = type === "normal" || type === "open";
+        props.sendPacket(new RoomCreatePacket(name, realPassword, speakToOthers, listenToOthers));
 
         // reset form
         setName("");
@@ -56,7 +60,7 @@ const CreateGroupForm: FunctionComponent<{ createGroup: (packet: CreateGroupPack
                     <label>Group type</label>
                     <select
                         value={type}
-                        onChange={event => setType(event.currentTarget.value as PacketClientGroupType)}
+                        onChange={event => setType(event.currentTarget.value as GroupAudioType)}
                     >
                         <option value={"normal"}>Normal</option>
                         <option value={"open"}>Open</option>

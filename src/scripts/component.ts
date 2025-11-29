@@ -65,3 +65,21 @@ type CommonComponent = Style | {
 export type TextComponent = string | (CommonComponent & { text: string })
 
 export type Component = TextComponent | Component[]
+
+export const renderComponent = (component: Component) => {
+    if (typeof component === "string") {
+        return component;
+    }
+    let string = "";
+    if ("text" in component) {
+        string += component.text;
+    } else {
+        string += "<error>"
+    }
+    if ("extra" in component && component.extra) {
+        for (const child of component.extra) {
+            string += renderComponent(child);
+        }
+    }
+    return string;
+};

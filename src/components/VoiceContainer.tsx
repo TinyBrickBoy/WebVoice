@@ -2,28 +2,8 @@ import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
 import VoiceInfo from "./VoiceInfo.tsx";
 import VoiceConnectButton from "./VoiceConnectButton.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
-import type {
-    AddCategoryPacket,
-    PacketPlayerState,
-    PlayerStatePacket,
-    PlayerStatesPacket,
-    SonusInfoPacket,
-    PacketVoiceCategory,
-    RemoveCategoryPacket,
-    UpdateStatePacket,
-    AuthenticatePacket,
-    KeepAlivePacket,
-    PingPacket,
-    ConnectionCheckAckPacket,
-    SonusResetPacket,
-    PlayerSoundPacket,
-    GroupSoundPacket,
-    LocationSoundPacket,
-    PacketClientGroup, AddGroupPacket, RemoveGroupPacket, JoinedGroupPacket,
-} from "../scripts/packets.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
-import VoiceCategory from "./VoiceCategory.tsx";
 import AudioPlayer from "../scripts/audio.ts";
 import {getVolume} from "../scripts/volumes.ts";
 import ClientGroups from "./ClientGroups.tsx";
@@ -31,6 +11,21 @@ import CreateGroupForm from "./CreateGroupForm.tsx";
 import type {UUID} from "../scripts/uuid.ts";
 import {getCurrentTimeString} from "../scripts/util.ts";
 import MicContainer from "./MicContainer.tsx";
+import {
+    AudioPacket,
+    CategoryAddPacket,
+    CategoryRemovePacket,
+    ConnectedPacket,
+    KeepAlivePacket,
+    PingPacket,
+    PositionUpdatePacket,
+    RoomAddPacket,
+    RoomJoinResponsePacket,
+    RoomRemovePacket,
+    StateUpdatePacket,
+} from "../scripts/packets.ts";
+import {type AudioCategory, AudioRoom, PlayerState} from "../scripts/types.ts";
+import {renderComponent} from "../scripts/component.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const INFO_DURATION = 10 * 1000;
@@ -38,18 +33,6 @@ const INFO_DURATION = 10 * 1000;
 interface Props {
     socket: URL;
     token: string;
-}
-
-export interface VoiceCategory extends PacketVoiceCategory {
-    volume: number;
-}
-
-export interface PlayerState extends PacketPlayerState {
-    volume: number;
-}
-
-export interface GroupState extends PacketClientGroup {
-    volume: number;
 }
 
 export interface PlayerInfo {
@@ -62,9 +45,9 @@ const VoiceContainer = (props: Props) => {
     const [state, setState] = useState<string>("disconnected");
     const [info, setInfo] = useState<string | undefined>();
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(props.socket));
-    const [categories, setCategories] = useState<{ [id: string]: VoiceCategory }>({});
+    const [categories, setCategories] = useState<{ [id: string]: AudioCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
-    const [groups, setGroups] = useState<{ [id: string]: GroupState }>({});
+    const [groups, setGroups] = useState<{ [id: string]: AudioRoom }>({});
     const audio = useMemo(() => new AudioPlayer(), []);
 
     const invalidateState = useCallback(() => {
@@ -90,102 +73,86 @@ const VoiceContainer = (props: Props) => {
                 invalidateState();
                 setSocket(new VoiceSocket(props.socket));
             })
-            // meta packets
-            .register("tjcsonus:reset", async (_event: CustomEvent<SonusResetPacket>) => {
+            // sonus packets
+            .register("audio", async (event: CustomEvent<AudioPacket>) => {
+                // TODO position
+                const playerVolume = getVolume("player", event.detail.senderId.name) / 100;
+                const categoryVolume = getVolume("category", event.detail.categoryId?.name) / 100;
+                await audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio);
+            })
+            .register("category_add", (event: CustomEvent<CategoryAddPacket>) => {
+                setCategories(categories => {
+                    const category = event.detail.category;
+                    // keep volume
+                    const prevCategory = categories[category.uniqueId.name];
+                    category.volume = prevCategory?.volume || 1;
+                    // copy categories
+                    const newCategories = Object.assign({}, categories);
+                    newCategories[category.uniqueId.name] = category;
+                    return newCategories;
+                });
+            })
+            .register("category_remove", (event: CustomEvent<CategoryRemovePacket>) => {
+                setCategories(categories => {
+                    const newCategories = Object.assign({}, categories);
+                    delete newCategories[event.detail.categoryId.name];
+                    return newCategories;
+                });
+            })
+            .register("connected", async (event: CustomEvent<ConnectedPacket>) => {
+                // save player info
+                setPlayer({
+                    uuid: event.detail.playerId,
+                    name: renderComponent(event.detail.username),
+                });
+                // start audio
                 invalidateState();
                 await audio.startContext();
             })
-            .register("tjcsonus:info", (event: CustomEvent<SonusInfoPacket>) => {
-                setPlayer({
-                    uuid: event.detail.player,
-                    name: event.detail.username,
-                });
-                socket.sendVoice("authenticate", {
-                    player: event.detail.player,
-                    secret: event.detail.secret,
-                } as AuthenticatePacket);
+            .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
+                // TODO
             })
-            .register("voicechat:add_category", (event: CustomEvent<AddCategoryPacket>) => {
-                setCategories(categories => {
-                    const prevCategory = categories[event.detail.id];
-                    const volume = prevCategory?.volume || 1;
-                    const newCategories = Object.assign({}, categories);
-                    newCategories[event.detail.id] = {volume, ...event.detail};
-                    return newCategories;
-                });
-            })
-            .register("voicechat:remove_category", (event: CustomEvent<RemoveCategoryPacket>) => {
-                setCategories(categories => {
-                    const newCategories = Object.assign({}, categories);
-                    delete newCategories[event.detail.categoryId];
-                    return newCategories;
-                });
-            })
-            .register("voicechat:player_states", (event: CustomEvent<PlayerStatesPacket>) => {
-                setPlayers(players => {
-                    const newPlayers = Object.assign({}, players);
-                    event.detail.states.forEach(state => {
-                        const prevState = newPlayers[state.playerId.name];
-                        const volume = prevState?.volume || 1;
-                        newPlayers[state.playerId.name] = {volume, ...state};
-                    });
-                    return newPlayers;
-                });
-            })
-            .register("voicechat:player_state", (event: CustomEvent<PlayerStatePacket>) => {
-                setPlayers(players => {
-                    const newPlayers = Object.assign({}, players);
-                    const prevState = newPlayers[event.detail.playerId.name];
-                    const volume = prevState?.volume || 1;
-                    newPlayers[event.detail.playerId.name] = {volume, ...event.detail};
-                    return newPlayers;
-                });
-            })
-            .register("voicechat:add_group", (event: CustomEvent<AddGroupPacket>) => {
+            .register("room_add", (event: CustomEvent<RoomAddPacket>) => {
                 setGroups(groups => {
+                    const room = event.detail.room;
+                    // keep volume
+                    const prevGroup = groups[room.uniqueId.name];
+                    room.volume = prevGroup?.volume || 1;
+                    // copy groups
                     const newGroups = Object.assign({}, groups);
-                    const prevState = newGroups[event.detail.groupId.name];
-                    const volume = prevState?.volume || 1;
-                    newGroups[event.detail.groupId.name] = {volume, ...event.detail};
+                    newGroups[room.uniqueId.name] = room;
                     return newGroups;
                 });
             })
-            .register("voicechat:remove_group", (event: CustomEvent<RemoveGroupPacket>) => {
-                setGroups(groups => {
-                    const newGroups = Object.assign({}, groups);
-                    delete newGroups[event.detail.groupId.name];
-                    return newGroups;
-                });
-            })
-            .register("voicechat:joined_group", (event: CustomEvent<JoinedGroupPacket>) => {
-                if (event.detail.wrongPassword) {
+            .register("room_join_response", (event: CustomEvent<RoomJoinResponsePacket>) => {
+                if (!event.detail.success) {
                     setInfo(`[${getCurrentTimeString()}] Wrong password, please try again!`);
                 }
             })
-            // voice packets
-            .register("connection_check_ack", (_event: CustomEvent<ConnectionCheckAckPacket>) => {
-                socket.sendMeta("voicechat:update_state", {disabled: false} as UpdateStatePacket);
+            .register("room_remove", (event: CustomEvent<RoomRemovePacket>) => {
+                setGroups(groups => {
+                    const newGroups = Object.assign({}, groups);
+                    delete newGroups[event.detail.roomId.name];
+                    return newGroups;
+                });
+            })
+            .register("state_update", (event: CustomEvent<StateUpdatePacket>) => {
+                setPlayers(players => {
+                    const state = event.detail.state;
+                    // keep volume
+                    const prevState = players[state.uniqueId.name];
+                    state.volume = prevState?.volume || 1;
+                    // copy players
+                    const newPlayers = Object.assign({}, players);
+                    newPlayers[state.uniqueId.name] = state;
+                    return newPlayers;
+                });
             })
             .register("keep_alive", (event: CustomEvent<KeepAlivePacket>) => {
-                socket.sendVoice("keep_alive", event.detail);
+                socket.sendPacket(event.detail);
             })
             .register("ping", (event: CustomEvent<PingPacket>) => {
-                socket.sendVoice("ping", event.detail);
-            })
-            .register("player_sound", (event: CustomEvent<PlayerSoundPacket>) => {
-                const playerVolume = getVolume("player", event.detail.sender.name) / 100;
-                const categoryVolume = getVolume("category", event.detail.category) / 100;
-                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
-            })
-            .register("group_sound", (event: CustomEvent<GroupSoundPacket>) => {
-                const playerVolume = getVolume("player", event.detail.sender.name) / 100;
-                const categoryVolume = getVolume("category", event.detail.category) / 100;
-                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
-            })
-            .register("location_sound", (event: CustomEvent<LocationSoundPacket>) => {
-                const playerVolume = getVolume("player", event.detail.sender.name) / 100;
-                const categoryVolume = getVolume("category", event.detail.category) / 100;
-                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.data);
+                // TODO
             })
             .callback();
     }, [socket]);
@@ -196,7 +163,6 @@ const VoiceContainer = (props: Props) => {
 
         setState("Connecting...");
         const newSocket = new VoiceSocket(props.socket);
-        newSocket.registerToken(props.token);
         newSocket.open();
         setSocket(newSocket);
     }, [socket]);
@@ -233,7 +199,7 @@ const VoiceContainer = (props: Props) => {
                 </div>
                 {(socket.isLoaded() && player) &&
                     <div className={"container"}>
-                        <MicContainer sendMic={packet => socket.sendVoice("mic", packet)}/>
+                        <MicContainer sendPacket={socket.sendPacket}/>
                     </div>
                 }
                 {Object.values(categories).length > 0 &&
@@ -244,7 +210,7 @@ const VoiceContainer = (props: Props) => {
             </div>
             {Object.values(players).length > 0 &&
                 <div className={"container"}>
-                    <PlayerInfos states={Object.values(players)} groups={groups}/>
+                    <PlayerInfos states={Object.values(players)}/>
                 </div>
             }
             <div style={{
@@ -255,7 +221,7 @@ const VoiceContainer = (props: Props) => {
                 {(socket.isLoaded() && player) &&
                     <div className={"container"}>
                         <h2>Create Group</h2>
-                        <CreateGroupForm createGroup={packet => socket.sendMeta("voicechat:create_group", packet)}/>
+                        <CreateGroupForm sendPacket={socket.sendPacket}/>
                     </div>
                 }
                 {Object.values(groups).length > 0 &&
@@ -263,9 +229,8 @@ const VoiceContainer = (props: Props) => {
                         <ClientGroups
                             viewerId={player?.uuid}
                             players={Object.values(players)}
-                            groups={Object.values(groups)}
-                            joinGroup={packet => socket.sendMeta("voicechat:set_group", packet)}
-                            leaveGroup={packet => socket.sendMeta("voicechat:leave_group", packet)}
+                            rooms={Object.values(groups)}
+                            sendPacket={packet => socket.sendPacket(packet)}
                         />
                     </div>
                 }
