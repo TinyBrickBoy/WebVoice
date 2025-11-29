@@ -49,10 +49,14 @@ export const readString = (buf: ByteBuffer): string => {
     const byteLength = readVarInt(buf);
     return buf.readUTF8String(byteLength); // FIXME not correct, the parameter excepts the amount of chars to read
 };
+const textEncoder = new TextEncoder();
 export const writeString = (buf: ByteBuffer, value: string) => {
-    const byteLength = Buffer.byteLength(value);
-    writeVarInt(buf, byteLength);
-    buf.writeBytes(value);
+    const bytes = textEncoder.encode(value);
+    writeVarInt(buf, bytes.length);
+    // TODO why doesn't ByteBuffer#writeBytes work?
+    for (let i = 0; i < bytes.length; ++i) {
+        buf.writeUint8(bytes[i]);
+    }
 };
 
 // why is this not a default method? seems strange...
@@ -73,6 +77,7 @@ export const readByteArray = (buf: ByteBuffer): Uint8Array => {
 };
 export const writeByteArray = (buf: ByteBuffer, value: Uint8Array) => {
     writeVarInt(buf, value.length);
+    // TODO why doesn't ByteBuffer#writeBytes work?
     for (let i = 0; i < value.length; ++i) {
         buf.writeUint8(value[i]);
     }
