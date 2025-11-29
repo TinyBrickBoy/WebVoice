@@ -22,6 +22,7 @@ import {
     RoomAddPacket,
     RoomJoinResponsePacket,
     RoomRemovePacket,
+    StateInfoPacket,
     StateUpdatePacket,
 } from "../scripts/packets.ts";
 import {type AudioCategory, AudioRoom, PlayerState} from "../scripts/types.ts";
@@ -108,6 +109,8 @@ const VoiceContainer = (props: Props) => {
                 // start audio
                 invalidateState();
                 await audio.startContext();
+                // inform the server we are able to send audio
+                socket.sendPacket(new StateInfoPacket(false, false));
             })
             .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
                 // TODO
