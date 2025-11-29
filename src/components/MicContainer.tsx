@@ -3,6 +3,7 @@ import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
 import opusEncoderWorkletUrl from "../scripts/opus_encoder.ts?worker&url";
+import resampleWorkletPath from "@alexanderolsen/libsamplerate-js/dist/libsamplerate.worklet?worker&url";
 import type {FunctionComponent} from "preact";
 import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
@@ -41,6 +42,7 @@ const setupAudioContext = async (
     await ctx.audioWorklet.addModule(noiseGateWorkletPath);
     await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
     await ctx.audioWorklet.addModule(opusEncoderWorkletUrl);
+    await ctx.audioWorklet.addModule(resampleWorkletPath);
 
     // load microphone stream
     const constraints: MediaStreamConstraints = {
@@ -153,7 +155,6 @@ const MicContainer: FunctionComponent<{ sendMic: (packet: MicPacket) => void }> 
         const canvas = canvasRef.current;
 
         const audioCtx = new AudioContext({
-            sampleRate: SAMPLE_RATE,
             latencyHint: "interactive",
         });
         const preNoiseAnalyzer = setupAudioAnalyzer(audioCtx);

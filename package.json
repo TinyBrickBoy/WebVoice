@@ -11,6 +11,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@alexanderolsen/libsamplerate-js": "^2.1.2",
     "@astrojs/check": "^0.9.4",
     "@astrojs/node": "9.0.0",
     "@astrojs/preact": "4.0.1",
