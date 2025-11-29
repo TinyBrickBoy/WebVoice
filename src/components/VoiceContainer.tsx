@@ -107,7 +107,6 @@ const VoiceContainer = (props: Props) => {
                     name: renderComponent(event.detail.username),
                 });
                 // start audio
-                invalidateState();
                 await audio.startContext();
                 // inform the server we are able to send audio
                 socket.sendPacket(new StateInfoPacket(false, false));
