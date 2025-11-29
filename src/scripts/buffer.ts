@@ -1,6 +1,6 @@
 import ByteBuffer from "bytebuffer";
 import {UUID} from "./uuid.ts";
-import type {Vector3d} from "./packets.ts";
+import type {Component} from "./component.ts";
 
 // https://web.archive.org/web/20241130182130/https://wiki.vg/Data_types#Type:UUID
 export const readUniqueId = (buf: ByteBuffer) => {
@@ -55,19 +55,6 @@ export const writeString = (buf: ByteBuffer, value: string) => {
     buf.writeBytes(value);
 };
 
-export const readVector3d = (buf: ByteBuffer): Vector3d => {
-    return {
-        x: buf.readDouble(),
-        y: buf.readDouble(),
-        z: buf.readDouble(),
-    };
-};
-export const writeVector3d = (buf: ByteBuffer, value: Vector3d) => {
-    buf.writeDouble(value.x);
-    buf.writeDouble(value.y);
-    buf.writeDouble(value.z);
-};
-
 // why is this not a default method? seems strange...
 export const readBoolean = (buf: ByteBuffer): boolean => {
     return buf.readByte() !== 0;
@@ -90,3 +77,8 @@ export const writeByteArray = (buf: ByteBuffer, value: Uint8Array) => {
         buf.writeUint8(value[i]);
     }
 };
+
+export const readComponentJson = (buf: ByteBuffer): Component =>
+    JSON.parse(readString(buf));
+export const writeComponentJson = (buf: ByteBuffer, value: Component) =>
+    writeString(buf, JSON.stringify(value));

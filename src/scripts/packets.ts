@@ -1,116 +1,266 @@
 import type {UUID} from "./uuid.ts";
 import Long from "long";
+import {AudioCategory, AudioRoom, PlayerState, Vector3d} from "./types.ts";
+import ByteBuffer from "bytebuffer";
+import {
+    readBoolean,
+    readByteArray,
+    readComponentJson,
+    readUniqueId,
+    writeBoolean,
+    writeByteArray,
+    writeString,
+    writeUniqueId,
+} from "./buffer.ts";
+import type {Component} from "./component.ts";
 
-// meta
-
-export type PacketPlayerState = {
-    playerId: UUID;
-    name: string;
-    disabled: boolean;
-    disconnected: boolean;
-    groupId?: UUID;
-}
-export type PacketVoiceCategory = {
-    id: string;
-    name: string;
-    description?: string;
-}
-export type PacketClientGroupType = "normal" | "open" | "isolated";
-export type PacketClientGroup = {
-    groupId: UUID;
-    name: string;
-    password: boolean;
-    persistent: boolean;
-    hidden: boolean;
-    type: PacketClientGroupType;
+export interface Packet {
 }
 
-export type SonusAuthPacket = { // tjcsonus:auth
-    token: string;
-}
-export type SonusInfoPacket = { // tjcsonus:info
-    player: UUID;
-    username: string;
-    image?: string;
-    secret: UUID;
-}
-export type SonusResetPacket = { // tjcsonus:reset
-}
-export type AddCategoryPacket = PacketVoiceCategory // voicechat:add_category
-export type RemoveCategoryPacket = { // voicechat:remove_category
-    categoryId: string;
-}
-export type PlayerStatesPacket = { // voicechat:player_states
-    states: PacketPlayerState[];
-}
-export type PlayerStatePacket = PacketPlayerState // voicechat:player_state
-export type AddGroupPacket = PacketClientGroup; // voicechat:add_group
-export type RemoveGroupPacket = { // voicechat:remove_group
-    groupId: UUID;
-}
-export type JoinedGroupPacket = { // voicechat:joined_group
-    groupId?: UUID;
-    wrongPassword: boolean;
-}
-export type CreateGroupPacket = { // voicechat:create_group
-    name: string;
-    password?: string;
-    type: PacketClientGroupType;
-}
-export type JoinGroupPacket = { // voicechat:set_group
-    groupId: UUID;
-    password?: string;
-}
-export type LeaveGroupPacket = { // voicechat:leave_group
+export interface EncodablePacket extends Packet {
+
+    encode(buf: ByteBuffer): void;
 }
 
-// voice
+// clientbound
 
-export type SoundPacket = {
-    channelId: UUID;
-    sender: UUID;
-    data: Uint8Array;
-    sequenceNumber: Long;
-    category?: string;
-}
-export type Vector3d = {
-    x: number;
-    y: number;
-    z: number;
+const AUDIO_FLAG_HAS_CATEGORY = 1 << 0;
+const AUDIO_FLAG_HAS_POSITION = 1 << 1;
+const AUDIO_FLAG_SENDER_IS_CHANNEL = 1 << 2;
+
+export class AudioPacket implements Packet {
+
+    public readonly channelId: UUID;
+    public readonly senderId: UUID;
+    public readonly audio: Uint8Array;
+    public readonly categoryId: UUID | null;
+    public readonly position: Vector3d | null;
+
+    constructor(buf: ByteBuffer) {
+        const flags = buf.readByte();
+        this.channelId = readUniqueId(buf);
+        if ((flags & AUDIO_FLAG_SENDER_IS_CHANNEL) != 0) {
+            this.senderId = this.channelId;
+        } else {
+            this.senderId = readUniqueId(buf);
+        }
+        this.audio = readByteArray(buf);
+        if ((flags & AUDIO_FLAG_HAS_CATEGORY)) {
+            this.categoryId = readUniqueId(buf);
+        } else {
+            this.categoryId = null;
+        }
+        if ((flags & AUDIO_FLAG_HAS_POSITION)) {
+            this.position = new Vector3d(buf);
+        } else {
+            this.position = null;
+        }
+    }
 }
 
-export type UpdateStatePacket = {
-    disabled: boolean;
+export class CategoryAddPacket implements Packet {
+
+    public readonly category: AudioCategory;
+
+    constructor(buf: ByteBuffer) {
+        this.category = new AudioCategory(buf);
+    }
 }
 
-export type MicPacket = { // 0x01
-    data: Uint8Array;
-    whispering: boolean;
-    sequenceNumber: Long;
+export class CategoryRemovePacket implements Packet {
+
+    public readonly categoryId: UUID;
+
+    constructor(buf: ByteBuffer) {
+        this.categoryId = readUniqueId(buf);
+    }
 }
-export type PlayerSoundPacket = SoundPacket & { // 0x02
-    whispering: boolean;
-    distance: number;
+
+export class ConnectedPacket implements Packet {
+
+    public readonly playerId: UUID;
+    public readonly username: Component;
+
+    constructor(buf: ByteBuffer) {
+        this.playerId = readUniqueId(buf);
+        this.username = readComponentJson(buf);
+    }
 }
-export type GroupSoundPacket = SoundPacket & { // 0x03
+
+export class PositionUpdatePacket implements Packet {
+
+    public readonly position: Vector3d;
+
+    constructor(buf: ByteBuffer) {
+        this.position = new Vector3d(buf);
+    }
 }
-export type LocationSoundPacket = SoundPacket & { // 0x04
-    location: Vector3d;
-    distance: number;
+
+export class RoomAddPacket implements Packet {
+
+    public readonly room: AudioRoom;
+
+    constructor(buf: ByteBuffer) {
+        this.room = new AudioRoom(buf);
+    }
 }
-export type AuthenticatePacket = { // 0x05
-    player: UUID;
-    secret: UUID;
+
+export class RoomJoinResponsePacket implements Packet {
+
+    public readonly success: boolean;
+
+    constructor(buf: ByteBuffer) {
+        this.success = readBoolean(buf);
+
+    }
 }
-export type AuthenticateAckPacket = { // 0x06
+
+export class RoomRemovePacket implements Packet {
+
+    public readonly roomId: UUID;
+
+    constructor(buf: ByteBuffer) {
+        this.roomId = readUniqueId(buf);
+    }
 }
-export type PingPacket = { // 0x07
-    id: UUID;
-    timestamp: Long;
+
+export class StateRemovePacket implements Packet {
+
+    public readonly playerId: UUID;
+
+    constructor(buf: ByteBuffer) {
+        this.playerId = readUniqueId(buf);
+    }
 }
-export type KeepAlivePacket = { // 0x08
+
+export class StateUpdatePacket implements Packet {
+
+    public readonly state: PlayerState;
+
+    constructor(buf: ByteBuffer) {
+        this.state = new PlayerState(buf);
+    }
 }
-export type ConnectionCheckPacket = { // 0x09
+
+// commonbound
+
+export class KeepAlivePacket implements EncodablePacket {
+
+    public readonly id: Long;
+
+    constructor(param: ByteBuffer | Long) {
+        this.id = "readLong" in param ? param.readLong() : param;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        buf.writeLong(this.id);
+    }
 }
-export type ConnectionCheckAckPacket = { // 0x0A
+
+export class PingPacket implements EncodablePacket {
+
+    public readonly id: Long;
+
+    constructor(param: ByteBuffer | Long) {
+        this.id = "readLong" in param ? param.readLong() : param;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        buf.writeLong(this.id);
+    }
+}
+
+// servicebound
+
+export class InputSoundPacket implements EncodablePacket {
+
+    public readonly audio: Uint8Array;
+    public readonly noiseReduction: boolean;
+
+    constructor(audio: Uint8Array, noiseReduction: boolean) {
+        this.audio = audio;
+        this.noiseReduction = noiseReduction;
+    }
+
+    public encode(buf: ByteBuffer) {
+        writeByteArray(buf, this.audio);
+        writeBoolean(buf, this.noiseReduction);
+    }
+}
+
+export class RoomCreatePacket implements EncodablePacket {
+
+    public readonly name: string;
+    public readonly password: string | null;
+    public readonly speakToOthers: boolean;
+    public readonly listenToOthers: boolean;
+
+    constructor(name: string, password: string | null, speakToOthers: boolean, listenToOthers: boolean) {
+        this.name = name;
+        this.password = password;
+        this.speakToOthers = speakToOthers;
+        this.listenToOthers = listenToOthers;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeString(buf, this.name);
+        if (this.password !== null) {
+            writeBoolean(buf, true);
+            writeString(buf, this.password);
+        } else {
+            writeBoolean(buf, false);
+        }
+        writeBoolean(buf, this.speakToOthers);
+        writeBoolean(buf, this.listenToOthers);
+    }
+}
+
+export class RoomJoinRequestPacket implements EncodablePacket {
+
+    public readonly roomId: UUID;
+    public readonly password: string | null;
+
+    constructor(roomId: UUID, password: string | null) {
+        this.roomId = roomId;
+        this.password = password;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeUniqueId(buf, this.roomId);
+        if (this.password != null) {
+            writeBoolean(buf, true);
+            writeString(buf, this.password);
+        } else {
+            writeBoolean(buf, false);
+        }
+    }
+}
+
+export class RoomLeavePacket implements EncodablePacket {
+
+    public readonly roomId: UUID;
+
+    constructor(roomId: UUID) {
+        this.roomId = roomId;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeUniqueId(buf, this.roomId);
+    }
+}
+
+export class StateInfoPacket implements EncodablePacket {
+
+    public readonly muted: boolean;
+    public readonly deafened: boolean;
+
+    constructor(muted: boolean, deafened: boolean) {
+        this.muted = muted;
+        this.deafened = deafened;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeBoolean(buf, this.muted);
+        writeBoolean(buf, this.deafened);
+    }
 }
