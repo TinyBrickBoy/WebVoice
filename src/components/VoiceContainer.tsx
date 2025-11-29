@@ -201,7 +201,7 @@ const VoiceContainer = (props: Props) => {
                 </div>
                 {(socket.isLoaded() && player) &&
                     <div className={"container"}>
-                        <MicContainer sendPacket={socket.sendPacket}/>
+                        <MicContainer sendPacket={packet => socket.sendPacket(packet)}/>
                     </div>
                 }
                 {Object.values(categories).length > 0 &&
@@ -223,7 +223,7 @@ const VoiceContainer = (props: Props) => {
                 {(socket.isLoaded() && player) &&
                     <div className={"container"}>
                         <h2>Create Group</h2>
-                        <CreateGroupForm sendPacket={socket.sendPacket}/>
+                        <CreateGroupForm sendPacket={packet => socket.sendPacket(packet)}/>
                     </div>
                 }
                 {Object.values(groups).length > 0 &&
