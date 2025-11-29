@@ -22,16 +22,17 @@ export class VoiceSocket extends EventManager {
     }
 
     public sendPacket(packet: Packet) {
+        if (!this.socket) {
+            console.warn("Skipped sending packet because socket isn't connected", packet);
+            return;
+        }
+        // write to new buffer
         const buf = ByteBuffer.allocate();
         writePacket(buf, packet);
-
+        // convert buffer to arraybuffer and send
         buf.limit = buf.offset;
         buf.reset();
-        this.send(buf.toArrayBuffer());
-    }
-
-    public send(data: string | ArrayBufferLike | ArrayBufferView) {
-        this.socket!!.send(data);
+        this.socket!!.send(buf.toArrayBuffer());
     }
 
     public open() {
