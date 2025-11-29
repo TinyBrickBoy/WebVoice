@@ -14,12 +14,14 @@ import {
 } from "./buffer.ts";
 import type {Component} from "./component.ts";
 
-export interface Packet {
+export abstract class Packet {
+    public static packetId = 0;
 }
 
-export interface EncodablePacket extends Packet {
-
-    encode(buf: ByteBuffer): void;
+export abstract class DecodablePacket extends Packet {
+    protected constructor() {
+        super();
+    }
 }
 
 // clientbound
@@ -28,7 +30,7 @@ const AUDIO_FLAG_HAS_CATEGORY = 1 << 0;
 const AUDIO_FLAG_HAS_POSITION = 1 << 1;
 const AUDIO_FLAG_SENDER_IS_CHANNEL = 1 << 2;
 
-export class AudioPacket implements Packet {
+export class AudioPacket extends DecodablePacket {
 
     public readonly channelId: UUID;
     public readonly senderId: UUID;
@@ -37,6 +39,7 @@ export class AudioPacket implements Packet {
     public readonly position: Vector3d | null;
 
     constructor(buf: ByteBuffer) {
+        super();
         const flags = buf.readByte();
         this.channelId = readUniqueId(buf);
         if ((flags & AUDIO_FLAG_SENDER_IS_CHANNEL) != 0) {
@@ -58,97 +61,108 @@ export class AudioPacket implements Packet {
     }
 }
 
-export class CategoryAddPacket implements Packet {
+export class CategoryAddPacket extends DecodablePacket {
 
     public readonly category: AudioCategory;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.category = new AudioCategory(buf);
     }
 }
 
-export class CategoryRemovePacket implements Packet {
+export class CategoryRemovePacket extends DecodablePacket {
 
     public readonly categoryId: UUID;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.categoryId = readUniqueId(buf);
     }
 }
 
-export class ConnectedPacket implements Packet {
+export class ConnectedPacket extends DecodablePacket {
 
     public readonly playerId: UUID;
     public readonly username: Component;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.playerId = readUniqueId(buf);
         this.username = readComponentJson(buf);
     }
 }
 
-export class PositionUpdatePacket implements Packet {
+export class PositionUpdatePacket extends DecodablePacket {
 
     public readonly position: Vector3d;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.position = new Vector3d(buf);
     }
 }
 
-export class RoomAddPacket implements Packet {
+export class RoomAddPacket extends DecodablePacket {
 
     public readonly room: AudioRoom;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.room = new AudioRoom(buf);
     }
 }
 
-export class RoomJoinResponsePacket implements Packet {
+export class RoomJoinResponsePacket extends DecodablePacket {
 
     public readonly success: boolean;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.success = readBoolean(buf);
-
     }
 }
 
-export class RoomRemovePacket implements Packet {
+export class RoomRemovePacket extends DecodablePacket {
 
     public readonly roomId: UUID;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.roomId = readUniqueId(buf);
     }
 }
 
-export class StateRemovePacket implements Packet {
+export class StateRemovePacket extends DecodablePacket {
 
     public readonly playerId: UUID;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.playerId = readUniqueId(buf);
     }
 }
 
-export class StateUpdatePacket implements Packet {
+export class StateUpdatePacket extends DecodablePacket {
 
     public readonly state: PlayerState;
 
     constructor(buf: ByteBuffer) {
+        super();
         this.state = new PlayerState(buf);
     }
 }
 
 // commonbound
 
-export class KeepAlivePacket implements EncodablePacket {
+export class KeepAlivePacket extends DecodablePacket {
 
     public readonly id: Long;
 
+    constructor(id: Long);
+    constructor(buf: ByteBuffer);
     constructor(param: ByteBuffer | Long) {
+        super();
         this.id = "readLong" in param ? param.readLong() : param;
     }
 
@@ -157,11 +171,14 @@ export class KeepAlivePacket implements EncodablePacket {
     }
 }
 
-export class PingPacket implements EncodablePacket {
+export class PingPacket extends DecodablePacket {
 
     public readonly id: Long;
 
+    constructor(id: Long);
+    constructor(buf: ByteBuffer);
     constructor(param: ByteBuffer | Long) {
+        super();
         this.id = "readLong" in param ? param.readLong() : param;
     }
 
@@ -172,12 +189,13 @@ export class PingPacket implements EncodablePacket {
 
 // servicebound
 
-export class InputSoundPacket implements EncodablePacket {
+export class InputSoundPacket extends Packet {
 
     public readonly audio: Uint8Array;
     public readonly noiseReduction: boolean;
 
     constructor(audio: Uint8Array, noiseReduction: boolean) {
+        super();
         this.audio = audio;
         this.noiseReduction = noiseReduction;
     }
@@ -188,7 +206,7 @@ export class InputSoundPacket implements EncodablePacket {
     }
 }
 
-export class RoomCreatePacket implements EncodablePacket {
+export class RoomCreatePacket extends Packet {
 
     public readonly name: string;
     public readonly password: string | null;
@@ -196,6 +214,7 @@ export class RoomCreatePacket implements EncodablePacket {
     public readonly listenToOthers: boolean;
 
     constructor(name: string, password: string | null, speakToOthers: boolean, listenToOthers: boolean) {
+        super();
         this.name = name;
         this.password = password;
         this.speakToOthers = speakToOthers;
@@ -215,12 +234,13 @@ export class RoomCreatePacket implements EncodablePacket {
     }
 }
 
-export class RoomJoinRequestPacket implements EncodablePacket {
+export class RoomJoinRequestPacket extends Packet {
 
     public readonly roomId: UUID;
     public readonly password: string | null;
 
     constructor(roomId: UUID, password: string | null) {
+        super();
         this.roomId = roomId;
         this.password = password;
     }
@@ -236,11 +256,12 @@ export class RoomJoinRequestPacket implements EncodablePacket {
     }
 }
 
-export class RoomLeavePacket implements EncodablePacket {
+export class RoomLeavePacket extends Packet {
 
     public readonly roomId: UUID;
 
     constructor(roomId: UUID) {
+        super();
         this.roomId = roomId;
     }
 
@@ -249,12 +270,13 @@ export class RoomLeavePacket implements EncodablePacket {
     }
 }
 
-export class StateInfoPacket implements EncodablePacket {
+export class StateInfoPacket extends Packet {
 
     public readonly muted: boolean;
     public readonly deafened: boolean;
 
     constructor(muted: boolean, deafened: boolean) {
+        super();
         this.muted = muted;
         this.deafened = deafened;
     }
