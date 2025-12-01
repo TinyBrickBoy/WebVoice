@@ -48,12 +48,12 @@ export class AudioPacket extends DecodablePacket {
             this.senderId = readUniqueId(buf);
         }
         this.audio = readByteArray(buf);
-        if ((flags & AUDIO_FLAG_HAS_CATEGORY)) {
+        if ((flags & AUDIO_FLAG_HAS_CATEGORY) != 0) {
             this.categoryId = readUniqueId(buf);
         } else {
             this.categoryId = null;
         }
-        if ((flags & AUDIO_FLAG_HAS_POSITION)) {
+        if ((flags & AUDIO_FLAG_HAS_POSITION) != 0) {
             this.position = new Vector3d(buf);
         } else {
             this.position = null;

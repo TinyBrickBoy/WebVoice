@@ -16,7 +16,8 @@ export class VoiceSocket extends EventManager {
             if (!(event.data instanceof ArrayBuffer)) {
                 return; // we only expect buffers
             }
-            const packet = readPacket(ByteBuffer.wrap(event.data));
+            const buf = ByteBuffer.wrap(event.data);
+            const packet = readPacket(buf.reset());
             this.fire(new CustomEvent(packet.id, {detail: packet.packet}));
         });
     }
