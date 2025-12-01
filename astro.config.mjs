@@ -1,4 +1,4 @@
-import {defineConfig} from "astro/config";
+import {defineConfig, envField} from "astro/config";
 import preact from "@astrojs/preact";
 import cloudflare from "@astrojs/cloudflare";
 
@@ -10,4 +10,13 @@ export default defineConfig({
     trailingSlash: "ignore",
     integrations: [preact()],
     adapter: cloudflare(),
+    env: {
+        schema: {
+            WEBSOCKET_URL: envField.string({
+                context: "client",
+                access: "public",
+                default: "wss://sonus.froglight.eu/api",
+            }),
+        },
+    },
 });

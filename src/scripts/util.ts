@@ -1,15 +1,14 @@
+import {WEBSOCKET_URL} from "astro:env/client";
+
 export const respondRedirect = (path: string = "/", status: number = 303) => {
     return new Response(null, {status, headers: {Location: path}});
 };
 
-export const TOKEN_LENGTH = 16
-
-// TODO needs to be configurable
-const host = "127.0.0.1:8032";
+export const TOKEN_LENGTH = 16;
 const apiVersion = "v1";
 
 export const constructSocketUrl = (token: string) => {
-    return new URL(`ws://${host}/api/${apiVersion}/socket/${token}`);
+    return new URL(`${WEBSOCKET_URL}/${apiVersion}/socket/${token}`);
 };
 
 export const calculateAudioLevel = (samples: Float32Array, offset: number, length: number) => {
