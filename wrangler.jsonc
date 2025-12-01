@@ -1,6 +1,6 @@
 {
   "main": "dist/_worker.js/index.js",
-  "name": "sonus-web",
+  "name": "sonus",
   "compatibility_date": "2025-12-01",
   "compatibility_flags": [
     "nodejs_compat",
