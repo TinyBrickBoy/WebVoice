@@ -1,15 +1,13 @@
 import {defineConfig} from "astro/config";
-import node from "@astrojs/node";
 import preact from "@astrojs/preact";
+import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-    site: "http://localhost:4321",
+    site: "https://sonus.minceraft.dev/",
     output: "server",
     compressHTML: process.env.NODE_ENV === "production",
     trailingSlash: "ignore",
     integrations: [preact()],
-    adapter: node({
-        mode: "standalone",
-    }),
+    adapter: cloudflare(),
 });

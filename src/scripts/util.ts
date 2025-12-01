@@ -5,11 +5,11 @@ export const respondRedirect = (path: string = "/", status: number = 303) => {
 export const TOKEN_LENGTH = 16
 
 // TODO needs to be configurable
-const host = "audio.froglight.eu";
+const host = "127.0.0.1:8032";
 const apiVersion = "v1";
 
 export const constructSocketUrl = (token: string) => {
-    return new URL(`wss://${host}/api/${apiVersion}/socket/${token}`);
+    return new URL(`ws://${host}/api/${apiVersion}/socket/${token}`);
 };
 
 export const calculateAudioLevel = (samples: Float32Array, offset: number, length: number) => {
