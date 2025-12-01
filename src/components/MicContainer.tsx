@@ -8,7 +8,7 @@ import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import VolumeSlider from "./VolumeSlider.tsx";
 import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio_constants.ts";
-import {OpusApplication, OpusEncoderWebWorker} from "@tjc/opus-encoder";
+import {OpusApplication, OpusEncoderWebWorker} from "@minceraftmc/opus-encoder";
 import {getHighestAudioPercent} from "../scripts/util.ts";
 import {InputSoundPacket, Packet} from "../scripts/packets.ts";
 

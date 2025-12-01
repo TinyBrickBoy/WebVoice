@@ -1,6 +1,6 @@
 import opusDecoderWorkletUrl from "./opus_decoder.ts?worker&url";
 import {CHANNEL_COUNT, type DecodedOpusData, SAMPLE_RATE} from "./audio_constants.ts";
-import {OpusDecoderWebWorker} from "opus-decoder";
+import {OpusDecoderWebWorker} from "@minceraftmc/opus-decoder";
 
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
 
