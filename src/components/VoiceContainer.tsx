@@ -4,19 +4,16 @@ import VoiceConnectButton from "./VoiceConnectButton.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
-import AudioPlayer from "../scripts/audio/audio.ts";
-import {getVolume} from "../scripts/util/volumes.ts";
+import AudioPlayer from "../scripts/audio/audio_player.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
 import type {UUID} from "../scripts/util/uuid.ts";
 import {getCurrentTimeString} from "../scripts/util/util.ts";
 import MicContainer from "./MicContainer.tsx";
 import {
-    AudioPacket,
     ConnectedPacket,
     KeepAlivePacket,
     PingPacket,
-    PositionUpdatePacket,
     RoomJoinResponsePacket,
     StateInfoPacket,
     StateUpdatePacket,
@@ -27,7 +24,6 @@ import type {FunctionComponent} from "preact";
 
 // TODO cleanup
 
-const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const INFO_DURATION = 10 * 1000;
 
 interface Props {
@@ -46,37 +42,27 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
     const [info, setInfo] = useState<string | undefined>();
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(socketUrl));
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
-    const audio = useMemo(() => new AudioPlayer(), []);
 
-    const invalidateState = useCallback(() => {
+    // audio player handling
+    const audio = useMemo(() => new AudioPlayer(), []);
+    useEffect(() => audio.startGarbageCollector, [audio]);
+    useEffect(() => audio.registerSocket(socket), [audio, socket]);
+
+    useEffect(() => {
+        // invalidate
         setPlayers({});
         setInfo(undefined);
-    }, []);
 
-    useEffect(() => {
-        const timer = setInterval(() => audio.runGarbageCollector(), GARBAGE_COLLECTOR_INTERVAL);
-        return () => clearInterval(timer);
-    }, [audio]);
-
-    useEffect(() => {
+        // register events
         return socket.registers()
             .register("open", () => setState("Connected"))
             .register("error", console.error)
             .register("close", (event: CloseEvent) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
                 setState(`Disconnected: ${event.reason} (${event.code})`);
-
-                invalidateState();
                 setSocket(new VoiceSocket(socketUrl));
             })
             // sonus packets
-            .register("audio", (event: CustomEvent<AudioPacket>) => {
-                // TODO position
-                const playerVolume = getVolume("player", event.detail.senderId.name) / 100;
-                const categoryVolume = getVolume("category", event.detail.categoryId?.name) / 100;
-                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio)
-                    .catch(error => console.error(error));
-            })
             .register("connected", (event: CustomEvent<ConnectedPacket>) => {
                 // save player info
                 setPlayer({
@@ -90,9 +76,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                         socket.sendPacket(new StateInfoPacket(false, false));
                     })
                     .catch(error => console.error(error));
-            })
-            .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
-                // TODO
             })
             .register("room_join_response", (event: CustomEvent<RoomJoinResponsePacket>) => {
                 if (!event.detail.success) {

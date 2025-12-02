@@ -1,7 +1,11 @@
 import opusDecoderWorkletUrl from "./opus_decoder.ts?worker&url";
 import {CHANNEL_COUNT, type DecodedOpusData, SAMPLE_RATE} from "./audio_constants.ts";
 import {OpusDecoderWebWorker} from "@minceraftmc/opus-decoder";
+import type {VoiceSocket} from "../socket.ts";
+import {AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
+import {getVolume} from "../util/volumes.ts";
 
+const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
 
 type ChannelData = {
@@ -23,6 +27,12 @@ export default class AudioPlayer {
             await data.decoder.free()
             delete this.channels[channel];
         }
+    }
+
+    public startGarbageCollector() {
+        // run garbage collector periodically
+        const timer = setInterval(() => this.runGarbageCollector(), GARBAGE_COLLECTOR_INTERVAL);
+        return () => clearInterval(timer);
     }
 
     // periodically clean up unused channels to reduce
@@ -80,5 +90,20 @@ export default class AudioPlayer {
         const pcmAudio = await data.decoder.decodeFrame(opus);
         const frame = {data: pcmAudio.channelData[0], volume: volume * 5} as DecodedOpusData;
         data.worklet.postMessage(frame);
+    }
+
+    public registerSocket(socket: VoiceSocket) {
+        return socket.registers()
+            .register("audio", (event: CustomEvent<AudioPacket>) => {
+                // TODO position
+                const playerVolume = getVolume("player", event.detail.senderId.name) / 100;
+                const categoryVolume = getVolume("category", event.detail.categoryId?.name) / 100;
+                this.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio)
+                    .catch(error => console.error(error));
+            })
+            .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
+                // TODO
+            })
+            .callback();
     }
 }
