@@ -1,30 +1,29 @@
 import type {FunctionComponent} from "preact";
-import {useState} from "preact/hooks";
+import {useCallback, useState} from "preact/hooks";
 import {Packet, RoomCreatePacket} from "../scripts/network/packets.ts";
 
 type GroupAudioType = "normal" | "open" | "isolated"
 
 const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = ({sendPacket}) => {
-    const [name, setName] = useState<string>();
-    const [password, setPassword] = useState<string>();
+    const [name, setName] = useState<string>("");
+    const [password, setPassword] = useState<string | null>(null);
     const [type, setType] = useState<GroupAudioType>("normal");
 
-    const submitGroup = (event: SubmitEvent) => {
+    const submitGroup = useCallback((event: SubmitEvent) => {
         event.preventDefault();
 
         if (!name) {
             return;
         }
-        const realPassword = password ? password : null;
         const speakToOthers = type === "open";
         const listenToOthers = type === "normal" || type === "open";
-        props.sendPacket(new RoomCreatePacket(name, realPassword, speakToOthers, listenToOthers));
+        sendPacket(new RoomCreatePacket(name, password, speakToOthers, listenToOthers));
 
         // reset form
         setName("");
-        setPassword("");
+        setPassword(null);
         setType("normal");
-    };
+    }, [sendPacket, name, password, type]);
 
     return (
         <form
@@ -46,14 +45,14 @@ const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void 
                     <label>Name</label>
                     <input
                         required type="text" placeholder="Group name" value={name}
-                        onChange={event => setName(event.currentTarget.value)}
+                        onChange={event => setName(event.currentTarget.value.trim())}
                     />
                 </div>
                 <div className="input-entry">
                     <label>Password</label>
                     <input
-                        type="password" placeholder="Password (optional)" value={password}
-                        onChange={event => setPassword(event.currentTarget.value)}
+                        type="password" placeholder="Password (optional)" value={password || ""}
+                        onChange={event => setPassword(event.currentTarget.value.trim() || null)}
                     />
                 </div>
                 <div className="input-entry">

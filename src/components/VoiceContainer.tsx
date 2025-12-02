@@ -29,6 +29,8 @@ import {type AudioCategory, AudioRoom, PlayerState} from "../scripts/types.ts";
 import type {Component} from "../scripts/network/component.ts";
 import type {FunctionComponent} from "preact";
 
+// TODO cleanup
+
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const INFO_DURATION = 10 * 1000;
 
@@ -42,11 +44,11 @@ export interface PlayerInfo {
     name: Component;
 }
 
-const VoiceContainer: FunctionComponent<Props> = ({socket, token}) => {
+const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) => {
     const [player, setPlayer] = useState<PlayerInfo | undefined>();
     const [state, setState] = useState<string>("disconnected");
     const [info, setInfo] = useState<string | undefined>();
-    const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(socket));
+    const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(socketUrl));
     const [categories, setCategories] = useState<{ [id: string]: AudioCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
     const [groups, setGroups] = useState<{ [id: string]: AudioRoom }>({});
@@ -73,7 +75,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socket, token}) => {
                 setState(`Disconnected: ${event.reason} (${event.code})`);
 
                 invalidateState();
-                setSocket(new VoiceSocket(socket));
+                setSocket(new VoiceSocket(socketUrl));
             })
             // sonus packets
             .register("audio", async (event: CustomEvent<AudioPacket>) => {
@@ -165,7 +167,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socket, token}) => {
         socket.close();
 
         setState("Connecting...");
-        const newSocket = new VoiceSocket(socket);
+        const newSocket = new VoiceSocket(socketUrl);
         newSocket.open();
         setSocket(newSocket);
     }, [socket]);
@@ -196,7 +198,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socket, token}) => {
                         gap: "1em",
                     }}
                 >
-                    <VoiceInfo player={player} token={token} socket={socket} state={state}/>
+                    <VoiceInfo player={player} token={token} socket={socketUrl} state={state}/>
                     {info && <code>{info}</code>}
                     <VoiceConnectButton socket={socket} openSocket={openSocket}/>
                 </div>

@@ -1,7 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import VoiceContainer from "../../components/VoiceContainer";
-import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util";
+import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util/util.ts";
 
 export const prerender = false;
 const {token} = Astro.params;
