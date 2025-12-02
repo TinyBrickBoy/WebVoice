@@ -1,6 +1,6 @@
 import type {FunctionComponent} from "preact";
 import {useState} from "preact/hooks";
-import {Packet, RoomCreatePacket} from "../scripts/packets.ts";
+import {Packet, RoomCreatePacket} from "../scripts/network/packets.ts";
 
 type GroupAudioType = "normal" | "open" | "isolated"
 

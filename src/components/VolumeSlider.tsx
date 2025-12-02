@@ -1,4 +1,4 @@
-import {getVolume, setVolume, type VolumeType} from "../scripts/volumes.ts";
+import {getVolume, setVolume, type VolumeType} from "../scripts/util/volumes.ts";
 import {useEffect, useRef} from "preact/hooks";
 
 interface Props {

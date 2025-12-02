@@ -1,5 +1,5 @@
 import ByteBuffer from "bytebuffer";
-import {UUID} from "./uuid.ts";
+import {UUID} from "../util/uuid.ts";
 import type {Component} from "./component.ts";
 
 // https://web.archive.org/web/20241130182130/https://wiki.vg/Data_types#Type:UUID

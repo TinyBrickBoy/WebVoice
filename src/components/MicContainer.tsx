@@ -7,10 +7,10 @@ import type {FunctionComponent} from "preact";
 import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import VolumeSlider from "./VolumeSlider.tsx";
-import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio_constants.ts";
+import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio/audio_constants.ts";
 import {OpusApplication, OpusEncoderWebWorker} from "@minceraftmc/opus-encoder";
-import {getHighestAudioPercent} from "../scripts/util.ts";
-import {InputSoundPacket, Packet} from "../scripts/packets.ts";
+import {getHighestAudioPercent} from "../scripts/util/util.ts";
+import {InputSoundPacket, Packet} from "../scripts/network/packets.ts";
 
 export type VisualizerInitMessage = {
     canvas: HTMLCanvasElement;

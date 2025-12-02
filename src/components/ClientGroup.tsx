@@ -1,24 +1,22 @@
-import type {UUID} from "../scripts/uuid.ts";
-import {Packet, RoomJoinRequestPacket, RoomLeavePacket} from "../scripts/packets.ts";
+import type {UUID} from "../scripts/util/uuid.ts";
+import {RoomJoinRequestPacket, RoomLeavePacket} from "../scripts/network/packets.ts";
 import PlayerInfo from "./PlayerInfo.tsx";
 import {useMemo, useState} from "preact/hooks";
-import {type AudioRoom, PlayerState} from "../scripts/types.ts";
-import {renderComponent} from "../scripts/component.ts";
+import {type AudioRoom, PlayerState, type SendPacket} from "../scripts/types.ts";
+import MinecraftComponent from "./MinecraftComponent.tsx";
 
 interface Props {
     room: AudioRoom;
     viewerId?: UUID;
     players: PlayerState[];
-    sendPacket: (packet: Packet) => void,
+    sendPacket: SendPacket,
 }
 
 const ClientGroup = (props: Props) => {
     const [password, setPassword] = useState<string>("");
-    const viewerMember = useMemo(() => {
+    const hasViewer = useMemo(() => {
         if (props.viewerId) {
-            const viewerIdStr = props.viewerId.name;
-            const idx = props.players.findIndex(state => state.uniqueId.name === viewerIdStr);
-            return idx >= 0;
+            return props.players.some(state => state.is(props.viewerId!!));
         }
         return false;
     }, [props.viewerId, props.players]);
@@ -31,14 +29,14 @@ const ClientGroup = (props: Props) => {
             gap: "0.2em",
         }}>
             <span>Id: <code>{props.room.uniqueId.name}</code></span>
-            <span>Name: <code>{renderComponent(props.room.name)}</code></span>
+            <span>Name: <MinecraftComponent component={props.room.name}/></span>
             <span>
                 Speak Passthrough:
-                <code style={{textTransform: "capitalize"}}>{props.room.speakToOthers}</code>
+                <code style={{textTransform: "capitalize"}}>{`${props.room.speakToOthers}`}</code>
             </span>
             <span>
                 Listen Passthrough:
-                <code style={{textTransform: "capitalize"}}>{props.room.listenToOthers}</code>
+                <code style={{textTransform: "capitalize"}}>{`${props.room.listenToOthers}`}</code>
             </span>
             {props.players.length > 0 &&
                 <>
@@ -68,7 +66,7 @@ const ClientGroup = (props: Props) => {
                 }}>
                     <input
                         onChange={event => setPassword(event.currentTarget.value)}
-                        type={"password"} disabled={viewerMember} placeholder="Password"
+                        type={"password"} disabled={hasViewer} placeholder="Password"
                     />
                 </div>
             }
@@ -79,14 +77,14 @@ const ClientGroup = (props: Props) => {
                 marginTop: "0.5em",
             }}>
                 <button
-                    disabled={viewerMember}
+                    disabled={hasViewer}
                     style={{flex: 1}}
                     onClick={() => props.sendPacket(new RoomJoinRequestPacket(props.room.uniqueId, password ? password : null))}
                 >
                     Join
                 </button>
                 <button
-                    disabled={!viewerMember}
+                    disabled={!hasViewer}
                     style={{flex: 1}}
                     onClick={() => props.sendPacket(new RoomLeavePacket(props.room.uniqueId))}
                 >

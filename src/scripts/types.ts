@@ -1,7 +1,8 @@
 import ByteBuffer from "bytebuffer";
-import type {UUID} from "./uuid.ts";
-import type {Component} from "./component.ts";
-import {readBoolean, readComponentJson, readUniqueId} from "./buffer.ts";
+import type {UUID} from "./util/uuid.ts";
+import type {Component} from "./network/component.ts";
+import {readBoolean, readComponentJson, readUniqueId} from "./network/buffer.ts";
+import type {Packet} from "./network/packets.ts";
 
 export class Vector3d {
 
@@ -81,4 +82,14 @@ export class PlayerState {
             this.primaryRoomId = null;
         }
     }
+
+    public is(uniqueId: UUID) {
+        return this.uniqueId.name === uniqueId.name;
+    }
+
+    public in(roomId: UUID) {
+        return this.primaryRoomId?.name === roomId.name;
+    }
 }
+
+export type SendPacket = (packet: Packet) => void;

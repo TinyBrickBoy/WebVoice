@@ -1,6 +1,6 @@
-import type {UUID} from "./uuid.ts";
+import type {UUID} from "../util/uuid.ts";
 import Long from "long";
-import {AudioCategory, AudioRoom, PlayerState, Vector3d} from "./types.ts";
+import {AudioCategory, AudioRoom, PlayerState, Vector3d} from "../types.ts";
 import ByteBuffer from "bytebuffer";
 import {
     readBoolean,

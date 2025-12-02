@@ -4,12 +4,12 @@ import VoiceConnectButton from "./VoiceConnectButton.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
 import VoiceCategories from "./VoiceCategories.tsx";
 import PlayerInfos from "./PlayerInfos.tsx";
-import AudioPlayer from "../scripts/audio.ts";
-import {getVolume} from "../scripts/volumes.ts";
+import AudioPlayer from "../scripts/audio/audio.ts";
+import {getVolume} from "../scripts/util/volumes.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
-import type {UUID} from "../scripts/uuid.ts";
-import {getCurrentTimeString} from "../scripts/util.ts";
+import type {UUID} from "../scripts/util/uuid.ts";
+import {getCurrentTimeString} from "../scripts/util/util.ts";
 import MicContainer from "./MicContainer.tsx";
 import {
     AudioPacket,
@@ -24,9 +24,9 @@ import {
     RoomRemovePacket,
     StateInfoPacket,
     StateUpdatePacket,
-} from "../scripts/packets.ts";
+} from "../scripts/network/packets.ts";
 import {type AudioCategory, AudioRoom, PlayerState} from "../scripts/types.ts";
-import {renderComponent} from "../scripts/component.ts";
+import type {Component} from "../scripts/network/component.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const INFO_DURATION = 10 * 1000;
@@ -38,7 +38,7 @@ interface Props {
 
 export interface PlayerInfo {
     uuid: UUID;
-    name: string;
+    name: Component;
 }
 
 const VoiceContainer = (props: Props) => {
@@ -104,7 +104,7 @@ const VoiceContainer = (props: Props) => {
                 // save player info
                 setPlayer({
                     uuid: event.detail.playerId,
-                    name: renderComponent(event.detail.username),
+                    name: event.detail.username,
                 });
                 // start audio
                 await audio.startContext();

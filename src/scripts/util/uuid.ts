@@ -66,25 +66,14 @@ export const uuidToString = (most: Long, least: Long): string => {
 };
 
 export class UUID {
-    private readonly _most: Long;
-    private readonly _least: Long;
-    private readonly _name: string;
+
+    public readonly most: Long;
+    public readonly least: Long;
+    public readonly name: string;
 
     constructor(most: Long, least: Long) {
-        this._most = most;
-        this._least = least;
-        this._name = uuidToString(most, least);
-    }
-
-    get most(): Long {
-        return this._most;
-    }
-
-    get least(): Long {
-        return this._least;
-    }
-
-    get name(): string {
-        return this._name;
+        this.most = most;
+        this.least = least;
+        this.name = uuidToString(most, least);
     }
 }

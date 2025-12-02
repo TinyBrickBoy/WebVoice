@@ -3,6 +3,7 @@ export type EventListener = (event: any) => void
 export type RemovalCallback = () => void;
 
 export class Registers {
+
     private manager: EventManager;
     private callbacks: RemovalCallback[] = [];
 
@@ -21,6 +22,7 @@ export class Registers {
 }
 
 export class EventManager {
+
     private listeners: { [type: string]: EventListener[] } = {};
 
     public fire(event: Event): boolean {

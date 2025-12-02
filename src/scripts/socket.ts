@@ -1,7 +1,7 @@
-import {EventManager} from "./events";
+import {EventManager} from "./util/events";
 import ByteBuffer from "bytebuffer";
-import {Packet} from "./packets.ts";
-import {readPacket, writePacket} from "./packet_registry.ts";
+import {Packet} from "./network/packets.ts";
+import {readPacket, writePacket} from "./network/packet_registry.ts";
 
 export class VoiceSocket extends EventManager {
 
@@ -16,8 +16,10 @@ export class VoiceSocket extends EventManager {
             if (!(event.data instanceof ArrayBuffer)) {
                 return; // we only expect buffers
             }
+            // read the packet
             const buf = ByteBuffer.wrap(event.data);
             const packet = readPacket(buf.reset());
+            // fire as event to be handled
             this.fire(new CustomEvent(packet.id, {detail: packet.packet}));
         });
     }
