@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import VoiceContainer from "../../components/VoiceContainer";
+import VoiceStateProvider from "../../components/VoiceStateProvider";
 import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util/util.ts";
 
 export const prerender = false;
@@ -9,11 +10,15 @@ const {token} = Astro.params;
 if (!token || token.length !== TOKEN_LENGTH) {
     return Astro.redirect("/", 303);
 }
+
+const socketUrl = constructSocketUrl(token);
 ---
 
 <Layout>
     <main id="container" style="display: flex; flex-direction: column; gap: 0.5em">
         <h1 style={{marginBottom: "0"}}>Voicechat</h1>
-        <VoiceContainer client:only socket={constructSocketUrl(token)} token={token}></VoiceContainer>
+        <VoiceStateProvider client:only socketUrl={socketUrl}>
+            <VoiceContainer client:only socketUrl={socketUrl} token={token}></VoiceContainer>
+        </VoiceStateProvider>
     </main>
 </Layout>

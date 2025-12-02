@@ -1,16 +1,11 @@
 import Category from "./VoiceCategory.tsx";
-import type {AudioCategory} from "../scripts/types.ts";
 import type {FunctionComponent} from "preact";
-import {useEffect, useState} from "preact/hooks";
-import {VoiceSocket} from "../scripts/socket.ts";
+import {useEffect} from "preact/hooks";
 import {CategoryAddPacket, CategoryRemovePacket} from "../scripts/network/packets.ts";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
-interface Props {
-    socket: VoiceSocket;
-}
-
-const VoiceCategories: FunctionComponent<Props> = ({socket}) => {
-    const [categories, setCategories] = useState<Record<string, AudioCategory>>({});
+const VoiceCategories: FunctionComponent = () => {
+    const {socket: [socket], categories: [categories, setCategories]} = useVoiceStateContext();
 
     useEffect(() => {
         setCategories({}); // invalidate

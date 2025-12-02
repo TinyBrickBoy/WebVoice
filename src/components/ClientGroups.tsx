@@ -1,20 +1,11 @@
 import ClientGroup from "./ClientGroup.tsx";
-import type {UUID} from "../scripts/util/uuid.ts";
-import {Packet, RoomAddPacket, RoomRemovePacket} from "../scripts/network/packets.ts";
-import type {AudioRoom, PlayerState} from "../scripts/types.ts";
+import {RoomAddPacket, RoomRemovePacket} from "../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
-import {useEffect, useState} from "preact/hooks";
-import type {VoiceSocket} from "../scripts/socket.ts";
+import {useEffect} from "preact/hooks";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
-interface Props {
-    socket: VoiceSocket;
-    viewerId?: UUID;
-    players: PlayerState[];
-    sendPacket: (packet: Packet) => void,
-}
-
-const ClientGroups: FunctionComponent<Props> = ({socket, viewerId, players, sendPacket}) => {
-    const [rooms, setRooms] = useState<Record<string, AudioRoom>>({});
+const ClientGroups: FunctionComponent = () => {
+    const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
 
     useEffect(() => {
         setRooms({}); // invalidate
@@ -45,10 +36,9 @@ const ClientGroups: FunctionComponent<Props> = ({socket, viewerId, players, send
                 .filter(room => room.joinable)
                 .map(room => (
                     <ClientGroup
-                        key={room.uniqueId.name} room={room}
-                        viewerId={viewerId}
-                        players={players.filter(state => state.in(room.uniqueId))}
-                        sendPacket={sendPacket}
+                        key={room.uniqueId.name}
+                        room={room}
+                        players={Object.values(players).filter(state => state.in(room.uniqueId))}
                     />
                 ))}
         </div> : <></>;

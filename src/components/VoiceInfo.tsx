@@ -1,24 +1,25 @@
-import type {PlayerInfo} from "./VoiceContainer.tsx";
 import MinecraftComponent from "./MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 interface Props {
-    player?: PlayerInfo,
     token: string,
-    socket: URL,
+    socketUrl: URL,
     state: string,
 }
 
-const VoiceInfo: FunctionComponent<Props> = (props) => {
+const VoiceInfo: FunctionComponent<Props> = ({token, socketUrl, state}) => {
+    const {user: [user]} = useVoiceStateContext();
+
     return (
         <>
             <h2>Status</h2>
             <div style={{display: "flex", flexDirection: "column", gap: "0.2em"}}>
-                <span>Player: {props.player ? <><MinecraftComponent
-                    component={props.player.name}/> ({props.player.uuid.name})</> : <>Unknown</>}</span>
-                <span>Token: <code>{props.token}</code></span>
-                <span>Socket: <code>{props.socket.toString()}</code></span>
-                <span style={{textTransform: "capitalize"}}>{props.state}</span>
+                <span>Player: {user ? <><MinecraftComponent
+                    component={user.name}/> ({user.uuid.name})</> : <>Unknown</>}</span>
+                <span>Token: <code>{token}</code></span>
+                <span>Socket: <code>{socketUrl.toString()}</code></span>
+                <span style={{textTransform: "capitalize"}}>{state}</span>
             </div>
         </>
     );

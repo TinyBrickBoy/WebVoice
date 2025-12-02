@@ -1,10 +1,13 @@
 import type {FunctionComponent} from "preact";
 import {useCallback, useState} from "preact/hooks";
-import {Packet, RoomCreatePacket} from "../scripts/network/packets.ts";
+import {RoomCreatePacket} from "../scripts/network/packets.ts";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 type GroupAudioType = "normal" | "open" | "isolated"
 
-const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = ({sendPacket}) => {
+const CreateGroupForm: FunctionComponent = () => {
+    const {socket: [socket]} = useVoiceStateContext();
+
     const [name, setName] = useState<string>("");
     const [password, setPassword] = useState<string | null>(null);
     const [type, setType] = useState<GroupAudioType>("normal");
@@ -17,13 +20,13 @@ const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void 
         }
         const speakToOthers = type === "open";
         const listenToOthers = type === "normal" || type === "open";
-        sendPacket(new RoomCreatePacket(name, password, speakToOthers, listenToOthers));
+        socket.sendPacket(new RoomCreatePacket(name, password, speakToOthers, listenToOthers));
 
         // reset form
         setName("");
         setPassword(null);
         setType("normal");
-    }, [sendPacket, name, password, type]);
+    }, [socket, name, password, type]);
 
     return (
         <form

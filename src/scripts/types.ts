@@ -93,3 +93,8 @@ export class PlayerState {
 }
 
 export type SendPacket = (packet: Packet) => void;
+
+export interface UserInfo {
+    uuid: UUID;
+    name: Component;
+}

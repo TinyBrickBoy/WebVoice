@@ -7,7 +7,6 @@ import PlayerInfos from "./PlayerInfos.tsx";
 import AudioPlayer from "../scripts/audio/audio_player.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
-import type {UUID} from "../scripts/util/uuid.ts";
 import {getCurrentTimeString} from "../scripts/util/util.ts";
 import MicContainer from "./MicContainer.tsx";
 import {
@@ -16,32 +15,23 @@ import {
     PingPacket,
     RoomJoinResponsePacket,
     StateInfoPacket,
-    StateUpdatePacket,
 } from "../scripts/network/packets.ts";
-import {PlayerState} from "../scripts/types.ts";
-import type {Component} from "../scripts/network/component.ts";
 import type {FunctionComponent} from "preact";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 // TODO cleanup
 
 const INFO_DURATION = 10 * 1000;
 
 interface Props {
-    socket: URL;
+    socketUrl: URL;
     token: string;
 }
 
-export interface PlayerInfo {
-    uuid: UUID;
-    name: Component;
-}
-
-const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) => {
-    const [player, setPlayer] = useState<PlayerInfo | undefined>();
+const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
     const [state, setState] = useState<string>("disconnected");
     const [info, setInfo] = useState<string | undefined>();
-    const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(socketUrl));
-    const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
+    const {socket: [socket, setSocket], user: [user, setUser]} = useVoiceStateContext();
 
     // audio player handling
     const audio = useMemo(() => new AudioPlayer(), []);
@@ -50,7 +40,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
 
     useEffect(() => {
         // invalidate
-        setPlayers({});
         setInfo(undefined);
 
         // register events
@@ -65,7 +54,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
             // sonus packets
             .register("connected", (event: CustomEvent<ConnectedPacket>) => {
                 // save player info
-                setPlayer({
+                setUser({
                     uuid: event.detail.playerId,
                     name: event.detail.username,
                 });
@@ -81,18 +70,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                 if (!event.detail.success) {
                     setInfo(`[${getCurrentTimeString()}] Wrong password, please try again!`);
                 }
-            })
-            .register("state_update", (event: CustomEvent<StateUpdatePacket>) => {
-                setPlayers(players => {
-                    const state = event.detail.state;
-                    // keep volume
-                    const prevState = players[state.uniqueId.name];
-                    state.volume = prevState?.volume || 1;
-                    // copy players
-                    const newPlayers = Object.assign({}, players);
-                    newPlayers[state.uniqueId.name] = state;
-                    return newPlayers;
-                });
             })
             .register("keep_alive", (event: CustomEvent<KeepAlivePacket>) => {
                 socket.sendPacket(event.detail);
@@ -139,39 +116,30 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                         gap: "1em",
                     }}
                 >
-                    <VoiceInfo player={player} token={token} socket={socketUrl} state={state}/>
+                    <VoiceInfo token={token} socketUrl={socketUrl} state={state}/>
                     {info && <code>{info}</code>}
-                    <VoiceConnectButton socket={socket} openSocket={openSocket}/>
+                    <VoiceConnectButton openSocket={openSocket}/>
                 </div>
-                {(socket.isLoaded() && player) &&
+                {(socket.isLoaded() && user) &&
                     <div className={"container"}>
-                        <MicContainer sendPacket={packet => socket.sendPacket(packet)}/>
+                        <MicContainer/>
                     </div>
                 }
-                <VoiceCategories socket={socket}/>
+                <VoiceCategories/>
             </div>
-            {Object.values(players).length > 0 &&
-                <div className={"container"}>
-                    <PlayerInfos states={Object.values(players)}/>
-                </div>
-            }
+            <PlayerInfos/>
             <div style={{
                 display: "flex",
                 flexDirection: "column",
                 gap: "0.5rem",
             }}>
-                {(socket.isLoaded() && player) &&
+                {(socket.isLoaded() && user) &&
                     <div className={"container"}>
                         <h2>Create Group</h2>
-                        <CreateGroupForm sendPacket={packet => socket.sendPacket(packet)}/>
+                        <CreateGroupForm/>
                     </div>
                 }
-                <ClientGroups
-                    socket={socket}
-                    viewerId={player?.uuid}
-                    players={Object.values(players)}
-                    sendPacket={packet => socket.sendPacket(packet)}
-                />
+                <ClientGroups/>
             </div>
         </div>
     );

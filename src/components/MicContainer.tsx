@@ -11,6 +11,7 @@ import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio/audio_con
 import {OpusApplication, OpusEncoderWebWorker} from "@minceraftmc/opus-encoder";
 import {getHighestAudioPercent} from "../scripts/util/util.ts";
 import {InputSoundPacket, Packet} from "../scripts/network/packets.ts";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 // TODO clean this shit mess up
 
@@ -124,7 +125,9 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
     return analyzer;
 };
 
-const MicContainer: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = ({sendPacket}) => {
+const MicContainer: FunctionComponent = () => {
+    const {socket: [socket]} = useVoiceStateContext();
+
     const [deviceId, setDeviceId] = useState<string>(DEFAULT_DEVICE_ID);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [deviceRefresh, setDeviceRefresh] = useState<number>(0);
@@ -160,7 +163,7 @@ const MicContainer: FunctionComponent<{ sendPacket: (packet: Packet) => void }> 
         let tearDown = [false];
         let tearDownCalls: (() => void)[] = [() => tearDown[0] = true];
 
-        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], sendPacket)
+        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], packet => socket.sendPacket(packet))
             .then(async controller => {
                 // always free voice encoder
                 if (tearDown[0]) {

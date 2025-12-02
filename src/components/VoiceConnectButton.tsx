@@ -1,13 +1,14 @@
 import {useCallback, useEffect, useState} from "preact/hooks";
-import {VoiceSocket} from "../scripts/socket.ts";
 import type {FunctionComponent} from "preact";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 interface Props {
-    socket: VoiceSocket;
     openSocket: () => void,
 }
 
-const VoiceConnectButton: FunctionComponent<Props> = ({socket, openSocket}) => {
+const VoiceConnectButton: FunctionComponent<Props> = ({openSocket}) => {
+    const {socket: [socket]} = useVoiceStateContext();
+
     const [connected, setConnected] = useState(false);
     const [connecting, setConnecting] = useState(false);
 
