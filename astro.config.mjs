@@ -9,7 +9,9 @@ export default defineConfig({
     compressHTML: process.env.NODE_ENV === "production",
     trailingSlash: "ignore",
     integrations: [preact()],
-    adapter: cloudflare(),
+    adapter: cloudflare({
+        imageService: "compile",
+    }),
     env: {
         schema: {
             WEBSOCKET_URL: envField.string({
