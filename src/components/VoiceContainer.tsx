@@ -13,19 +13,15 @@ import {getCurrentTimeString} from "../scripts/util/util.ts";
 import MicContainer from "./MicContainer.tsx";
 import {
     AudioPacket,
-    CategoryAddPacket,
-    CategoryRemovePacket,
     ConnectedPacket,
     KeepAlivePacket,
     PingPacket,
     PositionUpdatePacket,
-    RoomAddPacket,
     RoomJoinResponsePacket,
-    RoomRemovePacket,
     StateInfoPacket,
     StateUpdatePacket,
 } from "../scripts/network/packets.ts";
-import {type AudioCategory, AudioRoom, PlayerState} from "../scripts/types.ts";
+import {PlayerState} from "../scripts/types.ts";
 import type {Component} from "../scripts/network/component.ts";
 import type {FunctionComponent} from "preact";
 
@@ -49,15 +45,11 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
     const [state, setState] = useState<string>("disconnected");
     const [info, setInfo] = useState<string | undefined>();
     const [socket, setSocket] = useState<VoiceSocket>(new VoiceSocket(socketUrl));
-    const [categories, setCategories] = useState<{ [id: string]: AudioCategory }>({});
     const [players, setPlayers] = useState<{ [id: string]: PlayerState }>({});
-    const [groups, setGroups] = useState<{ [id: string]: AudioRoom }>({});
     const audio = useMemo(() => new AudioPlayer(), []);
 
     const invalidateState = useCallback(() => {
-        setCategories({});
         setPlayers({});
-        setGroups({});
         setInfo(undefined);
     }, []);
 
@@ -85,25 +77,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                 audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio)
                     .catch(error => console.error(error));
             })
-            .register("category_add", (event: CustomEvent<CategoryAddPacket>) => {
-                setCategories(categories => {
-                    const category = event.detail.category;
-                    // keep volume
-                    const prevCategory = categories[category.uniqueId.name];
-                    category.volume = prevCategory?.volume || 1;
-                    // copy categories
-                    const newCategories = Object.assign({}, categories);
-                    newCategories[category.uniqueId.name] = category;
-                    return newCategories;
-                });
-            })
-            .register("category_remove", (event: CustomEvent<CategoryRemovePacket>) => {
-                setCategories(categories => {
-                    const newCategories = Object.assign({}, categories);
-                    delete newCategories[event.detail.categoryId.name];
-                    return newCategories;
-                });
-            })
             .register("connected", (event: CustomEvent<ConnectedPacket>) => {
                 // save player info
                 setPlayer({
@@ -116,34 +89,15 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                         // inform the server we are able to send audio
                         socket.sendPacket(new StateInfoPacket(false, false));
                     })
-                    .catch(error => console.error(error))
+                    .catch(error => console.error(error));
             })
             .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
                 // TODO
-            })
-            .register("room_add", (event: CustomEvent<RoomAddPacket>) => {
-                setGroups(groups => {
-                    const room = event.detail.room;
-                    // keep volume
-                    const prevGroup = groups[room.uniqueId.name];
-                    room.volume = prevGroup?.volume || 1;
-                    // copy groups
-                    const newGroups = Object.assign({}, groups);
-                    newGroups[room.uniqueId.name] = room;
-                    return newGroups;
-                });
             })
             .register("room_join_response", (event: CustomEvent<RoomJoinResponsePacket>) => {
                 if (!event.detail.success) {
                     setInfo(`[${getCurrentTimeString()}] Wrong password, please try again!`);
                 }
-            })
-            .register("room_remove", (event: CustomEvent<RoomRemovePacket>) => {
-                setGroups(groups => {
-                    const newGroups = Object.assign({}, groups);
-                    delete newGroups[event.detail.roomId.name];
-                    return newGroups;
-                });
             })
             .register("state_update", (event: CustomEvent<StateUpdatePacket>) => {
                 setPlayers(players => {
@@ -211,11 +165,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                         <MicContainer sendPacket={packet => socket.sendPacket(packet)}/>
                     </div>
                 }
-                {Object.values(categories).length > 0 &&
-                    <div className={"container"}>
-                        <VoiceCategories categories={Object.values(categories)}/>
-                    </div>
-                }
+                <VoiceCategories socket={socket}/>
             </div>
             {Object.values(players).length > 0 &&
                 <div className={"container"}>
@@ -233,16 +183,12 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                         <CreateGroupForm sendPacket={packet => socket.sendPacket(packet)}/>
                     </div>
                 }
-                {Object.values(groups).length > 0 &&
-                    <div className={"container"}>
-                        <ClientGroups
-                            viewerId={player?.uuid}
-                            players={Object.values(players)}
-                            rooms={Object.values(groups)}
-                            sendPacket={packet => socket.sendPacket(packet)}
-                        />
-                    </div>
-                }
+                <ClientGroups
+                    socket={socket}
+                    viewerId={player?.uuid}
+                    players={Object.values(players)}
+                    sendPacket={packet => socket.sendPacket(packet)}
+                />
             </div>
         </div>
     );
