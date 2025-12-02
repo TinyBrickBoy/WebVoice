@@ -78,11 +78,12 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                 setSocket(new VoiceSocket(socketUrl));
             })
             // sonus packets
-            .register("audio", async (event: CustomEvent<AudioPacket>) => {
+            .register("audio", (event: CustomEvent<AudioPacket>) => {
                 // TODO position
                 const playerVolume = getVolume("player", event.detail.senderId.name) / 100;
                 const categoryVolume = getVolume("category", event.detail.categoryId?.name) / 100;
-                await audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio);
+                audio.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio)
+                    .catch(error => console.error(error));
             })
             .register("category_add", (event: CustomEvent<CategoryAddPacket>) => {
                 setCategories(categories => {
@@ -103,16 +104,19 @@ const VoiceContainer: FunctionComponent<Props> = ({socket: socketUrl, token}) =>
                     return newCategories;
                 });
             })
-            .register("connected", async (event: CustomEvent<ConnectedPacket>) => {
+            .register("connected", (event: CustomEvent<ConnectedPacket>) => {
                 // save player info
                 setPlayer({
                     uuid: event.detail.playerId,
                     name: event.detail.username,
                 });
                 // start audio
-                await audio.startContext();
-                // inform the server we are able to send audio
-                socket.sendPacket(new StateInfoPacket(false, false));
+                audio.startContext()
+                    .then(() => {
+                        // inform the server we are able to send audio
+                        socket.sendPacket(new StateInfoPacket(false, false));
+                    })
+                    .catch(error => console.error(error))
             })
             .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
                 // TODO

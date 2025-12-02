@@ -65,7 +65,7 @@ export default class AudioPlayer {
         });
         node.connect(this.ctx!!.destination); // connect to default speaker
         const decoder = new OpusDecoderWebWorker({sampleRate: SAMPLE_RATE, channels: CHANNEL_COUNT});
-        // reduce chance of race condition by saving data BEFORE waiting for WASM
+        // prevent race condition by saving data before waiting for WASM to load
         const data = {worklet: node.port, node, decoder, lastTouch: Date.now()};
         this.channels[channel] = data;
         await decoder.ready;
