@@ -1,29 +1,30 @@
 import {useCallback, useEffect, useState} from "preact/hooks";
 import {VoiceSocket} from "../scripts/socket.ts";
+import type {FunctionComponent} from "preact";
 
 interface Props {
     socket: VoiceSocket;
     openSocket: () => void,
 }
 
-const VoiceConnectButton = (props: Props) => {
+const VoiceConnectButton: FunctionComponent<Props> = ({socket, openSocket}) => {
     const [connected, setConnected] = useState(false);
     const [connecting, setConnecting] = useState(false);
 
     useEffect(() => {
-        return props.socket.registers()
+        return socket.registers()
             .register("open", () => {
                 setConnected(true);
                 setConnecting(false);
             })
             .register("close", () => setConnected(false))
             .callback();
-    }, [props.socket]);
+    }, [socket]);
 
     const tryConnect = useCallback(() => {
         setConnecting(true);
-        props.openSocket();
-    }, [props.openSocket]);
+        openSocket();
+    }, [openSocket]);
 
     return (
         <div>

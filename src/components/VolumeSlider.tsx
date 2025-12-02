@@ -1,5 +1,6 @@
 import {getVolume, setVolume, type VolumeType} from "../scripts/util/volumes.ts";
 import {useEffect, useRef} from "preact/hooks";
+import type {FunctionComponent} from "preact";
 
 interface Props {
     type: VolumeType;
@@ -7,7 +8,7 @@ interface Props {
     onUpdate?: (volume: number) => void;
 }
 
-const VolumeSlider = (props: Props) => {
+const VolumeSlider: FunctionComponent<Props> = (props) => {
     const volume = getVolume(props.type, props.name);
     const volumeRef = useRef<HTMLSpanElement>();
 

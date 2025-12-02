@@ -1,5 +1,5 @@
 import {type Component} from "../scripts/network/component.ts";
-import type {JSX} from "preact";
+import type {FunctionComponent, JSX} from "preact";
 
 interface Props {
     component: Component;
@@ -32,7 +32,7 @@ const getCssColor = (color: string) => {
     return minecraftColors[color.toLowerCase()];
 };
 
-const MinecraftComponent = ({component}: Props) => {
+const MinecraftComponent: FunctionComponent<Props> = ({component}) => {
     let content = "";
     let children: JSX.Element[] | false = false;
     const styling: JSX.CSSProperties = {};

@@ -1,5 +1,6 @@
 import type {PlayerInfo} from "./VoiceContainer.tsx";
 import MinecraftComponent from "./MinecraftComponent.tsx";
+import type {FunctionComponent} from "preact";
 
 interface Props {
     player?: PlayerInfo,
@@ -8,7 +9,7 @@ interface Props {
     state: string,
 }
 
-const VoiceInfo = (props: Props) => {
+const VoiceInfo: FunctionComponent<Props> = (props) => {
     return (
         <>
             <h2>Status</h2>

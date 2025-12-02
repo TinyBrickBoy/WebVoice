@@ -4,6 +4,7 @@ import PlayerInfo from "./PlayerInfo.tsx";
 import {useMemo, useState} from "preact/hooks";
 import {type AudioRoom, PlayerState, type SendPacket} from "../scripts/types.ts";
 import MinecraftComponent from "./MinecraftComponent.tsx";
+import type {FunctionComponent} from "preact";
 
 interface Props {
     room: AudioRoom;
@@ -12,7 +13,7 @@ interface Props {
     sendPacket: SendPacket,
 }
 
-const ClientGroup = (props: Props) => {
+const ClientGroup: FunctionComponent<Props> = (props) => {
     const [password, setPassword] = useState<string>("");
     const hasViewer = useMemo(() => {
         if (props.viewerId) {

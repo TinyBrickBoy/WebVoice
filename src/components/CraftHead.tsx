@@ -1,11 +1,12 @@
 import type {UUID} from "../scripts/util/uuid.ts";
+import type {FunctionComponent} from "preact";
 
 interface Props {
     uuid: UUID;
     size: number;
 }
 
-const CraftHead = ({uuid, size}: Props) => {
+const CraftHead: FunctionComponent<Props> = ({uuid, size}) => {
     return <img
         alt={"Head of " + uuid.name}
         src={`https://crafthead.net/helm/${uuid.name}/8`}

@@ -2,6 +2,7 @@ import ClientGroup from "./ClientGroup.tsx";
 import type {UUID} from "../scripts/util/uuid.ts";
 import {Packet} from "../scripts/network/packets.ts";
 import type {AudioRoom, PlayerState} from "../scripts/types.ts";
+import type {FunctionComponent} from "preact";
 
 interface Props {
     viewerId?: UUID;
@@ -10,7 +11,7 @@ interface Props {
     sendPacket: (packet: Packet) => void,
 }
 
-const ClientGroups = (props: Props) => {
+const ClientGroups: FunctionComponent<Props> = (props) => {
     return (
         <>
             <h2 style={{marginBottom: "0.5em"}}>Groups</h2>

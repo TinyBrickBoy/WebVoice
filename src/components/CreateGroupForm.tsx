@@ -4,7 +4,7 @@ import {Packet, RoomCreatePacket} from "../scripts/network/packets.ts";
 
 type GroupAudioType = "normal" | "open" | "isolated"
 
-const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = (props) => {
+const CreateGroupForm: FunctionComponent<{ sendPacket: (packet: Packet) => void }> = ({sendPacket}) => {
     const [name, setName] = useState<string>();
     const [password, setPassword] = useState<string>();
     const [type, setType] = useState<GroupAudioType>("normal");
