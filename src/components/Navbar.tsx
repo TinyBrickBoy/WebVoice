@@ -7,14 +7,16 @@ import SearchBar from "./SearchBar.tsx";
 
 export const Navbar: FunctionComponent = () => {
     return <>
-        <div className={"flex flex-col min-w-110 p-3 gap-2 h-full bg-amber-950"}>
+        <div className={"flex flex-col min-w-110 p-4 gap-2 h-full bg-amber-950"}>
             <SearchBar/>
-            <div className={"flex flex-col gap-2 overflow-y-scroll grow"}>
+            <div className={"flex flex-col flex-1 gap-2 overflow-y-scroll grow"}>
                 <VoiceCategories/>
                 <PlayerInfos/>
                 <ClientGroups/>
             </div>
-            <UserProfile/>
+            <div className={""}>
+                <UserProfile/>
+            </div>
         </div>
     </>;
 };
