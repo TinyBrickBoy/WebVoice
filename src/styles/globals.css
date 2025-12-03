@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+html {
+    font-family: Poppins, system-ui, sans-serif;
+    font-size: 1.05rem;
+}
+
 .container {
     background-color: #525252;
     border-radius: 0.5em;

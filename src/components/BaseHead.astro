@@ -2,6 +2,12 @@
 // global stylesheets
 import "../styles/globals.css";
 
+// import global font
+import "@fontsource/poppins/400.css";
+import poppins400 from "@fontsource/poppins/files/poppins-latin-400-normal.woff2?url";
+import "@fontsource/poppins/600.css";
+import poppins600 from "@fontsource/poppins/files/poppins-latin-600-normal.woff2?url";
+
 export interface HeadProps {
     title?: string;
     description?: string;
@@ -64,3 +70,6 @@ keywords.push("Minecraft", "Minecraft Server", "Froglight.net", "Froglight", "Fr
 <meta name="theme-color" content="#333333">
 <meta name="color-scheme" content="dark">
 <meta name="darkreader-lock">
+
+<link rel="prefetch" href={poppins400}/>
+<link rel="prefetch" href={poppins600}/>

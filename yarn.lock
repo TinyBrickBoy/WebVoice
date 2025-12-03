@@ -1032,6 +1032,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/poppins@npm:^5.2.7":
+  version: 5.2.7
+  resolution: "@fontsource/poppins@npm:5.2.7"
+  checksum: 10c0/22a317488c1aee2a8eca1a2082599482fae38fa51c72a08ce45836aeceb0272cc71e8e7cc02e4466a8e6b22f77de3a659fc4bbfc7a1f5788fdb91960d9a21415
+  languageName: node
+  linkType: hard
+
 "@img/colour@npm:^1.0.0":
   version: 1.0.0
   resolution: "@img/colour@npm:1.0.0"
@@ -6317,6 +6324,7 @@ __metadata:
     "@astrojs/cloudflare": "npm:^12.6.12"
     "@astrojs/node": "npm:9.5.1"
     "@astrojs/preact": "npm:4.1.3"
+    "@fontsource/poppins": "npm:^5.2.7"
     "@minceraftmc/opus-decoder": "npm:^0.7.11-rc.1"
     "@minceraftmc/opus-encoder": "npm:^0.0.7-rc.1"
     "@sapphi-red/web-noise-suppressor": "npm:^0.3.5"
