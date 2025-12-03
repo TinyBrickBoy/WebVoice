@@ -8,18 +8,9 @@ import AudioPlayer from "../scripts/audio/audio_player.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
 import MicContainer from "./MicContainer.tsx";
-import {
-    ConnectedPacket,
-    KeepAlivePacket,
-    PingPacket,
-    StateInfoPacket,
-} from "../scripts/network/packets.ts";
+import {ConnectedPacket, PingPacket, StateInfoPacket} from "../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-
-// TODO cleanup
-
-const INFO_DURATION = 10 * 1000;
 
 interface Props {
     socketUrl: URL;
@@ -28,7 +19,6 @@ interface Props {
 
 const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
     const [state, setState] = useState<string>("disconnected");
-    const [info, setInfo] = useState<string | undefined>();
     const {socket: [socket, setSocket], user: [user, setUser]} = useVoiceStateContext();
 
     // audio player handling
@@ -37,19 +27,14 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
     useEffect(() => audio.registerSocket(socket), [audio, socket]);
 
     useEffect(() => {
-        // invalidate
-        setInfo(undefined);
-
         // register events
         return socket.registers()
             .register("open", () => setState("Connected"))
-            .register("error", console.error)
             .register("close", (event: CloseEvent) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
                 setState(`Disconnected: ${event.reason} (${event.code})`);
                 setSocket(new VoiceSocket(socketUrl));
             })
-            // sonus packets
             .register("connected", (event: CustomEvent<ConnectedPacket>) => {
                 // save player info
                 setUser({
@@ -63,9 +48,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
                         socket.sendPacket(new StateInfoPacket(false, false));
                     })
                     .catch(error => console.error(error));
-            })
-            .register("keep_alive", (event: CustomEvent<KeepAlivePacket>) => {
-                socket.sendPacket(event.detail);
             })
             .register("ping", (event: CustomEvent<PingPacket>) => {
                 // TODO
@@ -82,13 +64,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
         newSocket.open();
         setSocket(newSocket);
     }, [socket]);
-
-    // deactivate info after short period of time
-    useEffect(() => {
-        if (!info) return;
-        const timer = setTimeout(() => setInfo(undefined), INFO_DURATION);
-        return () => clearTimeout(timer);
-    }, [info]);
 
     return (
         <div style={{
@@ -110,7 +85,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
                     }}
                 >
                     <VoiceInfo token={token} socketUrl={socketUrl} state={state}/>
-                    {info && <code>{info}</code>}
                     <VoiceConnectButton openSocket={openSocket}/>
                 </div>
                 {(socket.isLoaded() && user) &&

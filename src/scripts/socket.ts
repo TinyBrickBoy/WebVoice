@@ -1,6 +1,6 @@
 import {EventManager} from "./util/events";
 import ByteBuffer from "bytebuffer";
-import {Packet} from "./network/packets.ts";
+import {KeepAlivePacket, Packet} from "./network/packets.ts";
 import {readPacket, writePacket} from "./network/packet_registry.ts";
 
 export class VoiceSocket extends EventManager {
@@ -22,6 +22,10 @@ export class VoiceSocket extends EventManager {
             // fire as event to be handled
             this.fire(new CustomEvent(packet.id, {detail: packet.packet}));
         });
+        this.register("error", error => console.error(error));
+
+        // always send back keep alive packets
+        this.register("keep_alive", ({detail}: CustomEvent<KeepAlivePacket>) => this.sendPacket(detail));
     }
 
     public sendPacket(packet: Packet) {
