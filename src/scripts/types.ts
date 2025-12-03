@@ -83,16 +83,26 @@ export class PlayerState {
     public readonly primaryRoomId: UUID | null;
     public volume: number = 1;
 
-    constructor(buf: ByteBuffer) {
-        this.uniqueId = readUniqueId(buf);
-        this.name = readComponentJson(buf);
-        const flags = buf.readByte();
-        this.muted = (flags & STATE_FLAG_MUTED) != 0;
-        this.deafened = (flags & STATE_FLAG_DEAFENED) != 0;
-        if ((flags & STATE_FLAG_HAS_GROUP) != 0) {
-            this.primaryRoomId = readUniqueId(buf);
+    constructor(uniqueId: UUID, name: Component, muted: boolean, deafened: boolean, primaryRoomId: UUID | null);
+    constructor(buf: ByteBuffer);
+    constructor(param: ByteBuffer | UUID, name?: Component, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null) {
+        if ("readByte" in param) {
+            this.uniqueId = readUniqueId(buf);
+            this.name = readComponentJson(buf);
+            const flags = buf.readByte();
+            this.muted = (flags & STATE_FLAG_MUTED) != 0;
+            this.deafened = (flags & STATE_FLAG_DEAFENED) != 0;
+            if ((flags & STATE_FLAG_HAS_GROUP) != 0) {
+                this.primaryRoomId = readUniqueId(buf);
+            } else {
+                this.primaryRoomId = null;
+            }
         } else {
-            this.primaryRoomId = null;
+            this.uniqueId = param;
+            this.name = name!!;
+            this.muted = muted!!;
+            this.deafened = deafened!!;
+            this.primaryRoomId = primaryRoomId || null;
         }
     }
 

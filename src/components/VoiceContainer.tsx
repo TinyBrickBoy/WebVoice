@@ -5,6 +5,7 @@ import {ConnectedPacket, PingPacket, StateInfoPacket} from "../scripts/network/p
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {Navbar} from "./Navbar.tsx";
+import PlayerGrid from "./PlayerGrid.tsx";
 
 interface Props {
     socketUrl: URL;
@@ -50,9 +51,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     return <>
         <main className={"flex flex-row h-full"}>
             <Navbar/>
-            <div className={"grow"}>
-                <span>spast</span>
-            </div>
+            <PlayerGrid/>
         </main>
     </>;
 };

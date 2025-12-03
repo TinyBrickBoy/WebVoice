@@ -7,9 +7,9 @@ import SearchBar from "./SearchBar.tsx";
 
 export const Navbar: FunctionComponent = () => {
     return <>
-        <div className={"flex flex-col min-w-110 m-3 gap-2 h-full"}>
+        <div className={"flex flex-col min-w-110 p-3 gap-2 h-full bg-amber-950"}>
             <SearchBar/>
-            <div className={"flex flex-col gap-2 overflow-y-scroll"}>
+            <div className={"flex flex-col gap-2 overflow-y-scroll grow"}>
                 <VoiceCategories/>
                 <PlayerInfos/>
                 <ClientGroups/>
