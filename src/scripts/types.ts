@@ -2,7 +2,6 @@ import ByteBuffer from "bytebuffer";
 import type {UUID} from "./util/uuid.ts";
 import type {Component} from "./network/component.ts";
 import {readBoolean, readComponentJson, readUniqueId} from "./network/buffer.ts";
-import type {Packet} from "./network/packets.ts";
 
 export class Vector3d {
 
@@ -23,6 +22,12 @@ export class Vector3d {
             this.z = param.readDouble();
         }
     }
+}
+
+export type Position3d = {
+    pos: Vector3d,
+    yaw: number,
+    pitch: number,
 }
 
 export class AudioCategory {
@@ -100,9 +105,14 @@ export class PlayerState {
     }
 }
 
-export type SendPacket = (packet: Packet) => void;
-
 export interface UserInfo {
     uuid: UUID;
     name: Component;
+}
+
+export type AudioQueueData = {
+    data: Float32Array,
+    volume: number,
+    source: Position3d | null,
+    position: Vector3d | null,
 }

@@ -96,10 +96,14 @@ export class ConnectedPacket extends DecodablePacket {
 export class PositionUpdatePacket extends DecodablePacket {
 
     public readonly position: Vector3d;
+    public readonly yaw: number;
+    public readonly pitch: number;
 
     constructor(buf: ByteBuffer) {
         super();
         this.position = new Vector3d(buf);
+        this.yaw = buf.readFloat();
+        this.pitch = buf.readFloat();
     }
 }
 
@@ -120,7 +124,7 @@ export class RoomJoinResponsePacket extends DecodablePacket {
 
     constructor(buf: ByteBuffer) {
         super();
-        this.roomId = readUniqueId(buf)
+        this.roomId = readUniqueId(buf);
         this.success = readBoolean(buf);
     }
 }
@@ -132,7 +136,7 @@ export class RoomLeaveResponsePacket extends DecodablePacket {
 
     constructor(buf: ByteBuffer) {
         super();
-        this.roomId = readUniqueId(buf)
+        this.roomId = readUniqueId(buf);
         this.success = readBoolean(buf);
     }
 }

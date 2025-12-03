@@ -2,7 +2,7 @@ import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWork
 import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
-import opusEncoderWorkletUrl from "../scripts/audio/opus_encoder.ts?worker&url";
+import opusEncoderWorkletUrl from "../scripts/audio/audio_queue_transmitter.ts?worker&url";
 import type {FunctionComponent} from "preact";
 import {useEffect, useRef, useState} from "preact/hooks";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";

@@ -1,6 +1,6 @@
 import {FRAME_SIZE} from "./audio_constants.ts";
 
-class OpusEncoderProcessor extends AudioWorkletProcessor {
+class AudioQueueTransmitter extends AudioWorkletProcessor {
 
     private readonly samplesQueue: number[] = [];
     private senderPort?: MessagePort;
@@ -25,4 +25,4 @@ class OpusEncoderProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor("opus-encoder", OpusEncoderProcessor);
+registerProcessor("audio-queue-transmitter", AudioQueueTransmitter);
