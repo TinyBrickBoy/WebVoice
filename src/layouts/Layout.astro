@@ -1,6 +1,7 @@
 ---
 import type {HeadProps} from "../components/BaseHead.astro";
 import BaseHead from "../components/BaseHead.astro";
+import "../styles/globals.css";
 
 interface Props extends HeadProps {
 }
@@ -13,8 +14,6 @@ interface Props extends HeadProps {
     <slot name="head"/>
 </head>
 <body>
-<div id="page-content">
-    <slot/>
-</div>
+<slot/>
 </body>
 </html>

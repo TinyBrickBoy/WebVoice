@@ -22,16 +22,18 @@ const PlayerInfos: FunctionComponent = () => {
             .callback();
     }, [socket]);
 
-    return Object.values(players).length ?
-        <div className={"container"}>
-            <h2>Players</h2>
-            <div>
+    const playerValues = Object.values(players)
+    return <>
+        <details open={true}>
+            <summary>Players ({playerValues.length})</summary>
+            <div className={"flex flex-col"}>
                 {Object.values(players)
                     .filter(state => !state.deafened)
                     .map(state => (
                         <PlayerInfo key={state.uniqueId.name} state={state}/>
                     ))}
             </div>
-        </div> : <></>;
+        </details>
+    </>;
 };
 export default PlayerInfos;

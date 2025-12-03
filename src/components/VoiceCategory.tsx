@@ -7,7 +7,7 @@ interface Props {
     category: AudioCategory;
 }
 
-const Category: FunctionComponent<Props> = ({category}) => {
+const VoiceCategory: FunctionComponent<Props> = ({category}) => {
     return (
         <div style={{display: "flex", flexDirection: "column", gap: "0.2em", marginTop: "1em"}}>
             <span>Category: <MinecraftComponent component={category.name}/></span>
@@ -16,4 +16,4 @@ const Category: FunctionComponent<Props> = ({category}) => {
         </div>
     );
 };
-export default Category;
+export default VoiceCategory;

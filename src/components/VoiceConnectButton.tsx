@@ -1,13 +1,11 @@
 import {useCallback, useEffect, useState} from "preact/hooks";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {VoiceSocket} from "../scripts/socket.ts";
+import Button from "./Button.tsx";
 
-interface Props {
-    openSocket: () => void,
-}
-
-const VoiceConnectButton: FunctionComponent<Props> = ({openSocket}) => {
-    const {socket: [socket]} = useVoiceStateContext();
+const VoiceConnectButton: FunctionComponent = () => {
+    const {socketUrl, socket: [socket, setSocket], state: [_state, setState]} = useVoiceStateContext();
 
     const [connected, setConnected] = useState(false);
     const [connecting, setConnecting] = useState(false);
@@ -22,15 +20,26 @@ const VoiceConnectButton: FunctionComponent<Props> = ({openSocket}) => {
             .callback();
     }, [socket]);
 
-    const tryConnect = useCallback(() => {
+    const openSocket = useCallback(() => {
         setConnecting(true);
-        openSocket();
-    }, [openSocket]);
+        setState("disconnected");
+        socket.close();
 
-    return (
-        <div>
-            <button disabled={connecting || connected} onClick={tryConnect}>Connect</button>
-        </div>
-    );
+        setState("connecting");
+        const newSocket = new VoiceSocket(socketUrl);
+        newSocket.open();
+        setSocket(newSocket);
+    }, [socket, socketUrl]);
+
+    return <>
+        <Button
+            color={"purple"}
+            disabled={connecting || connected}
+            onClick={openSocket}
+            className={"grow"}
+        >
+            Connect
+        </Button>
+    </>;
 };
 export default VoiceConnectButton;

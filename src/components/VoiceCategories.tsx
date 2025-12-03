@@ -1,4 +1,4 @@
-import Category from "./VoiceCategory.tsx";
+import VoiceCategory from "./VoiceCategory.tsx";
 import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
 import {CategoryAddPacket, CategoryRemovePacket} from "../scripts/network/packets.ts";
@@ -29,14 +29,16 @@ const VoiceCategories: FunctionComponent = () => {
             .callback();
     }, [socket]);
 
-    return Object.values(categories).length ?
-        <div className={"container"}>
-            <h2 style={{marginBottom: "0"}}>Categories</h2>
-            <div>
-                {Object.values(categories).map(category => (
-                    <Category key={category.uniqueId.name} category={category}/>
+    const categoryValues = Object.values(categories);
+    return <>
+        <details open={true}>
+            <summary>Categories ({categoryValues.length})</summary>
+            <div className={"flex flex-col"}>
+                {categoryValues.map(category => (
+                    <VoiceCategory key={category.uniqueId.name} category={category}/>
                 ))}
             </div>
-        </div> : <></>;
+        </details>
+    </>;
 };
 export default VoiceCategories;

@@ -29,18 +29,21 @@ const ClientGroups: FunctionComponent = () => {
             .callback();
     }, [socket]);
 
-    return Object.values(rooms).length ?
-        <div className={"container"}>
-            <h2 style={{marginBottom: "0.5em"}}>Groups</h2>
-            {Object.values(rooms)
-                .filter(room => room.joinable)
-                .map(room => (
+    const roomValues = Object.values(rooms)
+        .filter(room => room.joinable);
+    return <>
+        <details open={true}>
+            <summary>Groups ({roomValues.length})</summary>
+            <div className={"flex flex-col"}>
+                {roomValues.map(room => (
                     <ClientGroup
                         key={room.uniqueId.name}
                         room={room}
                         players={Object.values(players).filter(state => state.in(room.uniqueId))}
                     />
                 ))}
-        </div> : <></>;
+            </div>
+        </details>
+    </>;
 };
 export default ClientGroups;

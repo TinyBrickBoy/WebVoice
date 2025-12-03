@@ -1,25 +1,17 @@
-import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
-import VoiceInfo from "./VoiceInfo.tsx";
-import VoiceConnectButton from "./VoiceConnectButton.tsx";
+import {useEffect, useMemo} from "preact/hooks";
 import {VoiceSocket} from "../scripts/socket.ts";
-import VoiceCategories from "./VoiceCategories.tsx";
-import PlayerInfos from "./PlayerInfos.tsx";
 import AudioPlayer from "../scripts/audio/audio_player.ts";
-import ClientGroups from "./ClientGroups.tsx";
-import CreateGroupForm from "./CreateGroupForm.tsx";
-import MicContainer from "./MicContainer.tsx";
 import {ConnectedPacket, PingPacket, StateInfoPacket} from "../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {Navbar} from "./Navbar.tsx";
 
 interface Props {
     socketUrl: URL;
-    token: string;
 }
 
-const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
-    const [state, setState] = useState<string>("disconnected");
-    const {socket: [socket, setSocket], user: [user, setUser]} = useVoiceStateContext();
+const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
+    const {socket: [socket, setSocket], user: [_user, setUser], state: [_state, setState]} = useVoiceStateContext();
 
     // audio player handling
     const audio = useMemo(() => new AudioPlayer(), []);
@@ -29,10 +21,10 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
     useEffect(() => {
         // register events
         return socket.registers()
-            .register("open", () => setState("Connected"))
+            .register("open", () => setState("connected"))
             .register("close", (event: CloseEvent) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
-                setState(`Disconnected: ${event.reason} (${event.code})`);
+                setState("disconnected");
                 setSocket(new VoiceSocket(socketUrl));
             })
             .register("connected", (event: CustomEvent<ConnectedPacket>) => {
@@ -55,60 +47,14 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
             .callback();
     }, [socket]);
 
-    const openSocket = useCallback(() => {
-        setState("Disconnected");
-        socket.close();
-
-        setState("Connecting...");
-        const newSocket = new VoiceSocket(socketUrl);
-        newSocket.open();
-        setSocket(newSocket);
-    }, [socket]);
-
-    return (
-        <div style={{
-            display: "flex",
-            gap: "0.5rem",
-            alignItems: "flex-start",
-        }}>
-            <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-            }}>
-                <div
-                    className={"container"}
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "1em",
-                    }}
-                >
-                    <VoiceInfo token={token} socketUrl={socketUrl} state={state}/>
-                    <VoiceConnectButton openSocket={openSocket}/>
-                </div>
-                {(socket.isLoaded() && user) &&
-                    <div className={"container"}>
-                        <MicContainer/>
-                    </div>
-                }
-                <VoiceCategories/>
+    return <>
+        <main className={"flex flex-row h-full"}>
+            <Navbar/>
+            <div className={"grow"}>
+                <span>spast</span>
             </div>
-            <PlayerInfos/>
-            <div style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-            }}>
-                {(socket.isLoaded() && user) &&
-                    <div className={"container"}>
-                        <h2>Create Group</h2>
-                        <CreateGroupForm/>
-                    </div>
-                }
-                <ClientGroups/>
-            </div>
-        </div>
-    );
+        </main>
+    </>;
 };
 export default VoiceContainer;
+;

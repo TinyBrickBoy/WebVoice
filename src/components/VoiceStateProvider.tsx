@@ -3,15 +3,19 @@ import {VoiceSocket} from "../scripts/socket.ts";
 import {type Dispatch, type StateUpdater, useContext, useState} from "preact/hooks";
 import type {AudioCategory, AudioRoom, PlayerState, UserInfo} from "../scripts/types.ts";
 import VoiceContainer from "./VoiceContainer.tsx";
+import {uuidFromString} from "../scripts/util/uuid.ts";
 
 type StateType<S> = [S, Dispatch<StateUpdater<S>>];
+type SocketState = "disconnected" | "connecting" | "connected"
 
 export type VoiceState = {
-    user: StateType<UserInfo | null>,
+    socketUrl: URL,
+    user: StateType<UserInfo>,
     socket: StateType<VoiceSocket>,
     players: StateType<Record<string, PlayerState>>,
     rooms: StateType<Record<string, AudioRoom>>,
     categories: StateType<Record<string, AudioCategory>>,
+    state: StateType<SocketState>,
 }
 
 // @ts-ignore it will be fiiiine, I don't want to spam null checks everywhere
@@ -26,16 +30,22 @@ interface Props {
     token: string;
 }
 
+const defaultUser = {
+    uuid: uuidFromString("606e2ff0-ed77-4842-9d6c-e1d3321c7838"),
+    name: {text: "Unknown", italic: true},
+} as UserInfo;
+
 const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl, token}) => {
-    const user = useState<UserInfo | null>(null);
+    const user = useState<UserInfo>(defaultUser);
     const socket = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
     const players = useState<Record<string, PlayerState>>({});
     const rooms = useState<Record<string, AudioRoom>>({});
     const categories = useState<Record<string, AudioCategory>>({});
+    const state = useState<SocketState>("disconnected");
 
     return <>
-        <VoiceStateContext.Provider value={{user, socket, players, rooms, categories}}>
-            <VoiceContainer socketUrl={socketUrl} token={token}/>
+        <VoiceStateContext.Provider value={{socketUrl, user, socket, players, rooms, categories, state}}>
+            <VoiceContainer socketUrl={socketUrl}/>
         </VoiceStateContext.Provider>
     </>;
 };

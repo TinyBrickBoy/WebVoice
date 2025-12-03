@@ -19,10 +19,12 @@
     "@minceraftmc/opus-decoder": "^0.7.11-rc.1",
     "@minceraftmc/opus-encoder": "^0.0.7-rc.1",
     "@sapphi-red/web-noise-suppressor": "^0.3.5",
+    "@tailwindcss/vite": "^4.1.17",
     "astro": "5.16.3",
     "bytebuffer": "^5.0.1",
     "preact": "^10.25.1",
     "symbl-opus-encdec": "^0.1.2",
+    "tailwindcss": "^4.1.17",
     "typescript": "^5.6.3"
   },
   "author": {
