@@ -4,6 +4,7 @@ import {OpusDecoderWebWorker} from "@minceraftmc/opus-decoder";
 import type {VoiceSocket} from "../socket.ts";
 import {AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
 import {getVolume} from "../util/volumes.ts";
+import {Vector3d} from "../types.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
@@ -19,6 +20,7 @@ export default class AudioPlayer {
 
     private ctx?: AudioContext;
     private readonly channels: { [channel: string]: ChannelData } = {};
+    private position: Vector3d = new Vector3d(0, 0, 0);
 
     private async closeChannel(channel: string) {
         const data = this.channels[channel];
@@ -82,27 +84,27 @@ export default class AudioPlayer {
         return data;
     }
 
-    public async playFrame(channel: string, volume: number, opus: Uint8Array) {
+    public async playFrame(channel: string, volume: number, opus: Uint8Array, position: Vector3d | null) {
         if (!this.ctx) {
             throw new Error("Can't play frame before creation of audio context");
         }
         const data = await this.resolveChannel(channel);
         const pcmAudio = await data.decoder.decodeFrame(opus);
-        const frame = {data: pcmAudio.channelData[0], volume: volume * 5} as DecodedOpusData;
+        const frame = {data: pcmAudio.channelData[0], volume: volume} as DecodedOpusData;
         data.worklet.postMessage(frame);
     }
 
     public registerSocket(socket: VoiceSocket) {
         return socket.registers()
-            .register("audio", (event: CustomEvent<AudioPacket>) => {
+            .register("audio", ({detail: packet}: CustomEvent<AudioPacket>) => {
                 // TODO position
-                const playerVolume = getVolume("player", event.detail.senderId.name) / 100;
-                const categoryVolume = getVolume("category", event.detail.categoryId?.name) / 100;
-                this.playFrame(event.detail.channelId.name, playerVolume * categoryVolume, event.detail.audio)
+                const playerVolume = getVolume("player", packet.senderId.name) / 100;
+                const categoryVolume = getVolume("category", packet.categoryId?.name) / 100;
+                this.playFrame(packet.channelId.name, playerVolume * categoryVolume, packet.audio, packet.position)
                     .catch(error => console.error(error));
             })
-            .register("position_update", (event: CustomEvent<PositionUpdatePacket>) => {
-                // TODO
+            .register("position_update", ({detail: {position}}: CustomEvent<PositionUpdatePacket>) => {
+                this.position = position;
             })
             .callback();
     }

@@ -10,10 +10,18 @@ export class Vector3d {
     public readonly y: number;
     public readonly z: number;
 
-    constructor(buf: ByteBuffer) {
-        this.x = buf.readDouble();
-        this.y = buf.readDouble();
-        this.z = buf.readDouble();
+    constructor(buf: ByteBuffer);
+    constructor(x: number, y: number, z: number);
+    constructor(param: ByteBuffer | number, y?: number, z?: number) {
+        if (typeof param == "number") {
+            this.x = param;
+            this.y = y || 0;
+            this.z = z || 0;
+        } else {
+            this.x = param.readDouble();
+            this.y = param.readDouble();
+            this.z = param.readDouble();
+        }
     }
 }
 
