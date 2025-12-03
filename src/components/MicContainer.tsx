@@ -1,121 +1,12 @@
-import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWorklet.js?url";
-import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
-import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
-import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
-import opusEncoderWorkletUrl from "../scripts/audio/audio_queue_transmitter.ts?worker&url";
 import type {FunctionComponent} from "preact";
 import {useEffect, useRef, useState} from "preact/hooks";
-import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import VolumeSlider from "./VolumeSlider.tsx";
-import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "../scripts/audio/audio_constants.ts";
-import {OpusApplication, OpusEncoderWebWorker} from "@minceraftmc/opus-encoder";
-import {getHighestAudioPercent} from "../scripts/util/util.ts";
-import {InputSoundPacket, Packet} from "../scripts/network/packets.ts";
+import {SAMPLE_RATE} from "../scripts/audio/audio_constants.ts";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {DEFAULT_DEVICE_ID, setupMicrophonePipeline} from "../scripts/audio/audio_mic.ts";
 
 // TODO clean this shit mess up
 
-export type VisualizerInitMessage = {
-    canvas: HTMLCanvasElement;
-}
-export type VisualizerFrameMessage = {
-    bufferLength: number;
-    dataArray: Uint8Array;
-}
-export type VisualizerMessage = VisualizerInitMessage | VisualizerFrameMessage;
-
-const GAIN_MULTIPLIER = 0.2;
-const DEFAULT_DEVICE_ID = "default";
-
-const setupAudioContext = async (
-    ctx: AudioContext,
-    deviceId: string,
-    analyzers: AnalyserNode[],
-    sendPacket: (packet: Packet) => void,
-) => {
-    // load WASM
-    const rnnoiseWasmBinary = await loadRnnoise({
-        url: rnnoiseWasmPath,
-        simdUrl: rnnoiseWasmSimdPath,
-    });
-
-    // load worker modules
-    await ctx.audioWorklet.addModule(noiseGateWorkletPath);
-    await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
-    await ctx.audioWorklet.addModule(opusEncoderWorkletUrl);
-
-    // load microphone stream
-    const constraints: MediaStreamConstraints = {
-        audio: {
-            echoCancellation: false,
-            sampleRate: SAMPLE_RATE,
-        },
-    };
-    if (deviceId !== DEFAULT_DEVICE_ID) (constraints.audio as MediaTrackConstraints).deviceId = deviceId;
-    const micStream = await navigator.mediaDevices!!.getUserMedia(constraints);
-
-    // convert to mono
-    const mono = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
-    ctx.createMediaStreamSource(micStream).connect(mono);
-    const monoNode = ctx.createMediaStreamSource(mono.stream)
-        .connect(analyzers.shift()!!);
-
-    // apply RNNoise
-    const noisedNode = monoNode
-        .connect(new RnnoiseWorkletNode(ctx, {
-            wasmBinary: rnnoiseWasmBinary,
-            maxChannels: 1,
-        }))
-        .connect(analyzers.shift()!!);
-
-    // apply noise gate
-    const gatedNode = noisedNode
-        .connect(new NoiseGateWorkletNode(ctx, {
-            openThreshold: -50,
-            closeThreshold: -60,
-            holdMs: 150,
-            maxChannels: 1,
-        }));
-
-    // change volume
-    const gainNode = new GainNode(ctx, {gain: GAIN_MULTIPLIER});
-    const gainedNode = gatedNode.connect(gainNode)
-        .connect(analyzers.shift()!!);
-
-    // apply "debug"
-    // gainedNode.connect(ctx.destination);
-
-    // send microphone input to server, opus-encoded
-    const inputNode = new AudioWorkletNode(ctx, "opus-encoder", {
-        numberOfInputs: 1,
-        numberOfOutputs: 0,
-    });
-    gainedNode.connect(inputNode);
-
-    // pre-allocate microphone opus encoder
-    const encoder = new OpusEncoderWebWorker({sampleRate: SAMPLE_RATE, application: OpusApplication.VOIP});
-    await encoder.ready;
-    const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
-
-    // create communication channel for receiving voice data from worker
-    const channel = new MessageChannel();
-    inputNode.port.postMessage(undefined, [channel.port2]);
-    channel.port1.onmessage = async (event: MessageEvent<number[]>) => {
-        frameSamples.set(event.data as number[]);
-        const inputVol = getHighestAudioPercent(frameSamples);
-        if (inputVol < 0.01) { // skip if quieter than 1%
-            return;
-        }
-
-        const opus = await encoder.encodeFrame(frameSamples);
-        sendPacket(new InputSoundPacket(opus, true));
-    };
-
-    return {
-        setVolume: (volume: number) => gainNode.gain.value = (volume / 100) * GAIN_MULTIPLIER,
-        free: async () => await encoder.free(),
-    };
-};
 const setupAudioAnalyzer = (ctx: AudioContext) => {
     const analyzer = ctx.createAnalyser();
     analyzer.fftSize = 256;
@@ -163,7 +54,7 @@ const MicContainer: FunctionComponent = () => {
         let tearDown = [false];
         let tearDownCalls: (() => void)[] = [() => tearDown[0] = true];
 
-        setupAudioContext(audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], packet => socket.sendPacket(packet))
+        setupMicrophonePipeline(socket, audioCtx, deviceId, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer], true)
             .then(async controller => {
                 // always free voice encoder
                 if (tearDown[0]) {
