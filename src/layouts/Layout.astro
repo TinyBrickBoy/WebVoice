@@ -8,12 +8,12 @@ interface Props extends HeadProps {
 ---
 
 <!doctype html>
-<html lang="de">
+<html lang="de" class="h-full">
 <head>
     <BaseHead {...Astro.props}/>
     <slot name="head"/>
 </head>
-<body>
+<body class="h-full">
 <slot/>
 </body>
 </html>
