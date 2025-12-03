@@ -13,7 +13,7 @@ const PlayerInfos: FunctionComponent = () => {
         setPlayers({}); // invalidate
 
         // TODO remove debug
-        const players = {} as Record<string, PlayerState>;
+        const dplayers = {} as Record<string, PlayerState>;
         [
             ["c5369b7e-2295-4331-8673-251ea2ba3107", "SirReGa"],
             ["9fb636a3-4276-4c42-9773-0937248b851c", "pianoman911"],
@@ -26,9 +26,9 @@ const PlayerInfos: FunctionComponent = () => {
             ["bb9ccaf6-8b2c-4548-ba97-bdf7b23c12c6", "pinomann"],
             ["a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97", "B00KY"],
         ].forEach(([uuid, name]) => {
-            players[uuid] = new PlayerState(uuidFromString(uuid), name, false, false, null);
+            dplayers[uuid] = new PlayerState(uuidFromString(uuid), name, false, false, null);
         });
-        setPlayers(players);
+        setPlayers(dplayers);
 
         // register events
         return socket.registers()

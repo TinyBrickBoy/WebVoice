@@ -3,12 +3,22 @@ import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
 import {CategoryAddPacket, CategoryRemovePacket} from "../scripts/network/packets.ts";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {AudioCategory} from "../scripts/types.ts";
+import {randomUUID} from "../scripts/util/uuid.ts";
 
 const VoiceCategories: FunctionComponent = () => {
     const {socket: [socket], categories: [categories, setCategories]} = useVoiceStateContext();
 
     useEffect(() => {
         setCategories({}); // invalidate
+
+        // TODO remove debug
+        const dcategories = {} as Record<string, AudioCategory>;
+        for (let i = 0; i < 4; i++) {
+            const uuid = randomUUID();
+            dcategories[uuid.name] = new AudioCategory(uuid, `Category ${i}`, i % 2 == 0 ? `Epic Description ${i}` : null);
+        }
+        setCategories(dcategories);
 
         // register events
         return socket.registers()

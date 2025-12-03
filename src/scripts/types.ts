@@ -37,10 +37,18 @@ export class AudioCategory {
     public readonly description: Component | null;
     public volume: number = 1;
 
-    constructor(buf: ByteBuffer) {
-        this.uniqueId = readUniqueId(buf);
-        this.name = readComponentJson(buf);
-        this.description = readBoolean(buf) ? readComponentJson(buf) : null;
+    constructor(uniqueId: UUID, name: Component, description: Component | null);
+    constructor(buf: ByteBuffer);
+    constructor(param: ByteBuffer | UUID, name?: Component, description?: Component | null) {
+        if ("readByte" in param) {
+            this.uniqueId = readUniqueId(param);
+            this.name = readComponentJson(param);
+            this.description = readBoolean(param) ? readComponentJson(param) : null;
+        } else {
+            this.uniqueId = param;
+            this.name = name!!;
+            this.description = description || null;
+        }
     }
 }
 
@@ -59,14 +67,25 @@ export class AudioRoom {
     public readonly listenToOthers: boolean;
     public volume: number = 1;
 
-    constructor(buf: ByteBuffer) {
-        this.uniqueId = readUniqueId(buf);
-        this.name = readComponentJson(buf);
-        const flags = buf.readByte();
-        this.password = (flags & ROOM_FLAG_PASSWORD) != 0;
-        this.joinable = (flags & ROOM_FLAG_JOINABLE) != 0;
-        this.speakToOthers = (flags & ROOM_FLAG_SPEAK_TO_OTHERS) != 0;
-        this.listenToOthers = (flags & ROOM_FLAG_LISTEN_TO_OTHERS) != 0;
+    constructor(buf: ByteBuffer);
+    constructor(uniqueId: UUID, name: Component, password: boolean, joinable: boolean, speakToOthers: boolean, listenToOthers: boolean);
+    constructor(param: ByteBuffer | UUID, name?: Component, password?: boolean, joinable?: boolean, speakToOthers?: boolean, listenToOthers?: boolean) {
+        if ("readByte" in param) {
+            this.uniqueId = readUniqueId(param);
+            this.name = readComponentJson(param);
+            const flags = param.readByte();
+            this.password = (flags & ROOM_FLAG_PASSWORD) != 0;
+            this.joinable = (flags & ROOM_FLAG_JOINABLE) != 0;
+            this.speakToOthers = (flags & ROOM_FLAG_SPEAK_TO_OTHERS) != 0;
+            this.listenToOthers = (flags & ROOM_FLAG_LISTEN_TO_OTHERS) != 0;
+        } else {
+            this.uniqueId = param;
+            this.name = name!!;
+            this.password = password!!;
+            this.joinable = joinable!!;
+            this.speakToOthers = speakToOthers!!;
+            this.listenToOthers = listenToOthers!!;
+        }
     }
 }
 
@@ -87,13 +106,13 @@ export class PlayerState {
     constructor(buf: ByteBuffer);
     constructor(param: ByteBuffer | UUID, name?: Component, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null) {
         if ("readByte" in param) {
-            this.uniqueId = readUniqueId(buf);
-            this.name = readComponentJson(buf);
-            const flags = buf.readByte();
+            this.uniqueId = readUniqueId(param);
+            this.name = readComponentJson(param);
+            const flags = param.readByte();
             this.muted = (flags & STATE_FLAG_MUTED) != 0;
             this.deafened = (flags & STATE_FLAG_DEAFENED) != 0;
             if ((flags & STATE_FLAG_HAS_GROUP) != 0) {
-                this.primaryRoomId = readUniqueId(buf);
+                this.primaryRoomId = readUniqueId(param);
             } else {
                 this.primaryRoomId = null;
             }

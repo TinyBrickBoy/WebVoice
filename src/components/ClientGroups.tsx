@@ -3,12 +3,22 @@ import {RoomAddPacket, RoomRemovePacket} from "../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {AudioRoom} from "../scripts/types.ts";
+import {randomUUID} from "../scripts/util/uuid.ts";
 
 const ClientGroups: FunctionComponent = () => {
     const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
 
     useEffect(() => {
         setRooms({}); // invalidate
+
+        // TODO remove debug
+        const drooms = {} as Record<string, AudioRoom>;
+        for (let i = 0; i < 16; i++) {
+            const uuid = randomUUID();
+            drooms[uuid.name] = new AudioRoom(uuid, `Group ${i + 1}`, false, true, false, false);
+        }
+        setRooms(drooms);
 
         // register events
         return socket.registers()

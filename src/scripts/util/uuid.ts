@@ -18,6 +18,11 @@ const parse4Nibbles = (name: string, pos: number): Long => {
         NIBBLES[ch1].shl(12).or(NIBBLES[ch2].shl(8)).or(NIBBLES[ch3].shl(4)).or(NIBBLES[ch4]);
 };
 
+// generates completely random uuid data, even ignoring version field, etc.
+export const random32BitNumber = () => Math.floor(Math.random() * 0xFFFFFFFF);
+export const random64BitNumber = () => new Long(random32BitNumber(), random32BitNumber());
+export const randomUUID = () => new UUID(random64BitNumber(), random64BitNumber());
+
 export const uuidFromString = (name: string): UUID => {
     const ch1 = name.charCodeAt(8);
     const ch2 = name.charCodeAt(13);

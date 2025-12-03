@@ -10,6 +10,7 @@ import {type AudioRoom, PlayerState} from "../scripts/types.ts";
 import MinecraftComponent from "./MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import Button from "./Button.tsx";
 
 interface Props {
     room: AudioRoom;
@@ -68,11 +69,11 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
             <span>Id: <code>{room.uniqueId.name}</code></span>
             <span>Name: <MinecraftComponent component={room.name}/></span>
             <span>
-                Speak Passthrough:
+                Speak Passthrough:{" "}
                 <code style={{textTransform: "capitalize"}}>{`${room.speakToOthers}`}</code>
             </span>
             <span>
-                Listen Passthrough:
+                Listen Passthrough:{" "}
                 <code style={{textTransform: "capitalize"}}>{`${room.listenToOthers}`}</code>
             </span>
             {players.length > 0 &&
@@ -114,20 +115,22 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
                 gap: "0.5em",
                 marginTop: "0.5em",
             }}>
-                <button
+                <Button
+                    color={"purple"}
                     disabled={hasViewer || joining || leaving}
                     style={{flex: 1}}
                     onClick={joinRoom}
                 >
                     Join
-                </button>
-                <button
+                </Button>
+                <Button
+                    color={"purple"}
                     disabled={!hasViewer || joining || leaving}
                     style={{flex: 1}}
                     onClick={leaveRoom}
                 >
                     Leave
-                </button>
+                </Button>
             </div>
         </div>
     );
