@@ -115,10 +115,24 @@ export class RoomAddPacket extends DecodablePacket {
 
 export class RoomJoinResponsePacket extends DecodablePacket {
 
+    public readonly roomId: UUID;
     public readonly success: boolean;
 
     constructor(buf: ByteBuffer) {
         super();
+        this.roomId = readUniqueId(buf)
+        this.success = readBoolean(buf);
+    }
+}
+
+export class RoomLeaveResponsePacket extends DecodablePacket {
+
+    public readonly roomId: UUID;
+    public readonly success: boolean;
+
+    constructor(buf: ByteBuffer) {
+        super();
+        this.roomId = readUniqueId(buf)
         this.success = readBoolean(buf);
     }
 }

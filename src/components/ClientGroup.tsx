@@ -1,6 +1,11 @@
-import {RoomJoinRequestPacket, RoomLeavePacket} from "../scripts/network/packets.ts";
+import {
+    RoomJoinRequestPacket,
+    RoomJoinResponsePacket,
+    RoomLeavePacket,
+    RoomLeaveResponsePacket,
+} from "../scripts/network/packets.ts";
 import PlayerInfo from "./PlayerInfo.tsx";
-import {useMemo, useState} from "preact/hooks";
+import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
 import {type AudioRoom, PlayerState} from "../scripts/types.ts";
 import MinecraftComponent from "./MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
@@ -15,12 +20,43 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
     const {socket: [socket], user: [user]} = useVoiceStateContext();
 
     const [password, setPassword] = useState<string>("");
+    const [joining, setJoining] = useState<boolean>(false);
+    const [leaving, setLeaving] = useState<boolean>(false);
+    const [joinFailed, setJoinFailed] = useState<boolean>(false);
+
     const hasViewer = useMemo(() => {
         if (user?.uuid) {
             return players.some(state => state.is(user.uuid));
         }
         return false;
     }, [user, players]);
+
+    useEffect(() => {
+        return socket.registers()
+            .register("room_join_response", ({detail: {roomId, success}}: CustomEvent<RoomJoinResponsePacket>) => {
+                if (room.uniqueId.name === roomId.name) {
+                    setJoinFailed(!success);
+                    setJoining(false);
+                }
+            })
+            .register("room_leave_response", ({detail: {roomId}}: CustomEvent<RoomLeaveResponsePacket>) => {
+                if (room.uniqueId.name === roomId.name) {
+                    setLeaving(false);
+                }
+            })
+            .callback();
+    }, [socket]);
+
+    const joinRoom = useCallback(() => {
+        setJoining(true);
+        setJoinFailed(false);
+        socket.sendPacket(new RoomJoinRequestPacket(room.uniqueId, password ? password : null));
+    }, [socket, password]);
+
+    const leaveRoom = useCallback(() => {
+        setLeaving(true);
+        socket.sendPacket(new RoomLeavePacket(room.uniqueId));
+    }, [socket, password]);
 
     return (
         <div style={{
@@ -59,6 +95,7 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
                     </ul>
                 </>
             }
+            {joinFailed && <span>Failed to join!</span>}
             {room.password &&
                 <div style={{
                     display: "flex",
@@ -78,16 +115,16 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
                 marginTop: "0.5em",
             }}>
                 <button
-                    disabled={hasViewer}
+                    disabled={hasViewer || joining || leaving}
                     style={{flex: 1}}
-                    onClick={() => socket.sendPacket(new RoomJoinRequestPacket(room.uniqueId, password ? password : null))}
+                    onClick={joinRoom}
                 >
                     Join
                 </button>
                 <button
-                    disabled={!hasViewer}
+                    disabled={!hasViewer || joining || leaving}
                     style={{flex: 1}}
-                    onClick={() => socket.sendPacket(new RoomLeavePacket(room.uniqueId))}
+                    onClick={leaveRoom}
                 >
                     Leave
                 </button>

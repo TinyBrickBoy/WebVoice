@@ -24,7 +24,7 @@ export default class AudioPlayer {
         const data = this.channels[channel];
         if (data) {
             data.node.disconnect();
-            await data.decoder.free()
+            await data.decoder.free();
             delete this.channels[channel];
         }
     }

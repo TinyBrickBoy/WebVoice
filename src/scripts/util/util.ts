@@ -35,8 +35,3 @@ export const getHighestAudioPercent = (samples: Float32Array) => {
 };
 
 export const pad = (num: number, amount: number) => String(num).padStart(amount, "0");
-
-export const getCurrentTimeString = () => {
-    const date = new Date();
-    return `${pad(date.getHours(), 2)}:${pad(date.getMinutes(), 2)}:${pad(date.getSeconds(), 2)}`;
-};

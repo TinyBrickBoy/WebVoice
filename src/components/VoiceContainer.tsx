@@ -7,13 +7,11 @@ import PlayerInfos from "./PlayerInfos.tsx";
 import AudioPlayer from "../scripts/audio/audio_player.ts";
 import ClientGroups from "./ClientGroups.tsx";
 import CreateGroupForm from "./CreateGroupForm.tsx";
-import {getCurrentTimeString} from "../scripts/util/util.ts";
 import MicContainer from "./MicContainer.tsx";
 import {
     ConnectedPacket,
     KeepAlivePacket,
     PingPacket,
-    RoomJoinResponsePacket,
     StateInfoPacket,
 } from "../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
@@ -65,11 +63,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl, token}) => {
                         socket.sendPacket(new StateInfoPacket(false, false));
                     })
                     .catch(error => console.error(error));
-            })
-            .register("room_join_response", (event: CustomEvent<RoomJoinResponsePacket>) => {
-                if (!event.detail.success) {
-                    setInfo(`[${getCurrentTimeString()}] Wrong password, please try again!`);
-                }
             })
             .register("keep_alive", (event: CustomEvent<KeepAlivePacket>) => {
                 socket.sendPacket(event.detail);
