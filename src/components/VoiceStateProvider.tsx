@@ -2,6 +2,7 @@ import {type Context, createContext, type FunctionComponent} from "preact";
 import {VoiceSocket} from "../scripts/socket.ts";
 import {type Dispatch, type StateUpdater, useContext, useState} from "preact/hooks";
 import type {AudioCategory, AudioRoom, PlayerState, UserInfo} from "../scripts/types.ts";
+import VoiceContainer from "./VoiceContainer.tsx";
 
 type StateType<S> = [S, Dispatch<StateUpdater<S>>];
 
@@ -22,9 +23,10 @@ export const useVoiceStateContext = () => {
 
 interface Props {
     socketUrl: URL;
+    token: string;
 }
 
-const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl, children}) => {
+const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl, token}) => {
     const user = useState<UserInfo | null>(null);
     const socket = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
     const players = useState<Record<string, PlayerState>>({});
@@ -33,7 +35,7 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl, children}) => 
 
     return <>
         <VoiceStateContext.Provider value={{user, socket, players, rooms, categories}}>
-            {children}
+            <VoiceContainer socketUrl={socketUrl} token={token}/>
         </VoiceStateContext.Provider>
     </>;
 };
