@@ -14,9 +14,7 @@ export const Navbar: FunctionComponent = () => {
                 <PlayerInfos/>
                 <ClientGroups/>
             </div>
-            <div className={""}>
-                <UserProfile/>
-            </div>
+            <UserProfile/>
         </div>
     </>;
 };
