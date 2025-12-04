@@ -6,7 +6,7 @@ import {readPacket, writePacket} from "./network/packet_registry.ts";
 export class VoiceSocket extends EventManager {
 
     public readonly socketUrl: URL;
-    public socket?: WebSocket;
+    public socket: WebSocket | null = null;
 
     constructor(socketUrl: URL) {
         super();
@@ -43,20 +43,27 @@ export class VoiceSocket extends EventManager {
     }
 
     public open() {
+        this.close();
+
         const socket = new WebSocket(this.socketUrl.toString(), []);
         socket.binaryType = "arraybuffer";
         socket.onmessage = event => this.fire(event);
-        socket.onopen = event => this.fire(event);
-        socket.onclose = event => this.fire(event);
         socket.onerror = event => this.fire(event);
-        this.socket = socket;
+        socket.onopen = event => {
+            this.fire(event);
+            this.socket = socket;
+        };
+        socket.onclose = event => {
+            this.fire(event);
+            this.socket = null;
+        };
     }
 
     public close(code: number = 1002) {
         this.socket?.close(code);
     }
 
-    public isLoaded() {
+    public isActive() {
         return !!this.socket;
     }
 }

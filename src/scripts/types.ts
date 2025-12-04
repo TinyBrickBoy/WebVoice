@@ -2,6 +2,7 @@ import ByteBuffer from "bytebuffer";
 import type {UUID} from "./util/uuid.ts";
 import type {Component} from "./network/component.ts";
 import {readBoolean, readComponentJson, readUniqueId} from "./network/buffer.ts";
+import type {Dispatch, StateUpdater} from "preact/hooks";
 
 export class Vector3d {
 
@@ -160,3 +161,6 @@ export type AudioQueueData = {
     source: Position3d | null,
     position: Vector3d | null,
 }
+
+export type StateType<S> = [S, Dispatch<StateUpdater<S>>];
+export type SocketState = "disconnected" | "connecting" | "connected"

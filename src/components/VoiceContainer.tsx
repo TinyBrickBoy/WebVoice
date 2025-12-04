@@ -70,4 +70,3 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     </>;
 };
 export default VoiceContainer;
-;

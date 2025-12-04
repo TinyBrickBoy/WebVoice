@@ -1,12 +1,16 @@
 import {type Context, createContext, type FunctionComponent} from "preact";
 import {VoiceSocket} from "../scripts/socket.ts";
-import {type Dispatch, type StateUpdater, useContext, useState} from "preact/hooks";
-import {type AudioCategory, type AudioRoom, PlayerState, type UserInfo} from "../scripts/types.ts";
+import {useContext, useState} from "preact/hooks";
+import {
+    type AudioCategory,
+    type AudioRoom,
+    PlayerState,
+    type SocketState,
+    type StateType,
+    type UserInfo,
+} from "../scripts/types.ts";
 import VoiceContainer from "./VoiceContainer.tsx";
 import {uuidFromString} from "../scripts/util/uuid.ts";
-
-type StateType<S> = [S, Dispatch<StateUpdater<S>>];
-type SocketState = "disconnected" | "connecting" | "connected"
 
 export type VoiceState = {
     socketUrl: URL,

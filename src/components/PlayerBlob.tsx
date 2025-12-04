@@ -27,7 +27,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
         fetchColor(state.uniqueId)
             .then(color => setColor(color))
             .catch(error => console.error(error));
-    }, [state]);
+    }, [state.uniqueId]);
 
     return <>
         <div
