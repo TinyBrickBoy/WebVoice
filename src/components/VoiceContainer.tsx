@@ -17,7 +17,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
 
     // audio player handling
     const audio = useMemo(() => new AudioPlayer(), []);
-    useEffect(() => audio.startGarbageCollector, [audio]);
+    useEffect(() => audio.startGarbageCollector(), [audio]);
     useEffect(() => audio.registerSocket(socket), [audio, socket]);
 
     useEffect(() => {
