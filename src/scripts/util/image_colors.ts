@@ -1,4 +1,4 @@
-import type {PNGWithMetadata} from "pngjs";
+import {type DecodedPng} from "fast-png";
 
 // inspired by https://www.jameslmilner.com/posts/converting-rgb-hex-hsl-colors/#hex-to-hsl
 export const convertRgbToHsl = (red: number, green: number, blue: number) => {
@@ -47,22 +47,38 @@ export const packRgb = (red: number, green: number, blue: number) => {
     return ((red & 0xFF) << 16) | ((green & 0xFF) << 8) | (blue & 0xFF);
 };
 
-export const getAverageHSL = (image: PNGWithMetadata, ignoreEdges = true): number[] => {
+// as the data array has a varying "depth", we need to split words sometimes
+export const getPaletteIndex = (image: DecodedPng, index: number) => {
+    const depth = image.depth;
+    if (depth === 16 || depth === 8) {
+        return image.data[index];
+    }
+    const pixelsPerWord = 8 / depth;
+    const wordIndex = (index / pixelsPerWord) | 0;
+    const bitOffset = (index % pixelsPerWord) * depth;
+    const word = image.data[wordIndex];
+    const mask = (1 << depth) - 1;
+    return (word >> (8 - bitOffset - depth)) & mask;
+};
+
+export const getAverageHSL = (image: DecodedPng, ignoreEdges = true): number[] => {
     let totalHue = 0;
     let totalSaturation = 0;
     let totalLightness = 0;
     let count = 0;
 
-    const pixelData = image.data;
+    const palette = image.palette;
+    if (!palette) {
+        throw new Error(`Expected color palette to be available for decoding ${image}`);
+    }
+
+    // console.log(image.width, image.height, pixelData);
     const pixels = image.width * image.height;
-    for (let idx = 0; idx < pixels * 4; idx += 4) {
-        const red = pixelData[idx];
-        const green = pixelData[idx + 1];
-        const blue = pixelData[idx + 2];
+    for (let pixelIndex = 0; pixelIndex < pixels; ++pixelIndex) {
+        const [red, green, blue] = palette[getPaletteIndex(image, pixelIndex)];
 
         // convert to HSL so we can "customize" how the average looks
         const [hue, saturation, lightness] = convertRgbToHsl(red / 255, green / 255, blue / 255);
-        console.log(red, green, blue, "→", hue, saturation, lightness);
         if (!ignoreEdges || lightness > 10 && lightness < (100 - 10)) {
             totalHue += hue;
             totalSaturation += saturation;

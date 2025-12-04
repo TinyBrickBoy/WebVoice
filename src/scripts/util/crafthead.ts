@@ -1,6 +1,6 @@
 import type {UUID} from "./uuid.ts";
 import {boostVibrance, convertHslToRgb, getAverageHSL, packRgb} from "./image_colors.ts";
-import {PNG} from "pngjs";
+import {decode as decodePng} from "fast-png";
 
 export const buildHeadUrl = (uuid: UUID) => {
     // TODO NodeJS doesn't seem to recognize Cloudflare's SSL Certificates?
@@ -28,7 +28,7 @@ export const getOrFetchHeadColor = async (uuid: UUID) => {
     const head = await getOrFetchHead(uuid);
     let color: number | null = null;
     if (head.image) {
-        const image = PNG.sync.read(head.image)
+        const image = decodePng(head.image, {checkCrc: true});
         let [h, s, l] = getAverageHSL(image);
         [h, s, l] = boostVibrance(h, s, l); // apply a little boost
         const [r, g, b] = convertHslToRgb(h, s, l);
