@@ -14,7 +14,8 @@
             "unplugin-icons/types/preact",
             "@types/audioworklet",
             "@types/buffer",
-            "@types/node"
+            "@types/node",
+            "@types/pngjs"
         ]
     }
 }

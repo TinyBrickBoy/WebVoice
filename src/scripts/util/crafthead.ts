@@ -1,6 +1,6 @@
 import type {UUID} from "./uuid.ts";
-import {Vibrant} from "node-vibrant/node";
-import type {Palette} from "@vibrant/color";
+import {boostVibrance, convertHslToRgb, getAverageHSL, packRgb} from "./image_colors.ts";
+import {PNG} from "pngjs";
 
 export const buildHeadUrl = (uuid: UUID) => {
     // TODO NodeJS doesn't seem to recognize Cloudflare's SSL Certificates?
@@ -13,22 +13,29 @@ export type HeadResponse = {
     error: "not_found" | "unexpected" | null,
     status: number,
 }
-export type HeadPaletteResponse = HeadResponse & {
-    palette: Palette | null
+export type HeadColorResponse = HeadResponse & {
+    color: number | null
 }
 
 const heads = new Map<string, HeadResponse>();
-const palettes = new Map<string, HeadPaletteResponse>();
+const colors = new Map<string, HeadColorResponse>();
 
-export const getOrFetchHeadPalette = async (uuid: UUID) => {
-    let respObj = palettes.get(uuid.name);
+export const getOrFetchHeadColor = async (uuid: UUID) => {
+    let respObj = colors.get(uuid.name);
     if (respObj) {
         return respObj;
     }
     const head = await getOrFetchHead(uuid);
-    const palette = head.image ? await Vibrant.from(head.image).getPalette() : null;
-    respObj = {...head, palette};
-    palettes.set(uuid.name, respObj);
+    let color: number | null = null;
+    if (head.image) {
+        const image = PNG.sync.read(head.image)
+        let [h, s, l] = getAverageHSL(image);
+        [h, s, l] = boostVibrance(h, s, l); // apply a little boost
+        const [r, g, b] = convertHslToRgb(h, s, l);
+        color = packRgb(r, g, b);
+    }
+    respObj = {...head, color};
+    colors.set(uuid.name, respObj);
     return respObj;
 };
 
