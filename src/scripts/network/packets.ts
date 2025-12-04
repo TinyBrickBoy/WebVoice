@@ -6,6 +6,7 @@ import {
     readBoolean,
     readByteArray,
     readComponentJson,
+    readString,
     readUniqueId,
     writeBoolean,
     writeByteArray,
@@ -85,11 +86,23 @@ export class ConnectedPacket extends DecodablePacket {
 
     public readonly playerId: UUID;
     public readonly username: Component;
+    public readonly serverId: UUID | null;
+    public readonly serverName: Component | null;
+    public readonly serverType: string | null;
 
     constructor(buf: ByteBuffer) {
         super();
         this.playerId = readUniqueId(buf);
         this.username = readComponentJson(buf);
+        if (readBoolean(buf)) {
+            this.serverId = readUniqueId(buf);
+            this.serverName = readBoolean(buf) ? readComponentJson(buf) : null;
+            this.serverType = readBoolean(buf) ? readString(buf) : null;
+        } else {
+            this.serverId = null;
+            this.serverName = null;
+            this.serverType = null;
+        }
     }
 }
 

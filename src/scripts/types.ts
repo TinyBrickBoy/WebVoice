@@ -92,6 +92,7 @@ export class AudioRoom {
 const STATE_FLAG_MUTED = 1 << 0;
 const STATE_FLAG_DEAFENED = 1 << 1;
 const STATE_FLAG_HAS_GROUP = 1 << 2;
+const STATE_FLAG_HAS_SERVER = 1 << 3;
 
 export class PlayerState {
 
@@ -100,11 +101,12 @@ export class PlayerState {
     public readonly muted: boolean;
     public readonly deafened: boolean;
     public readonly primaryRoomId: UUID | null;
+    public readonly serverId: UUID | null;
     public volume: number = 1;
 
-    constructor(uniqueId: UUID, name: Component, muted: boolean, deafened: boolean, primaryRoomId: UUID | null);
+    constructor(uniqueId: UUID, name: Component, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
     constructor(buf: ByteBuffer);
-    constructor(param: ByteBuffer | UUID, name?: Component, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null) {
+    constructor(param: ByteBuffer | UUID, name?: Component, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null, serverId?: UUID | null) {
         if ("readByte" in param) {
             this.uniqueId = readUniqueId(param);
             this.name = readComponentJson(param);
@@ -116,12 +118,18 @@ export class PlayerState {
             } else {
                 this.primaryRoomId = null;
             }
+            if ((flags & STATE_FLAG_HAS_SERVER) != 0) {
+                this.serverId = readUniqueId(param);
+            } else {
+                this.serverId = null;
+            }
         } else {
             this.uniqueId = param;
             this.name = name!!;
             this.muted = muted!!;
             this.deafened = deafened!!;
             this.primaryRoomId = primaryRoomId || null;
+            this.serverId = serverId || null;
         }
     }
 
@@ -131,6 +139,10 @@ export class PlayerState {
 
     public in(roomId: UUID) {
         return this.primaryRoomId?.name === roomId.name;
+    }
+
+    public on(serverId: UUID) {
+        return this.serverId?.name === serverId.name;
     }
 }
 
