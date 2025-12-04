@@ -11,7 +11,7 @@ export const Navbar: FunctionComponent = () => {
                 <span className={"text-xl"}>CURRENT GROUP NAME {/*TODO*/}</span>
             </div>
             <SearchBar/>
-            <div className={"flex flex-col flex-1 gap-2 overflow-y-scroll grow"}>
+            <div className={"flex flex-col flex-1 gap-2 overflow-y-scroll rounded-lg grow"}>
                 <VoiceCategories/>
                 <ClientGroups/>
             </div>
