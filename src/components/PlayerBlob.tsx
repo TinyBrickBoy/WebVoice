@@ -39,7 +39,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
     return <>
         <div
             style={{backgroundColor: color}}
-            className={"flex justify-center items-center p-6 rounded-[100%]"}
+            className={"flex justify-center items-center p-6 rounded-lg"}
         >
             <CraftHead uuid={state.uniqueId} size={64}/>
         </div>
