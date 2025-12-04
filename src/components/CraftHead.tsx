@@ -10,7 +10,8 @@ const CraftHead: FunctionComponent<Props> = ({uuid, size}) => {
     return <img
         alt={"Head of " + uuid.name}
         src={`/head/${uuid.name}`}
-        className={"block"}
+        className={"block select-none"}
+        draggable={false}
         style={{
             imageRendering: "pixelated",
             width: `${size}px`,
