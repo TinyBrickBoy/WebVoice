@@ -1,13 +1,14 @@
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
-import {useEffect} from "preact/hooks";
+import {useEffect, useMemo} from "preact/hooks";
 import {PlayerState} from "../scripts/types.ts";
 import type {StateUpdatePacket} from "../scripts/network/packets.ts";
 import {uuidFromString} from "../scripts/util/uuid.ts";
+import MinecraftComponent from "./MinecraftComponent.tsx";
 
 const PlayerGrid: FunctionComponent = () => {
-    const {players: [players, setPlayers], socket: [socket]} = useVoiceStateContext();
+    const {players: [players, setPlayers], socket: [socket], user: [{serverId, serverName}]} = useVoiceStateContext();
 
     useEffect(() => {
         setPlayers({}); // invalidate
@@ -26,7 +27,7 @@ const PlayerGrid: FunctionComponent = () => {
             ["bb9ccaf6-8b2c-4548-ba97-bdf7b23c12c6", "pinomann"],
             ["a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97", "B00KY"],
         ].forEach(([uuid, name]) => {
-            dplayers[uuid] = new PlayerState(uuidFromString(uuid), name, false, false, null);
+            dplayers[uuid] = new PlayerState(uuidFromString(uuid), name, false, false, null, null);
         });
         setPlayers(dplayers);
 
@@ -43,14 +44,16 @@ const PlayerGrid: FunctionComponent = () => {
             .callback();
     }, [socket]);
 
+    const playerList = useMemo(() => Object.values(players)
+        .filter(player => player.on(serverId)), [players, serverId]);
     return <>
         <div className={"p-8 w-1/2 border-l-2 border-solid border-neutral-700"}>
             <div className={"flex flex-col mb-6"}>
                 <span className={"text-sm"}>Current server</span>
-                <span className={"text-xl"}>SERVER INFO {/*TODO*/}</span>
+                {serverName && <MinecraftComponent className={"text-xl"} component={serverName}/>}
             </div>
             <div className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}>
-                {Object.values(players).map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}
+                {playerList.map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}
             </div>
         </div>
     </>;

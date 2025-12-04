@@ -33,6 +33,9 @@ interface Props {
 const defaultUser = {
     uuid: uuidFromString("606e2ff0-ed77-4842-9d6c-e1d3321c7838"),
     name: {text: "Unknown", italic: true},
+    serverId: null,
+    serverName: {text: "Hide & Seek » Modern Island", color: "gold"}, // TODO remove
+    serverType: "hide_and_seek/modern_island", // TODO remove
 } as UserInfo;
 
 const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {

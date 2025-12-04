@@ -141,14 +141,17 @@ export class PlayerState {
         return this.primaryRoomId?.name === roomId.name;
     }
 
-    public on(serverId: UUID) {
-        return this.serverId?.name === serverId.name;
+    public on(serverId: UUID | null) {
+        return this.serverId?.name === serverId?.name;
     }
 }
 
 export interface UserInfo {
     uuid: UUID;
     name: Component;
+    serverId: UUID | null;
+    serverName: Component | null;
+    serverType: string | null;
 }
 
 export type AudioQueueData = {
