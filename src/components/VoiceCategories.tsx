@@ -22,6 +22,7 @@ const VoiceCategories: FunctionComponent = () => {
 
         // register events
         return socket.registers()
+            .register("open", () => setCategories({})) // TODO remove debug
             .register("category_add", ({detail: {category}}: CustomEvent<CategoryAddPacket>) => {
                 setCategories(categories => {
                     // keep volume and copy categories record

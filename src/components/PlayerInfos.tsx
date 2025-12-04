@@ -32,6 +32,7 @@ const PlayerInfos: FunctionComponent = () => {
 
         // register events
         return socket.registers()
+            .register("open", () => setPlayers({})) // TODO remove debug
             .register("state_update", ({detail: {state}}: CustomEvent<StateUpdatePacket>) => {
                 setPlayers(players => {
                     // keep volume and copy rooms record

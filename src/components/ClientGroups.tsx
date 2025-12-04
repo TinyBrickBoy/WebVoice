@@ -22,6 +22,7 @@ const ClientGroups: FunctionComponent = () => {
 
         // register events
         return socket.registers()
+            .register("open", () => setRooms({})) // TODO remove debug
             .register("room_add", ({detail: {room}}: CustomEvent<RoomAddPacket>) => {
                 setRooms(rooms => {
                     // keep volume and copy rooms record
