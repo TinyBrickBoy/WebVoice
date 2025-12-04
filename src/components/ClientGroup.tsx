@@ -61,10 +61,10 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
     }, [socket, password]);
 
     return (
-        <div className={"flex flex-col mt-4 gap-1 p-5 bg-neutral-700 rounded-lg"}>
+        <div className={"flex flex-col mt-3 gap-2 p-5 bg-neutral-900 rounded-xl"}>
             <div className={"flex justify-between"}>
-                <div className={"flex gap-4"}>
-                    <span><MinecraftComponent component={room.name}/></span>
+                <div className={"flex gap-4 items-center"}>
+                    <span className={"text-lg font-semibold"}><MinecraftComponent component={room.name}/></span>
                     <span>PLAYERLIST</span>
                 </div>
                 <div className={"flex gap-2 items-center"}>
@@ -94,23 +94,15 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
             }
             {joinFailed && <span>Failed to join!</span>}
             {room.password &&
-                <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "stretch",
-                }}>
-                    <input
+                <div className={"flex flex-col items-stretch"}>
+                    <input 
+                        className={"h-10 w-full p-4 rounded-lg text-sm bg-neutral-900 border border-neutral-700 placeholder:text-neutral-300 focus:outline-2 focus:outline-white"}
                         onChange={event => setPassword(event.currentTarget.value)}
-                        type={"password"} disabled={hasViewer} placeholder="Password"
+                        type={"password"} disabled={hasViewer} placeholder={"Password"}
                     />
                 </div>
             }
-            <div style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: "0.5em",
-                marginTop: "0.5em",
-            }}>
+            <div className={"flex gap-2"}>
                 <Button
                     color={"purple"}
                     disabled={hasViewer || joining || leaving}

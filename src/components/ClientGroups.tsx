@@ -44,7 +44,7 @@ const ClientGroups: FunctionComponent = () => {
         .filter(room => room.joinable);
     return <>
         <details open={true}>
-            <summary className={"text-sm text-neutral-600"}>Groups ({roomValues.length})</summary>
+            <summary className={"text-sm text-neutral-400"}>Groups ({roomValues.length})</summary>
             <div className={"flex flex-col"}>
                 {roomValues.map(room => (
                     <ClientGroup
