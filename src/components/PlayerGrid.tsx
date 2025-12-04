@@ -44,7 +44,7 @@ const PlayerGrid: FunctionComponent = () => {
     }, [socket]);
 
     return <>
-        <div className={"p-8 w-1/2 border-l-2 border-solid border-neutral-700 flex flex-col"}>
+        <div className={"p-8 w-1/2 border-l-2 border-solid border-neutral-700"}>
             <div className={"flex flex-col mb-6"}>
                 <span className={"text-sm"}>Current server</span>
                 <span className={"text-xl"}>SERVER INFO {/*TODO*/}</span>
