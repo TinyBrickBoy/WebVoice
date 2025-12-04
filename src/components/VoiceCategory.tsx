@@ -9,9 +9,11 @@ interface Props {
 
 const VoiceCategory: FunctionComponent<Props> = ({category}) => {
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: "0.2em", marginTop: "1em"}}>
-            <span>Category: <MinecraftComponent component={category.name}/></span>
-            {category.description && <span>Description: <MinecraftComponent component={category.description}/></span>}
+        <div className={"flex flex-col gap-1 mt-2 bg-neutral-700 p-6 rounded-lg"}>
+            <div className={"flex gap-2 items-center"}>
+                <span><MinecraftComponent component={category.name}/></span>
+                {category.description && <span className={"text-sm text-neutral-400"}><MinecraftComponent component={category.description}/></span>}
+            </div>
             <VolumeSlider type={"category"} name={category.uniqueId.name}/>
         </div>
     );

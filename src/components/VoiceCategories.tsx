@@ -43,7 +43,7 @@ const VoiceCategories: FunctionComponent = () => {
     const categoryValues = Object.values(categories);
     return <>
         <details open={true}>
-            <summary>Categories ({categoryValues.length})</summary>
+            <summary className={"text-sm text-neutral-600"}>Categories ({categoryValues.length})</summary>
             <div className={"flex flex-col"}>
                 {categoryValues.map(category => (
                     <VoiceCategory key={category.uniqueId.name} category={category}/>

@@ -50,7 +50,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     }, [socket]);
 
     return <>
-        <main className={"flex flex-col h-full bg-neutral-900"}>
+        <main className={"flex flex-col h-full bg-stone-950"}>
             <div className={"flex flex-row grow overflow-y-scroll"}>
                 <Navbar/>
                 <PlayerGrid/>
