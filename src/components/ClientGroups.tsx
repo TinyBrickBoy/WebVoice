@@ -16,7 +16,7 @@ const ClientGroups: FunctionComponent = () => {
         const drooms = {} as Record<string, AudioRoom>;
         for (let i = 0; i < 16; i++) {
             const uuid = randomUUID();
-            drooms[uuid.name] = new AudioRoom(uuid, `Group ${i + 1}`, false, true, false, false);
+            drooms[uuid.name] = new AudioRoom(uuid, `Group ${i + 1}`, i % 2 == 0, true, false, false);
         }
         setRooms(drooms);
 
