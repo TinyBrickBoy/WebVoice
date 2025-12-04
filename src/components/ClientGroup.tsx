@@ -11,6 +11,7 @@ import MinecraftComponent from "./MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import Button from "./Button.tsx";
+import LockIcon from "~icons/tabler/lock-filled"
 
 interface Props {
     room: AudioRoom;
@@ -60,22 +61,17 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
     }, [socket, password]);
 
     return (
-        <div style={{
-            display: "flex",
-            flexDirection: "column",
-            marginTop: "1em",
-            gap: "0.2em",
-        }}>
-            <span>Id: <code>{room.uniqueId.name}</code></span>
-            <span>Name: <MinecraftComponent component={room.name}/></span>
-            <span>
-                Speak Passthrough:{" "}
-                <code style={{textTransform: "capitalize"}}>{`${room.speakToOthers}`}</code>
-            </span>
-            <span>
-                Listen Passthrough:{" "}
-                <code style={{textTransform: "capitalize"}}>{`${room.listenToOthers}`}</code>
-            </span>
+        <div className={"flex flex-col mt-4 gap-1 p-5 bg-neutral-700 rounded-lg"}>
+            <div className={"flex justify-between"}>
+                <div className={"flex gap-4"}>
+                    <span><MinecraftComponent component={room.name}/></span>
+                    <span>PLAYERLIST</span>
+                </div>
+                <div className={"flex gap-2 items-center"}>
+                    <span>GROUPTYPE</span>
+                    <span><LockIcon /></span>
+                </div>
+            </div>
             {players.length > 0 &&
                 <>
                     <span style={{marginTop: "0.5em"}}><code>{players.length}</code> Members:</span>
