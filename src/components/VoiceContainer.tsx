@@ -6,6 +6,7 @@ import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {Navbar} from "./Navbar.tsx";
 import PlayerGrid from "./PlayerGrid.tsx";
+import {UserProfile} from "./UserProfile.tsx";
 
 interface Props {
     socketUrl: URL;
@@ -49,9 +50,14 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     }, [socket]);
 
     return <>
-        <main className={"flex flex-row h-full"}>
-            <Navbar/>
-            <PlayerGrid/>
+        <main className={"flex flex-col h-full"}>
+            <div className={"flex flex-row grow overflow-y-scroll"}>
+                <Navbar/>
+                <PlayerGrid/>
+            </div>
+            <div className={"flex flex-row justify-center p-3"}>
+                <UserProfile/>
+            </div>
         </main>
     </>;
 };

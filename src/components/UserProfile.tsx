@@ -9,7 +9,7 @@ export const UserProfile: FunctionComponent = () => {
     const {user: [user]} = useVoiceStateContext();
 
     return <>
-        <div className={"flex flex-col gap-2 mt-2"}>
+        <div className={"flex flex-col gap-2 mt-2 w-1/4"}>
             <div className={"flex flex-row gap-2"}>
                 <CraftHead uuid={user.uuid} size={48}/>
                 <div className={"flex flex-col gap-1"}>
