@@ -10,10 +10,11 @@ const CraftHead: FunctionComponent<Props> = ({uuid, size}) => {
     return <img
         alt={"Head of " + uuid.name}
         src={`/head/${uuid.name}`}
+        className={"block"}
         style={{
             imageRendering: "pixelated",
             width: `${size}px`,
-            height: `${size}px`,
+            height: "auto",
         }}
     />;
 };

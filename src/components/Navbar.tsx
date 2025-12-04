@@ -11,7 +11,6 @@ export const Navbar: FunctionComponent = () => {
             <SearchBar/>
             <div className={"flex flex-col flex-1 gap-2 overflow-y-scroll grow"}>
                 <VoiceCategories/>
-                <PlayerInfos/>
                 <ClientGroups/>
             </div>
         </div>
