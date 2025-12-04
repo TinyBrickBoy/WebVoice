@@ -11,7 +11,7 @@ import MinecraftComponent from "./MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import Button from "./Button.tsx";
-import LockIcon from "~icons/tabler/lock-filled"
+import LockIcon from "~icons/tabler/lock-filled";
 
 interface Props {
     room: AudioRoom;
@@ -64,12 +64,12 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
         <div className={"flex flex-col mt-3 gap-2 p-5 bg-neutral-900 rounded-xl"}>
             <div className={"flex justify-between"}>
                 <div className={"flex gap-4 items-center"}>
-                    <span className={"text-lg font-semibold"}><MinecraftComponent component={room.name}/></span>
+                    <MinecraftComponent className={"text-lg font-semibold"} component={room.name}/>
                     <span>PLAYERLIST</span>
                 </div>
                 <div className={"flex gap-2 items-center"}>
                     <span>GROUPTYPE</span>
-                    <span><LockIcon /></span>
+                    <span><LockIcon/></span>
                 </div>
             </div>
             {players.length > 0 &&
@@ -95,7 +95,7 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
             {joinFailed && <span>Failed to join!</span>}
             {room.password &&
                 <div className={"flex flex-col items-stretch"}>
-                    <input 
+                    <input
                         className={"h-10 w-full p-4 rounded-lg text-sm bg-neutral-900 border border-neutral-700 placeholder:text-neutral-300 focus:outline-2 focus:outline-white"}
                         onChange={event => setPassword(event.currentTarget.value)}
                         type={"password"} disabled={hasViewer} placeholder={"Password"}
