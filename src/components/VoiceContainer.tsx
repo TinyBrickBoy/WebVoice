@@ -21,6 +21,8 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     useEffect(() => audio.registerSocket(socket), [audio, socket]);
 
     useEffect(() => {
+        let connected = false;
+
         // register events
         return socket.registers()
             .register("open", () => setState("connected"))
@@ -29,19 +31,25 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
                 setState("disconnected");
                 setSocket(new VoiceSocket(socketUrl));
             })
-            .register("connected", (event: CustomEvent<ConnectedPacket>) => {
+            .register("connected", ({detail: packet}: CustomEvent<ConnectedPacket>) => {
                 // save player info
                 setUser({
-                    uuid: event.detail.playerId,
-                    name: event.detail.username,
+                    ...packet,
+                    uuid: packet.playerId,
+                    name: packet.username,
                 });
-                // start audio
-                audio.startContext()
-                    .then(() => {
-                        // inform the server we are able to send audio
-                        socket.sendPacket(new StateInfoPacket(false, false));
-                    })
-                    .catch(error => console.error(error));
+                // this packet may be sent multiple times during one connection,
+                // don't restart audio context if we don't need to
+                if (!connected) {
+                    connected = true;
+                    // start audio
+                    audio.startContext()
+                        .then(() => {
+                            // inform the server we are able to send audio
+                            socket.sendPacket(new StateInfoPacket(false, false));
+                        })
+                        .catch(error => console.error(error));
+                }
             })
             .register("ping", (event: CustomEvent<PingPacket>) => {
                 // TODO
