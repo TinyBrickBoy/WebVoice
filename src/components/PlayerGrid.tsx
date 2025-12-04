@@ -49,7 +49,7 @@ const PlayerGrid: FunctionComponent = () => {
                 <span className={"text-sm"}>Current server</span>
                 <span className={"text-xl"}>SERVER INFO {/*TODO*/}</span>
             </div>
-            <div className={"flex flex-row flex-wrap gap-5"}>
+            <div className={"gap-5 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}>
                 {Object.values(players).map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}
             </div>
         </div>

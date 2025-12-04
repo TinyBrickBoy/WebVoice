@@ -3,7 +3,7 @@ import type {FunctionComponent, JSX} from "preact";
 import CraftHead from "./CraftHead.tsx";
 import type {UUID} from "../scripts/util/uuid.ts";
 import {useEffect, useState} from "preact/hooks";
-import {type Vec3, Swatch, rgbToHex} from "@vibrant/color";
+import {rgbToHex, type Vec3} from "@vibrant/color";
 
 interface Props {
     state: PlayerState;
