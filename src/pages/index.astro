@@ -1,11 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import VoiceStateProvider from "../components/VoiceStateProvider.tsx";
 
-export const prerender = true;
+export const prerender = false;
 ---
 
 <Layout>
-    <main class="flex flex-col max-w-1/3 gap-2">
-        <h1>Voicechat</h1>
-    </main>
+    <VoiceStateProvider client:only socketUrl={new URL(`wss:///example`)} token={"example"}/>
 </Layout>
