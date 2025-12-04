@@ -18,7 +18,7 @@ const minecraftColors: Record<string, number> = {
     blue: 0x5555FF,
     green: 0x55FF55,
     aqua: 0x55FFFF,
-    RED: 0xFF5555,
+    red: 0xFF5555,
     light_purple: 0xFF55FF,
     yellow: 0xFFFF55,
     white: 0xFFFFFF,
@@ -29,7 +29,7 @@ const getCssColor = (color: string) => {
     if ((color.length == 6 + 1 || color.length == 3 + 1) && color[0] === "#") {
         return color; // hex string
     }
-    return minecraftColors[color.toLowerCase()];
+    return `#${minecraftColors[color.toLowerCase()].toString(16)}`;
 };
 
 const MinecraftComponent: FunctionComponent<Props> = ({component, style, ...other}) => {
