@@ -45,7 +45,11 @@ const PlayerGrid: FunctionComponent = () => {
 
     return <>
         <div className={"p-8 w-1/2 border-l-2 border-solid border-neutral-700"}>
-            <div className={"flex flex-wrap flex-row"}>
+            <div className={"flex flex-col mb-6"}>
+                <span className={"text-sm"}>Current server</span>
+                <span className={"text-xl"}>SERVER INFO {/*TODO*/}</span>
+            </div>
+            <div className={"grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"}>
                 {Object.values(players).map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}
             </div>
         </div>
