@@ -1,7 +1,7 @@
 import {type Component} from "../scripts/network/component.ts";
 import type {FunctionComponent, JSX} from "preact";
 
-interface Props {
+interface Props extends JSX.HTMLAttributes {
     component: Component;
 }
 
@@ -32,14 +32,24 @@ const getCssColor = (color: string) => {
     return minecraftColors[color.toLowerCase()];
 };
 
-const MinecraftComponent: FunctionComponent<Props> = ({component}) => {
+const MinecraftComponent: FunctionComponent<Props> = ({component, style, ...other}) => {
     let content = "";
     let children: JSX.Element[] | false = false;
+
     const styling: JSX.CSSProperties = {};
+    if (style && typeof style !== "string") {
+        // can't support transitive string-based styling for now
+        Object.assign(styling, style);
+    }
+
     if (typeof component === "string") {
-        return <MinecraftComponent component={{text: component}}/>;
+        content = component;
     } else if (component instanceof Array) {
-        return component.map((child) => <MinecraftComponent component={child}/>);
+        return <>
+            <span {...other}>
+                {component.map((child) => <MinecraftComponent component={child}/>)}
+            </span>
+        </>;
     } else {
         // text component
         if ("text" in component) {
@@ -66,7 +76,7 @@ const MinecraftComponent: FunctionComponent<Props> = ({component}) => {
             styling["fontStyle"] = component.italic ? "italic" : "normal";
         }
     }
-    return <span style={styling}>{content}{children}</span>;
+    return <span {...other} style={styling}>{content}{children}</span>;
 };
 
 export default MinecraftComponent;
