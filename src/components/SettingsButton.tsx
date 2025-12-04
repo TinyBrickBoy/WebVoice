@@ -6,7 +6,7 @@ const SettingsButton: FunctionComponent = () => {
     return <>
         <div className={"h-full"}>
             <Button color={"purple"} className={"h-full"}>
-                <SettingsIcon className={"h-full w-auto"}/>
+                <SettingsIcon aria-label={"Settings"} className={"h-full w-auto"}/>
             </Button>
         </div>
     </>;
