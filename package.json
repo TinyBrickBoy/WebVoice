@@ -12,6 +12,7 @@
     "wrangler": "wrangler"
   },
   "dependencies": {
+    "@alexanderolsen/libsamplerate-js": "^2.1.2",
     "@astrojs/check": "0.9.6",
     "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/node": "9.5.1",

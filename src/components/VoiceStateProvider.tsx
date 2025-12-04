@@ -35,7 +35,7 @@ const defaultUser = {
     name: {text: "Unknown", italic: true},
 } as UserInfo;
 
-const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl, token}) => {
+const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     const user = useState<UserInfo>(defaultUser);
     const socket = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
     const players = useState<Record<string, PlayerState>>({});

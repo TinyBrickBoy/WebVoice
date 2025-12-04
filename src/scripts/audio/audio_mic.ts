@@ -8,6 +8,7 @@ import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
 import audioQueueTransmitterWorkletUrl from "./audio_queue_transmitter.ts?worker&url";
+import libSamplerateWorkletUrl from "@alexanderolsen/libsamplerate-js/dist/libsamplerate.worklet.js?worker&url";
 import type {VoiceSocket} from "../socket.ts";
 
 export const DEFAULT_DEVICE_ID = "default";
@@ -20,6 +21,8 @@ export const setupMicrophonePipeline = async (
     deviceId: string,
     analyzers: AnalyserNode[],
     noiseReduction: boolean,
+    // firefox doesn't support automatic resampling, so we have to do it ourselves...
+    resampleManually = /firefox/i.test(navigator.userAgent),
 ) => {
     // load WASM
     const rnnoiseWasmBinary = await loadRnnoise({
@@ -32,20 +35,28 @@ export const setupMicrophonePipeline = async (
     if (noiseReduction) {
         await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
     }
+    if (resampleManually) {
+        // add libsamplerate worklet to audio context, which will be
+        // used in audio queue transmitter processor
+        await ctx.audioWorklet.addModule(libSamplerateWorkletUrl);
+    }
     await ctx.audioWorklet.addModule(audioQueueTransmitterWorkletUrl);
 
     // load microphone stream
-    const constraints: MediaStreamConstraints = {
-        audio: {
-            echoCancellation: false,
-            // TODO firefox doesn't support re-sampling?
-            sampleRate: SAMPLE_RATE,
-        },
+    const audioConstraints: MediaTrackConstraints = {
+        echoCancellation: false,
     };
-    if (deviceId !== DEFAULT_DEVICE_ID) {
-        (constraints.audio as MediaTrackConstraints).deviceId = deviceId;
+    if (!resampleManually) {
+        // sample rate so the browser automatically provides the correct sample rate
+        audioConstraints.sampleRate = SAMPLE_RATE;
     }
-    const micStream = await navigator.mediaDevices!!.getUserMedia(constraints);
+    if (deviceId !== DEFAULT_DEVICE_ID) {
+        // the user requested to use a specific microphone
+        audioConstraints.deviceId = deviceId;
+    }
+    const micStream = await navigator.mediaDevices!!.getUserMedia(
+        {audio: audioConstraints} as MediaStreamConstraints,
+    );
 
     // convert to mono
     let node: AudioNode = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
@@ -81,10 +92,16 @@ export const setupMicrophonePipeline = async (
         node = node.connect(analyzers.shift()!!);
     }
 
+    // create channel for receiving voice data from worker
+    const channel = new MessageChannel();
     // send microphone input to server, opus-encoded
     const transmitterNode = new AudioWorkletNode(ctx, "audio-queue-transmitter", {
         numberOfInputs: 1,
         numberOfOutputs: 0,
+        processorOptions: {
+            senderPort: channel.port2,
+            resample: resampleManually,
+        },
     });
     node.connect(transmitterNode);
 
@@ -93,9 +110,7 @@ export const setupMicrophonePipeline = async (
     await encoder.ready;
     const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
 
-    // create channel for receiving voice data from worker
-    const channel = new MessageChannel();
-    transmitterNode.port.postMessage(undefined, [channel.port2]);
+    // receive voice frames from worker via messaging channel
     channel.port1.onmessage = async ({data}: MessageEvent<number[]>) => {
         frameSamples.set(data);
 
