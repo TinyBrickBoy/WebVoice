@@ -9,7 +9,7 @@ interface Props {
 const CraftHead: FunctionComponent<Props> = ({uuid, size}) => {
     return <img
         alt={"Head of " + uuid.name}
-        src={`/head/${uuid.name}`}
+        src={`/head/${uuid.name}/image`}
         className={"block select-none"}
         draggable={false}
         style={{
