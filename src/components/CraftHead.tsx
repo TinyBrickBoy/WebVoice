@@ -9,7 +9,7 @@ interface Props {
 const CraftHead: FunctionComponent<Props> = ({uuid, size}) => {
     return <img
         alt={"Head of " + uuid.name}
-        src={`https://crafthead.net/helm/${uuid.name}/8`}
+        src={`/head/${uuid.name}`}
         style={{
             imageRendering: "pixelated",
             width: `${size}px`,
