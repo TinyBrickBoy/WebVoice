@@ -8,7 +8,7 @@ interface Props {
 
 const PlayerBlob: FunctionComponent<Props> = ({state}) => {
     return <>
-        <div className={"bg-amber-500 p-15 m-5 flex justify-center items-center"}>
+        <div className={"bg-neutral-800 p-15 m-5 flex justify-center items-center"}>
             <CraftHead uuid={state.uniqueId} size={128}/>
         </div>
     </>;
