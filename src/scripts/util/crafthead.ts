@@ -1,12 +1,10 @@
 import type {UUID} from "./uuid.ts";
 import {boostVibrance, convertHslToRgb, getAverageHSL, packRgb} from "./image_colors.ts";
 import {decode as decodePng} from "fast-png";
+import {SKIN_ENDPOINT} from "astro:env/server";
+import {format} from "node:util";
 
-export const buildHeadUrl = (uuid: UUID) => {
-    // TODO NodeJS doesn't seem to recognize Cloudflare's SSL Certificates?
-    // return `https://crafthead.net/helm/${uuid.name}/8`;
-    return `https://cravatar.eu/helmavatar/${uuid.name}/8.png`;
-};
+export const buildHeadUrl = (uuid: UUID) => format(SKIN_ENDPOINT, uuid.name);
 
 export type HeadResponse = {
     image: Buffer | null,
