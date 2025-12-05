@@ -10,7 +10,7 @@ const SettingsButton: FunctionComponent = () => {
     return <>
         <SettingsModal visible={[settingsVisible, setSettingsVisible]}/>
         <Button color={"transparent"} className={"h-full"} onClick={() => setSettingsVisible(true)}>
-            <SettingsIcon aria-label={"Settings"} className={"h-full w-auto"}/>
+            <SettingsIcon aria-label={"Settings"} stroke-width={2} className={"h-full w-auto"}/>
         </Button>
     </>;
 };
