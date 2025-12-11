@@ -28,7 +28,7 @@ export default defineConfig({
                 access: "public",
                 // I would rather use crafthead.net, but they have some weird SSL things going on;
                 // the default NodeJS runtime doesn't recognize Cloudflare-Signed SSL Certificates
-                default: "https://cravatar.eu/helmavatar/%s/8.png",
+                default: "https://crafthead.net/helm/%s/8.png",
             }),
         },
     },
