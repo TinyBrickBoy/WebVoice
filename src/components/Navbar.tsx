@@ -3,11 +3,14 @@ import VoiceCategories from "./VoiceCategories.tsx";
 import ClientGroups from "./ClientGroups.tsx";
 import SearchBar from "./SearchBar.tsx";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import {useMemo} from "preact/hooks";
+import {useMemo, useState} from "preact/hooks";
 import MinecraftComponent from "./MinecraftComponent.tsx";
 
 export const Navbar: FunctionComponent = () => {
     const {user: [user], rooms: [rooms], players: [players]} = useVoiceStateContext();
+    const [search, setSearch] = useState<string>("");
+
+    // find out which room the viewer is in
     const room = useMemo(() => {
         const roomId = players[user.uuid.name]?.primaryRoomId;
         return roomId ? rooms[roomId.name] : null;
@@ -22,10 +25,10 @@ export const Navbar: FunctionComponent = () => {
                     <span className={"text-xl text-neutral-400"}>Not in a group</span>
                 }
             </div>
-            <SearchBar/>
+            <SearchBar setSearch={setSearch}/>
             <div className={"flex flex-col flex-1 gap-2 overflow-y-scroll rounded-lg grow"}>
-                <VoiceCategories/>
-                <ClientGroups/>
+                <VoiceCategories search={search}/>
+                <ClientGroups search={search}/>
             </div>
         </div>
     </>;

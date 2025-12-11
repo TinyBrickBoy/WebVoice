@@ -5,8 +5,13 @@ import {CategoryAddPacket, CategoryRemovePacket} from "../scripts/network/packet
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {AudioCategory} from "../scripts/types.ts";
 import {randomUUID} from "../scripts/util/uuid.ts";
+import {includesTextLc} from "../scripts/network/component.ts";
 
-const VoiceCategories: FunctionComponent = () => {
+interface Props {
+    search: string,
+}
+
+const VoiceCategories: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], categories: [categories, setCategories]} = useVoiceStateContext();
 
     useEffect(() => {
@@ -40,7 +45,13 @@ const VoiceCategories: FunctionComponent = () => {
             .callback();
     }, [socket]);
 
-    const categoryValues = Object.values(categories);
+    let categoryValues = Object.values(categories);
+    if (search) {
+        categoryValues = categoryValues.filter(category =>
+            includesTextLc(category.name, search)
+            || (category.description && includesTextLc(category.description, search))
+            || category.uniqueId.name.includes(search));
+    }
     return <>
         <details open={true}>
             <summary className={"text-sm text-neutral-400"}>Categories ({categoryValues.length})</summary>

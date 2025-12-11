@@ -65,3 +65,33 @@ type CommonComponent = Style | {
 export type TextComponent = string | (CommonComponent & { text: string })
 
 export type Component = TextComponent | Component[]
+
+// assumes "search" is lowercase and converts all component text contents to lowercase too
+export const includesTextLc = (component: Component, search: string): boolean => {
+    if (!search) {
+        return true;
+    }
+
+    // extract info about this component
+    let childs: Component[] = [];
+    let content = "";
+    if (component instanceof Array) {
+        childs = component;
+    } else if (typeof component === "string") {
+        content = component.toLowerCase();
+    } else {
+        if ("text" in component) {
+            content = component.text.toLowerCase();
+        }
+        if ("extra" in component && component.extra) {
+            childs = component.extra;
+        }
+    }
+
+    // check if this component directly contains this text
+    if (content && content.includes(search)) {
+        return true;
+    }
+    // check for all children
+    return childs.some(child => includesTextLc(child, search));
+};

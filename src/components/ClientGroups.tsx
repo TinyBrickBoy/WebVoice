@@ -5,8 +5,13 @@ import {useEffect} from "preact/hooks";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {AudioRoom} from "../scripts/types.ts";
 import {randomUUID} from "../scripts/util/uuid.ts";
+import {includesTextLc} from "../scripts/network/component.ts";
 
-const ClientGroups: FunctionComponent = () => {
+interface Props {
+    search: string;
+}
+
+const ClientGroups: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
 
     useEffect(() => {
@@ -40,8 +45,13 @@ const ClientGroups: FunctionComponent = () => {
             .callback();
     }, [socket]);
 
-    const roomValues = Object.values(rooms)
+    let roomValues = Object.values(rooms)
         .filter(room => room.joinable);
+    if (search) {
+        roomValues = roomValues.filter(room =>
+            includesTextLc(room.name, search)
+            || room.uniqueId.name.includes(search));
+    }
     return <>
         <details open={true}>
             <summary className={"text-sm text-neutral-400"}>Groups ({roomValues.length})</summary>
