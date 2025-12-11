@@ -54,7 +54,7 @@ const ClientGroups: FunctionComponent<Props> = ({search}) => {
     }
     return <>
         <details open={true}>
-            <summary className={"text-sm text-neutral-400"}>Groups ({roomValues.length})</summary>
+            <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>Groups ({roomValues.length})</summary>
             <div className={"flex flex-col"}>
                 {roomValues.map(room => (
                     <ClientGroup

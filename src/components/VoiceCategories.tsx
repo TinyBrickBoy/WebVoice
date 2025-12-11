@@ -54,7 +54,7 @@ const VoiceCategories: FunctionComponent<Props> = ({search}) => {
     }
     return <>
         <details open={true}>
-            <summary className={"text-sm text-neutral-400"}>Categories ({categoryValues.length})</summary>
+            <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>Categories ({categoryValues.length})</summary>
             <div className={"flex flex-col"}>
                 {categoryValues.map(category => (
                     <VoiceCategory key={category.uniqueId.name} category={category}/>
