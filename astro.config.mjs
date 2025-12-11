@@ -30,6 +30,14 @@ export default defineConfig({
                 // the default NodeJS runtime doesn't recognize Cloudflare-Signed SSL Certificates
                 default: "https://crafthead.net/helm/%s/8.png",
             }),
+            GLOBAL_CACHE: envField.boolean({
+                context: "server",
+                access: "public",
+                // cloudflare workers doesn't like us keeping a global cache and periodically throws 500s
+                // because of this; promises which are started by one request are not allowed to be resolved
+                // by another request, which completely breaks a cross-request cache without a proper replacement...
+                default: false,
+            }),
         },
     },
 
