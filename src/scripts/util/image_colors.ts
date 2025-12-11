@@ -68,14 +68,21 @@ export const getAverageHSL = (image: DecodedPng, ignoreEdges = true): number[] =
     let count = 0;
 
     const palette = image.palette;
-    if (!palette) {
-        throw new Error(`Expected color palette to be available for decoding ${image}`);
-    }
-
-    // console.log(image.width, image.height, pixelData);
+    const data = image.data;
     const pixels = image.width * image.height;
+
+    // if we don't have a palette, calculate how much values each pixel uses in the data array
+    const dataPerPixel = palette ? -1 : data.length / pixels;
+
     for (let pixelIndex = 0; pixelIndex < pixels; ++pixelIndex) {
-        const [red, green, blue] = palette[getPaletteIndex(image, pixelIndex)];
+        let red: number, green: number, blue: number;
+        if (palette) {
+            [red, green, blue] = palette!![getPaletteIndex(image, pixelIndex)];
+        } else {
+            red = data[pixelIndex * dataPerPixel];
+            green = data[pixelIndex * dataPerPixel + 1];
+            blue = data[pixelIndex * dataPerPixel + 2];
+        }
 
         // convert to HSL so we can "customize" how the average looks
         const [hue, saturation, lightness] = convertRgbToHsl(red / 255, green / 255, blue / 255);
