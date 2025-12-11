@@ -3,12 +3,16 @@ import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
 import Button from "./Button.tsx";
+import Modal from "./Modal.tsx";
 
-const VoiceConnectButton: FunctionComponent = () => {
+const VoiceConnectModal: FunctionComponent = () => {
     const {socketUrl, socket: [socket, setSocket], state: [_state, setState]} = useVoiceStateContext();
 
-    const [connected, setConnected] = useState(false);
-    const [connecting, setConnecting] = useState(false);
+    const [connected, setConnected] = useState<boolean>(false);
+    const [connecting, setConnecting] = useState<boolean>(false);
+
+    const [visible, setVisible] = useState<boolean>(true);
+    useEffect(() => setVisible(!connected || connecting), [connected, connecting]);
 
     useEffect(() => {
         return socket.registers()
@@ -32,14 +36,18 @@ const VoiceConnectButton: FunctionComponent = () => {
     }, [socket, socketUrl]);
 
     return <>
-        <Button
-            color={"purple"}
-            disabled={connecting || connected}
-            onClick={openSocket}
-            className={"grow"}
-        >
-            Connect
-        </Button>
+        <Modal visible={[visible, setVisible]}>
+            <div className={"flex p-3"}>
+                <Button
+                    color={"purple"}
+                    disabled={connecting || connected}
+                    onClick={openSocket}
+                    className={"grow"}
+                >
+                    Connect to Voice
+                </Button>
+            </div>
+        </Modal>
     </>;
 };
-export default VoiceConnectButton;
+export default VoiceConnectModal;

@@ -7,6 +7,7 @@ import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {Navbar} from "./Navbar.tsx";
 import PlayerGrid from "./PlayerGrid.tsx";
 import {UserProfile} from "./UserProfile.tsx";
+import VoiceConnectModal from "./VoiceConnectModal.tsx";
 
 interface Props {
     socketUrl: URL;
@@ -58,7 +59,8 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     }, [socket]);
 
     return <>
-        <main className={"flex flex-col h-full bg-stone-950"}>
+        <main className={"flex flex-col h-full"}>
+            {socketUrl.hostname !== "example" /*TODO*/ && <VoiceConnectModal/>}
             <div className={"flex flex-row grow overflow-y-scroll"}>
                 <Navbar/>
                 <PlayerGrid/>

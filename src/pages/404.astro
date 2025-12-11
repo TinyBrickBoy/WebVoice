@@ -1,0 +1,10 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ErrorPage from "../components/ErrorPage.astro";
+
+export const prerender = true;
+---
+
+<Layout>
+    <ErrorPage error={404}/>
+</Layout>

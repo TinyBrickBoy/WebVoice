@@ -2,17 +2,15 @@
 import Layout from "../../layouts/Layout.astro";
 import VoiceStateProvider from "../../components/VoiceStateProvider";
 import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util/util.ts";
+import ErrorPage from "../../components/ErrorPage.astro";
 
 export const prerender = false;
 const {token} = Astro.params;
-
-if (!token || token.length !== TOKEN_LENGTH) {
-    return Astro.redirect("/", 303);
-}
-
-const socketUrl = constructSocketUrl(token);
 ---
 
 <Layout>
-    <VoiceStateProvider client:only socketUrl={socketUrl} token={token}/>
+    {token && token.length === TOKEN_LENGTH ?
+        <VoiceStateProvider client:only socketUrl={constructSocketUrl(token)} token={token}/> :
+        <ErrorPage error={404}/>
+    }
 </Layout>
