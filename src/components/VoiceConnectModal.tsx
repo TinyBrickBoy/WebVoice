@@ -14,13 +14,22 @@ const VoiceConnectModal: FunctionComponent = () => {
     const [visible, setVisible] = useState<boolean>(true);
     useEffect(() => setVisible(!connected || connecting), [connected, connecting]);
 
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
         return socket.registers()
             .register("open", () => {
                 setConnected(true);
                 setConnecting(false);
+                setError(null);
             })
-            .register("close", () => setConnected(false))
+            .register("close", (event: CloseEvent) => {
+                setConnected(false);
+                setConnecting(false);
+                if (event.code !== 1000) {
+                    setError(`closed (${event.code || -1}, ${event.reason || "unknown"})`);
+                }
+            })
             .callback();
     }, [socket]);
 
@@ -37,15 +46,23 @@ const VoiceConnectModal: FunctionComponent = () => {
 
     return <>
         <Modal visible={[visible, setVisible]}>
-            <div className={"flex p-3"}>
-                <Button
-                    color={"purple"}
-                    disabled={connecting || connected}
-                    onClick={openSocket}
-                    className={"grow"}
-                >
-                    Connect to Voice
-                </Button>
+            <div className={"flex flex-col"}>
+                <div className={"flex p-3"}>
+                    <Button
+                        color={"purple"}
+                        disabled={connecting || connected}
+                        onClick={openSocket}
+                        className={"grow"}
+                    >
+                        Connect to Voice
+                    </Button>
+                </div>
+                {connecting && <span className={"self-center"}>
+                    Connecting...
+                </span>}
+                {error && <span className={"self-center"}>
+                    Received error: {error}
+                </span>}
             </div>
         </Modal>
     </>;
