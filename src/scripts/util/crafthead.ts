@@ -16,7 +16,8 @@ export type HeadColorResponse = HeadResponse & {
     color: number | null
 }
 
-export const CACHE_DURATION_MS = 1000n * 60n * 3n; // cache for 3min
+export const CACHE_DURATION_SEC = 60n * 3n; // cache for 3min
+export const CACHE_DURATION_MS = 1000n * CACHE_DURATION_SEC;
 const heads = GLOBAL_CACHE ? new CachedMap<string, HeadResponse>(CACHE_DURATION_MS) : null;
 const colors = GLOBAL_CACHE ? new CachedMap<string, HeadColorResponse>(CACHE_DURATION_MS) : null;
 
@@ -53,7 +54,7 @@ const fetchHeadImage = async (uuid: UUID) => {
         },
         // @ts-ignore force cloudflare workers caching
         cf: {
-            cacheTtl: Number(CACHE_DURATION_MS / 1000n),
+            cacheTtl: Number(CACHE_DURATION_SEC),
             cacheEverything: true,
         },
     });
