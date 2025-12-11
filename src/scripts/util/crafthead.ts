@@ -16,8 +16,9 @@ export type HeadColorResponse = HeadResponse & {
     color: number | null
 }
 
-const heads = new CachedMap<string, HeadResponse>();
-const colors = new CachedMap<string, HeadColorResponse>();
+const CACHE_DURATION_MS = 1000n * 60n * 3n; // cache for 3min
+const heads = new CachedMap<string, HeadResponse>(CACHE_DURATION_MS);
+const colors = new CachedMap<string, HeadColorResponse>(CACHE_DURATION_MS);
 
 export const getOrFetchHeadColor = async (uuid: UUID) => {
     return colors.getOrLoad(uuid.name, async () => {

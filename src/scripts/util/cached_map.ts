@@ -3,10 +3,20 @@ type LoadingValue<V> = {
     reject: (error?: any) => void,
 }
 
+type ExpiringValue<V> = {
+    value: V,
+    expiry: bigint,
+}
+
 export class CachedMap<K, V> {
 
-    private readonly delegate = new Map<K, V>();
+    private readonly delegate = new Map<K, ExpiringValue<V>>();
     private readonly loading = new Map<K, LoadingValue<V>[]>();
+    private readonly cacheDuration: bigint;
+
+    constructor(cacheDuration: bigint) {
+        this.cacheDuration = cacheDuration;
+    }
 
     public hasCached(key: K) {
         return this.delegate.has(key);
@@ -20,7 +30,12 @@ export class CachedMap<K, V> {
         // check if cached
         const val = this.delegate.get(key);
         if (val !== undefined) {
-            return Promise.resolve(val);
+            // check the entry hasn't expired yet
+            if (val.expiry > Date.now()) {
+                return Promise.resolve(val.value);
+            }
+            // delete from delegate cache map
+            this.delegate.delete(key);
         }
         // check if loading
         const loadingVals = this.loading.get(key);
@@ -36,6 +51,8 @@ export class CachedMap<K, V> {
         return new Promise<V>(async (resolve, reject) => {
             try {
                 const val = await load(key);
+                // immediately save in map with set expiry
+                this.delegate.set(key, {value: val, expiry: BigInt(Date.now()) + this.cacheDuration});
                 // inform everyone about success!
                 newLoadingVals.forEach(loader => loader.resolve(val));
                 resolve(val);
