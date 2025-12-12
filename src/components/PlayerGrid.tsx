@@ -50,7 +50,7 @@ const PlayerGrid: FunctionComponent = () => {
         <div className={"p-8 w-1/2 border-l-2 border-solid border-neutral-700"}>
             <div className={"flex flex-col mb-6"}>
                 <span className={"text-sm"}>Current server</span>
-                {serverName && <MinecraftComponent className={"text-xl"} component={serverName}/>}
+                {serverName && <MinecraftComponent noColor className={"text-xl"} component={serverName}/>}
             </div>
             <div className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}>
                 {playerList.map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}

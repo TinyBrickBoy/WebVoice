@@ -3,6 +3,7 @@ import type {FunctionComponent, JSX} from "preact";
 
 interface Props extends JSX.HTMLAttributes {
     component: Component;
+    noColor?: boolean;
 }
 
 const minecraftColors: Record<string, number> = {
@@ -32,7 +33,7 @@ const getCssColor = (color: string) => {
     return `#${minecraftColors[color.toLowerCase()].toString(16)}`;
 };
 
-const MinecraftComponent: FunctionComponent<Props> = ({component, style, ...other}) => {
+const MinecraftComponent: FunctionComponent<Props> = ({component, noColor, style, ...other}) => {
     let content = "";
     let children: JSX.Element[] | false = false;
 
@@ -60,7 +61,7 @@ const MinecraftComponent: FunctionComponent<Props> = ({component, style, ...othe
             children = component.extra.map(child => <MinecraftComponent component={child}/>);
         }
         // styling
-        if ("color" in component && component.color) {
+        if ("color" in component && component.color && !noColor) {
             styling["color"] = getCssColor(component.color);
         }
         if ("bold" in component) {
