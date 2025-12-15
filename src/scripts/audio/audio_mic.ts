@@ -11,7 +11,7 @@ import audioQueueTransmitterWorkletUrl from "./audio_queue_transmitter.ts?worker
 import libSamplerateWorkletUrl from "@alexanderolsen/libsamplerate-js/dist/libsamplerate.worklet.js?worker&url";
 import type {VoiceSocket} from "../socket.ts";
 
-export const DEFAULT_DEVICE_ID = "default";
+export const DEFAULT_DEVICE_ID = "$$sonus$$default$$";
 
 const GAIN_MULTIPLIER = 0.2;
 
