@@ -23,25 +23,37 @@ export const random32BitNumber = () => Math.floor(Math.random() * 0xFFFFFFFF);
 export const random64BitNumber = () => new Long(random32BitNumber(), random32BitNumber());
 export const randomUUID = () => new UUID(random64BitNumber(), random64BitNumber());
 
+// supports parsing both dashed and undashed uuids
 export const uuidFromString = (name: string): UUID => {
-    const ch1 = name.charCodeAt(8);
-    const ch2 = name.charCodeAt(13);
-    const ch3 = name.charCodeAt(18);
-    const ch4 = name.charCodeAt(23);
-    if (ch1 === SEPARATOR && ch2 === SEPARATOR && ch3 === SEPARATOR && ch4 === SEPARATOR) {
-        const msb1 = parse4Nibbles(name, 0);
-        const msb2 = parse4Nibbles(name, 4);
-        const msb3 = parse4Nibbles(name, 9);
-        const msb4 = parse4Nibbles(name, 14);
-        const lsb1 = parse4Nibbles(name, 19);
-        const lsb2 = parse4Nibbles(name, 24);
-        const lsb3 = parse4Nibbles(name, 28);
-        const lsb4 = parse4Nibbles(name, 32);
-        if (msb1.or(msb2).or(msb3).or(msb4).or(lsb1).or(lsb2).or(lsb3).or(lsb4).gte(0)) {
-            return new UUID(
-                msb1.shl(48).or(msb2.shl(32)).or(msb3.shl(16)).or(msb4),
-                lsb1.shl(48).or(lsb2.shl(32)).or(lsb3.shl(16)).or(lsb4));
+    // check if it is a dashed uuid
+    if (name.length === 36) {
+        // verify placement of dashes
+        const ch1 = name.charCodeAt(8);
+        const ch2 = name.charCodeAt(13);
+        const ch3 = name.charCodeAt(18);
+        const ch4 = name.charCodeAt(23);
+        if (ch1 !== SEPARATOR || ch2 !== SEPARATOR || ch3 !== SEPARATOR || ch4 !== SEPARATOR) {
+            throw new Error("Can't parse uuid " + name);
         }
+    } else if (name.length !== 32) {
+        // neither dashed nor undashed length, early error
+        throw new Error("Can't parse uuid " + name);
+    }
+    // parse uuid nibbles
+    const dashed = name.length === 36;
+    const msb1 = parse4Nibbles(name, 0);
+    const msb2 = parse4Nibbles(name, 4);
+    const msb3 = parse4Nibbles(name, dashed ? 9 : 8);
+    const msb4 = parse4Nibbles(name, dashed ? 14 : 12);
+    const lsb1 = parse4Nibbles(name, dashed ? 19 : 16);
+    const lsb2 = parse4Nibbles(name, dashed ? 24 : 20);
+    const lsb3 = parse4Nibbles(name, dashed ? 28 : 24);
+    const lsb4 = parse4Nibbles(name, dashed ? 32 : 28);
+    // construct uuid object (as long as the value isn't less than 0)
+    if (msb1.or(msb2).or(msb3).or(msb4).or(lsb1).or(lsb2).or(lsb3).or(lsb4).gte(0)) {
+        return new UUID(
+            msb1.shl(48).or(msb2.shl(32)).or(msb3.shl(16)).or(msb4),
+            lsb1.shl(48).or(lsb2.shl(32)).or(lsb3.shl(16)).or(lsb4));
     }
     throw new Error("Can't parse uuid " + name);
 };
