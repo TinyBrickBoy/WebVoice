@@ -26,7 +26,7 @@ export const Navbar: FunctionComponent = () => {
                 }
             </div>
             <SearchBar setSearch={setSearch}/>
-            <div className={"flex flex-col flex-1 gap-2 overflow-y-scroll rounded-lg grow"}>
+            <div className={"flex flex-col flex-1 gap-2 overflow-y-auto rounded-lg grow"}>
                 <VoiceCategories search={search}/>
                 <ClientGroups search={search}/>
             </div>
