@@ -2,10 +2,9 @@ import type {UUID} from "./uuid.ts";
 import {boostVibrance, convertHslToRgb, getAverageHSL, packRgb} from "./image_colors.ts";
 import {decode as decodePng} from "fast-png";
 import {GLOBAL_CACHE, SKIN_ENDPOINT} from "astro:env/server";
-import {format} from "node:util";
 import {CachedMap} from "./cached_map.ts";
 
-export const buildHeadUrl = (uuid: UUID) => format(SKIN_ENDPOINT, uuid.name);
+export const buildHeadUrl = (uuid: UUID) => SKIN_ENDPOINT.replace("%s", uuid.name);
 
 export type HeadResponse = {
     image: Buffer | null,
