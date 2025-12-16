@@ -15,12 +15,10 @@ import type {AudioDeviceManager} from "./audio_devices.ts";
 
 const GAIN_MULTIPLIER = 0.2;
 
-export type MicrophoneController = {
-    setVolume: (volume: number) => void,
-    free: () => Promise<void>,
-}
-
-export const getMicrophoneStream = async (resampleManually: boolean, deviceId: string | null) => {
+export const getMicrophoneStream = async (
+    resampleManually: boolean,
+    deviceId: string | null,
+) => {
     // load microphone stream
     const audioConstraints: MediaTrackConstraints = {
         echoCancellation: false,
@@ -69,48 +67,102 @@ export const setupMicrophonePipeline = async (
     ctx.createMediaStreamSource(micStream).connect(firstNode);
 
     // update if the device manager tells us to
-    const unregisterCallback = devices.getEvents().register("update_microphone_stream", async () => {
+    const freeCallbacks: (() => void)[] = [];
+    freeCallbacks.push(devices.getEvents().register("update_microphone_stream", async () => {
         // stop previous microphone stream tracks
         micStream.getTracks().forEach(track => track.stop());
         // fetch new microphone stream from browser api
         micStream = await getMicrophoneStream(resampleManually, devices.getMicrophoneId());
         // start sending microphone stream to our audio pipeline
         ctx.createMediaStreamSource(micStream).connect(firstNode);
-    });
+    }));
 
-    let node: AudioNode = ctx.createMediaStreamSource(firstNode.stream);
+    let node: AudioNode = firstNode;
     if (analyzers.length > 0) {
         node = node.connect(analyzers.shift()!!);
     }
 
-    // create RNNoise worklet node
-    const rnnoiseNode = new RnnoiseWorkletNode(ctx, {
-        wasmBinary: rnnoiseWasmBinary,
-        maxChannels: 1,
-    });
-    const rnnoiseUseNode = analyzers.length > 0
-        ? rnnoiseNode.connect(analyzers.shift()!!) : rnnoiseNode;
-    // TODO
-    if (controls.noiseReduction) {
-        node.connect(rnnoiseNode);
-        node = rnnoiseUseNode;
-    }
-
     // apply noise gate
-    node = node.connect(new NoiseGateWorkletNode(ctx, {
+    const noiseGateNode = new NoiseGateWorkletNode(ctx, {
         openThreshold: -50,
         closeThreshold: -60,
         holdMs: 150,
         maxChannels: 1,
-    }));
+    });
+
+    // setup noise reduction dynamically between "node" and "noiseGateNode"
+    freeCallbacks.push(...(await setupNoiseReduction(ctx, controls, rnnoiseWasmBinary, node, noiseGateNode, analyzers)));
 
     // change volume
     const gainNode = new GainNode(ctx, {gain: GAIN_MULTIPLIER});
-    node = node.connect(gainNode);
+    node = noiseGateNode.connect(gainNode);
     if (analyzers.length > 0) {
         node = node.connect(analyzers.shift()!!);
     }
 
+    // apply volume to pipeline and listen for updates from controller
+    const applyVolume = (volume: number) => {
+        gainNode.gain.value = volume * GAIN_MULTIPLIER;
+    };
+    applyVolume(controls.inputVolume);
+    freeCallbacks.push(controls.register("update_input_volume",
+        () => applyVolume(controls.inputVolume)));
+
+    // setup packet transmitter at the end of the pipeline
+    freeCallbacks.push(await setupTransmitter(socket, controls, ctx, node, resampleManually));
+
+    return () => freeCallbacks.forEach(fn => fn());
+};
+
+const setupNoiseReduction = async (
+    ctx: AudioContext,
+    controls: AudioControls,
+    rnnoiseWasmBinary: ArrayBuffer,
+    preNode: AudioNode,
+    postNode: AudioNode,
+    analyzers: AnalyserNode[] = [],
+) => {
+
+    // create RNNoise worklet node
+    const rnnoiseInNode = new RnnoiseWorkletNode(ctx, {
+        wasmBinary: rnnoiseWasmBinary,
+        maxChannels: 1,
+    });
+    const rnnoiseOutNode = analyzers.length > 0
+        ? rnnoiseInNode.connect(analyzers.shift()!!) : rnnoiseInNode;
+
+    // apply noise reduction (if enabled) to pipeline and listen for updates from controller
+    const applyNoiseReduction = (noiseReduction: boolean) => {
+        // break pipeline
+        preNode.disconnect();
+        rnnoiseOutNode.disconnect();
+
+        if (noiseReduction) {
+            // pass audio through rnnoise and pipe back to normal processors
+            preNode.connect(rnnoiseInNode);
+            rnnoiseOutNode.connect(postNode);
+        } else {
+            // bypass rnnoise completely
+            preNode.connect(postNode);
+        }
+    };
+    applyNoiseReduction(controls.noiseReduction);
+    const removalCallback = controls.register("update_noise_reduction",
+        () => applyNoiseReduction(controls.noiseReduction));
+
+    return [
+        () => rnnoiseInNode.destroy(),
+        removalCallback,
+    ];
+};
+
+const setupTransmitter = async (
+    socket: VoiceSocket,
+    controls: AudioControls,
+    ctx: AudioContext,
+    lastNode: AudioNode,
+    resampleManually: boolean,
+) => {
     // create channel for receiving voice data from worker
     const channel = new MessageChannel();
     // send microphone input to server, opus-encoded
@@ -122,7 +174,7 @@ export const setupMicrophonePipeline = async (
             resample: resampleManually,
         },
     });
-    node.connect(transmitterNode);
+    lastNode.connect(transmitterNode);
 
     // pre-allocate microphone opus encoder
     const encoder = new OpusEncoderWebWorker({sampleRate: SAMPLE_RATE, application: OpusApplication.VOIP});
@@ -145,13 +197,7 @@ export const setupMicrophonePipeline = async (
         socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
     };
 
-    return {
-        setVolume: (volume: number) => {
-            gainNode.gain.value = (volume / 100) * GAIN_MULTIPLIER;
-        },
-        free: async () => {
-            unregisterCallback();
-            await encoder.free();
-        },
-    } as MicrophoneController;
+    return () => {
+        encoder.free().catch(error => console.error(error));
+    };
 };
