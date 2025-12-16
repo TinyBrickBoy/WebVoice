@@ -3,7 +3,6 @@ import Modal from "./Modal.tsx";
 import type {StateType} from "../scripts/types.ts";
 import {useCallback, useEffect, useState} from "preact/hooks";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import {DEFAULT_DEVICE_ID} from "../scripts/audio/audio_mic.ts";
 import Dropdown from "./Dropdown.tsx";
 import VersionInfo from "./VersionInfo.tsx";
 
@@ -11,39 +10,65 @@ interface Props {
     visible: StateType<boolean>;
 }
 
-const InputDeviceSelection: FunctionComponent<Props> = ({visible}) => {
-    const {settings: [settings, setSettings]} = useVoiceStateContext();
-    const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+interface DropdownProps {
+    type: "input" | "output";
+}
+
+const DeviceSelectionDropdown: FunctionComponent<DropdownProps> = ({type}) => {
+    const {devices} = useVoiceStateContext();
+
+    const [deviceList, setDeviceList] = useState<MediaDeviceInfo[]>([]);
+    const [deviceId, setDeviceId] = useState<string | null>(null);
+
+    const refreshDeviceList = useCallback(() => {
+        const devicesPromise = devices[type === "input" ? "getMicrophoneList" : "getSpeakerList"].call(devices);
+        devicesPromise
+            .then(result => setDeviceList(result))
+            .catch(error => console.error(error));
+    }, [devices, type]);
 
     useEffect(() => {
-        const timer = setTimeout(async () => {
-            const foundDevices = await navigator.mediaDevices.enumerateDevices();
-            const filteredDevices = foundDevices
-                .filter(device => device.deviceId.length !== 0)
-                .filter(device => device.kind === "audioinput");
-            setDevices(filteredDevices);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [visible]);
+        // initial refresh
+        refreshDeviceList();
+        // refresh when the device manager tells us to
+        return devices.getEvents().register(
+            "update_device_list",
+            () => refreshDeviceList(),
+        );
+    }, [devices, refreshDeviceList]);
 
-    const updateMic = useCallback((device: string) => {
-        setSettings(data => ({...data, microphoneId: device}));
-    }, []);
+    const [updating, setUpdating] = useState<boolean>(false);
+    const updateDevice = useCallback((newDeviceId: string) => {
+        setUpdating(true);
+        devices[type === "input" ? "updateMicrophone" : "updateSpeaker"](newDeviceId)
+            .then(result => {
+                setUpdating(false);
+                if (result) {
+                    setDeviceId(newDeviceId);
+                } else {
+                    console.error(`Failed to update ${type} to ${newDeviceId}`);
+                }
+            })
+            .catch(error => {
+                setUpdating(false);
+                console.error("audio change", type, newDeviceId, error);
+            });
+    }, [devices, type]);
 
-    if (devices.length < 1) {
+
+    if (deviceList.length < 1) {
         return <>
-            <Dropdown disabled value={"nop"}>
-                <option value={"nop"}>Loading devices...</option>
+            <Dropdown disabled value={"empty"}>
+                <option value={"empty"} className={"italic"}>No devices found</option>
             </Dropdown>
         </>;
     }
     return <>
         <Dropdown
-            value={settings.microphoneId}
-            onChange={event => updateMic(event.currentTarget.value)}
+            value={deviceId || deviceList[0].deviceId} disabled={updating}
+            onChange={event => updateDevice(event.currentTarget.value)}
         >
-            <option value={DEFAULT_DEVICE_ID}>Default</option>
-            {devices.map(device => (
+            {deviceList.map(device => (
                 <option value={device.deviceId} key={device.deviceId}>{device.label}</option>
             ))}
         </Dropdown>
@@ -51,17 +76,20 @@ const InputDeviceSelection: FunctionComponent<Props> = ({visible}) => {
 };
 
 const SettingsModal: FunctionComponent<Props> = ({visible}) => {
-    const {settings: [settings, setSettings]} = useVoiceStateContext();
 
     return <>
         <Modal visible={visible} dismissable>
             <div className={"flex flex-col gap-1"}>
                 <h2 className={"text-2xl font-bold"}>Settings</h2>
                 <div className={"flex flex-col gap-3"}>
-                    <h3 className={"text-lg font-semibold"}>Input Settings</h3>
+                    <h3 className={"text-lg font-semibold"}>Voice Settings</h3>
                     <label className={"flex flex-col gap-0.5"}>
                         <span>Input Device</span>
-                        <InputDeviceSelection visible={visible}/>
+                        <DeviceSelectionDropdown type={"input"}/>
+                    </label>
+                    <label className={"flex flex-col gap-0.5"}>
+                        <span>Output Device</span>
+                        <DeviceSelectionDropdown type={"output"}/>
                     </label>
                     <label className={"flex flex-col"}>
 

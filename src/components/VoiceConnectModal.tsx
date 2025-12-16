@@ -5,27 +5,40 @@ import {VoiceSocket} from "../scripts/socket.ts";
 import Button from "./Button.tsx";
 import Modal from "./Modal.tsx";
 
-const VoiceConnectModal: FunctionComponent = () => {
-    const {socketUrl, socket: [socket, setSocket], state: [_state, setState]} = useVoiceStateContext();
+interface Props {
+    demo?: boolean;
+}
 
-    const [connected, setConnected] = useState<boolean>(false);
-    const [connecting, setConnecting] = useState<boolean>(false);
+const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
+    const {socketUrl, socket: [socket, setSocket], state: [state, setState], devices} = useVoiceStateContext();
+
+    const [permissionState, setPermissionState] = useState<"checking" | "success" | "failed" | "todo">("todo");
+    const checkPermissions = useCallback(async () => {
+        setPermissionState("checking");
+        try {
+            const result = await devices.checkPermission();
+            setPermissionState(!result ? "success" : "failed");
+            return !result;
+        } catch (error) {
+            setPermissionState("failed");
+            console.error(error);
+            return false;
+        }
+    }, [devices]);
 
     const [visible, setVisible] = useState<boolean>(true);
-    useEffect(() => setVisible(!connected || connecting), [connected, connecting]);
+    useEffect(() => setVisible(state !== "connected"), [state]);
 
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         return socket.registers()
             .register("open", () => {
-                setConnected(true);
-                setConnecting(false);
+                setState("connected");
                 setError(null);
             })
             .register("close", (event: CloseEvent) => {
-                setConnected(false);
-                setConnecting(false);
+                setState("disconnected");
                 if (event.code !== 1000) {
                     setError(`closed (${event.code || -1}, ${event.reason || "unknown"})`);
                 }
@@ -34,30 +47,47 @@ const VoiceConnectModal: FunctionComponent = () => {
     }, [socket]);
 
     const openSocket = useCallback(() => {
-        setConnecting(true);
-        setState("disconnected");
+        if (demo) {
+            setState("connected");
+            setError(null);
+            return;
+        }
         socket.close();
 
         setState("connecting");
         const newSocket = new VoiceSocket(socketUrl);
         newSocket.open();
         setSocket(newSocket);
-    }, [socket, socketUrl]);
+    }, [socket, socketUrl, demo]);
+
+    const tryOpenSocket = useCallback(() => {
+        if (permissionState === "todo") {
+            checkPermissions()
+                .then(result => !result || openSocket())
+                .catch(error => console.error(error));
+        } else if (permissionState === "success") {
+            openSocket();
+        }
+    }, [permissionState, checkPermissions, openSocket]);
 
     return <>
-        <Modal visible={[visible, setVisible]}>
+        <Modal visible={[visible, setVisible]} dismissable={demo}>
             <div className={"flex flex-col"}>
                 <div className={"flex p-3"}>
                     <Button
                         color={"purple"}
-                        disabled={connecting || connected}
-                        onClick={openSocket}
+                        disabled={state !== "disconnected" || !permissionState}
+                        onClick={tryOpenSocket}
                         className={"grow"}
                     >
                         Connect to Voice
                     </Button>
                 </div>
-                {connecting && <span className={"self-center"}>
+                {permissionState === "checking" ?
+                    <span className={"self-center"}>Checking permissions...</span>
+                    : (permissionState === "failed" ?
+                        <span className={"self-center"}>No voice input permissions!</span> : null)}
+                {state === "connecting" && <span className={"self-center"}>
                     Connecting...
                 </span>}
                 {error && <span className={"self-center"}>

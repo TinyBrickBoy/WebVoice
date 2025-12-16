@@ -60,7 +60,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
 
     return <>
         <main className={"flex flex-col h-full"}>
-            {socketUrl.hostname !== "example" /*TODO*/ && <VoiceConnectModal/>}
+            <VoiceConnectModal demo={socketUrl.hostname === "example"}/>
             <div className={"flex flex-row grow overflow-y-scroll"}>
                 <Navbar/>
                 <PlayerGrid/>
