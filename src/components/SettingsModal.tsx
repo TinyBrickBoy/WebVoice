@@ -18,15 +18,12 @@ const DeviceSelectionDropdown: FunctionComponent<DropdownProps> = ({type}) => {
     const {devices} = useVoiceStateContext();
 
     const [deviceList, setDeviceList] = useState<MediaDeviceInfo[]>([]);
-    const [deviceId, setDeviceId] = useState<string | null>(null);
-
     const refreshDeviceList = useCallback(() => {
-        const devicesPromise = devices[type === "input" ? "getMicrophoneList" : "getSpeakerList"].call(devices);
+        const devicesPromise = devices[type === "input" ? "getMicrophoneList" : "getSpeakerList"]();
         devicesPromise
             .then(result => setDeviceList(result))
             .catch(error => console.error(error));
     }, [devices, type]);
-
     useEffect(() => {
         // initial refresh
         refreshDeviceList();
@@ -37,6 +34,20 @@ const DeviceSelectionDropdown: FunctionComponent<DropdownProps> = ({type}) => {
         );
     }, [devices, refreshDeviceList]);
 
+    const [deviceId, setDeviceId] = useState<string | null>(null);
+    const refreshDeviceId = useCallback(() => {
+        setDeviceId(devices[type === "input" ? "getMicrophoneId" : "getSpeakerId"]());
+    }, [devices, type]);
+    useEffect(() => {
+        // initial refresh
+        refreshDeviceId();
+        // refresh when the device manager tells us to
+        return devices.getEvents().register(
+            type === "input" ? "update_microphone" : "update_speaker",
+            () => refreshDeviceId(),
+        );
+    }, [devices, refreshDeviceId]);
+
     const [updating, setUpdating] = useState<boolean>(false);
     const updateDevice = useCallback((newDeviceId: string) => {
         setUpdating(true);
@@ -44,17 +55,16 @@ const DeviceSelectionDropdown: FunctionComponent<DropdownProps> = ({type}) => {
             .then(result => {
                 setUpdating(false);
                 if (result) {
-                    setDeviceId(newDeviceId);
+                    console.log(`Updated ${type} to ${newDeviceId}`);
                 } else {
                     console.error(`Failed to update ${type} to ${newDeviceId}`);
                 }
             })
             .catch(error => {
                 setUpdating(false);
-                console.error("audio change", type, newDeviceId, error);
+                console.error(`Error on audio change for ${type} to ${newDeviceId}`, error);
             });
     }, [devices, type]);
-
 
     if (deviceList.length < 1) {
         return <>
@@ -66,7 +76,7 @@ const DeviceSelectionDropdown: FunctionComponent<DropdownProps> = ({type}) => {
     return <>
         <Dropdown
             value={deviceId || deviceList[0].deviceId} disabled={updating}
-            onChange={event => updateDevice(event.currentTarget.value)}
+            onUpdate={value => updateDevice(value)}
         >
             {deviceList.map(device => (
                 <option value={device.deviceId} key={device.deviceId}>{device.label}</option>

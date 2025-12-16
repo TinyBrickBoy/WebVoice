@@ -1,6 +1,6 @@
 import {type FunctionComponent, type JSX} from "preact";
 
-interface Props extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
+interface Props extends Omit<JSX.SelectHTMLAttributes<HTMLSelectElement>, "onChange"> {
     onUpdate?: (value: string) => void;
 }
 

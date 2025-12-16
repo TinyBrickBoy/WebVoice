@@ -17,6 +17,7 @@ export class AudioDeviceManager {
     constructor() {
         this.selectedMicrophone = localStorage.getItem("sonus:microphone") || null;
         this.selectedSpeaker = localStorage.getItem("sonus:speaker") || null;
+        console.log("Loaded audio devices from local storage", this.selectedMicrophone, this.selectedSpeaker);
     }
 
     public registerMediaListener() {
