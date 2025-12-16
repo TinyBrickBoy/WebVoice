@@ -29,14 +29,15 @@ export class VolumeManager extends EventManager {
         if (!typeData) {
             this.volumes[type] = typeData = {};
         }
-        if (typeData[id] === volume) {
-            return; // nothing changed
-        }
+        const noChange = typeData[id] === volume;
         typeData[id] = volume;
         if (save) {
+            console.log("Saved volumes to local storage", type, id, volume * 100);
             this.save();
         }
-        // fire volume updates
-        this.fire(new CustomEvent(type));
+        if (!noChange) {
+            // fire volume updates
+            this.fire(new CustomEvent(type));
+        }
     }
 }
