@@ -5,6 +5,7 @@ import {useCallback, useEffect, useState} from "preact/hooks";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {DEFAULT_DEVICE_ID} from "../scripts/audio/audio_mic.ts";
 import Dropdown from "./Dropdown.tsx";
+import VersionInfo from "./VersionInfo.tsx";
 
 interface Props {
     visible: StateType<boolean>;
@@ -66,6 +67,7 @@ const SettingsModal: FunctionComponent<Props> = ({visible}) => {
 
                     </label>
                 </div>
+                <VersionInfo/>
             </div>
         </Modal>
     </>;

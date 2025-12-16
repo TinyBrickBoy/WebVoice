@@ -3,6 +3,9 @@ import preact from "@astrojs/preact";
 import cloudflare from "@astrojs/cloudflare";
 import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
+import {execSync} from "node:child_process";
+
+const GIT_COMMIT_HASH = (process.env.GITHUB_SHA || "").trim().slice(0, 7) || execSync("git rev-parse --short HEAD").toString().trim();
 
 // https://astro.build/config
 export default defineConfig({
@@ -46,5 +49,8 @@ export default defineConfig({
             tailwindcss(),
             Icons({compiler: "jsx", jsx: "preact"}),
         ],
+        define: {
+            "import.meta.env.GIT_COMMIT_HASH": JSON.stringify(GIT_COMMIT_HASH),
+        },
     },
 });
