@@ -6,7 +6,7 @@ import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {useMemo, useState} from "preact/hooks";
 import MinecraftComponent from "./MinecraftComponent.tsx";
 
-export const Navbar: FunctionComponent = () => {
+const Navbar: FunctionComponent = () => {
     const {user: [user], rooms: [rooms], players: [players]} = useVoiceStateContext();
     const [search, setSearch] = useState<string>("");
 
@@ -33,3 +33,5 @@ export const Navbar: FunctionComponent = () => {
         </div>
     </>;
 };
+
+export default Navbar;

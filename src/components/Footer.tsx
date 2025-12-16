@@ -4,7 +4,7 @@ import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import SettingsButton from "./SettingsButton.tsx";
 import ControlPanel from "./ControlPanel.tsx";
 
-export const UserProfile: FunctionComponent = () => {
+const Footer: FunctionComponent = () => {
     const {user: [user]} = useVoiceStateContext();
 
     return <>
@@ -17,3 +17,4 @@ export const UserProfile: FunctionComponent = () => {
         </div>
     </>;
 };
+export default Footer;

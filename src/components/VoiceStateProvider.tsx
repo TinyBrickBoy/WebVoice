@@ -12,6 +12,7 @@ import {
 import VoiceContainer from "./VoiceContainer.tsx";
 import {uuidFromString} from "../scripts/util/uuid.ts";
 import {AudioDeviceManager} from "../scripts/audio/audio_devices.ts";
+import {AudioControls} from "../scripts/audio/audio_controls.ts";
 
 export type VoiceState = {
     socketUrl: URL,
@@ -22,6 +23,7 @@ export type VoiceState = {
     categories: StateType<Record<string, AudioCategory>>,
     state: StateType<SocketState>,
     devices: AudioDeviceManager,
+    controls: AudioControls,
 }
 
 // @ts-ignore it will be fiiiine, I don't want to spam null checks everywhere
@@ -53,9 +55,12 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     const state = useState<SocketState>("disconnected");
     const devices = useMemo(() => new AudioDeviceManager(), []);
     useEffect(() => devices.registerMediaListener(), [devices]);
+    const controls = useMemo(() => new AudioControls(), []);
 
     return <>
-        <VoiceStateContext.Provider value={{socketUrl, user, socket, players, rooms, categories, state, devices}}>
+        <VoiceStateContext.Provider
+            value={{socketUrl, user, socket, players, rooms, categories, state, devices, controls}}
+        >
             <VoiceContainer socketUrl={socketUrl}/>
         </VoiceStateContext.Provider>
     </>;

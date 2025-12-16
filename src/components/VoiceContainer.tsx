@@ -4,9 +4,9 @@ import AudioPlayer from "../scripts/audio/audio_player.ts";
 import {ConnectedPacket, PingPacket, StateInfoPacket} from "../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import {Navbar} from "./Navbar.tsx";
+import Navbar from "./Navbar.tsx";
 import PlayerGrid from "./PlayerGrid.tsx";
-import {UserProfile} from "./UserProfile.tsx";
+import Footer from "./Footer.tsx";
 import VoiceConnectModal from "./VoiceConnectModal.tsx";
 
 interface Props {
@@ -66,7 +66,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
                 <PlayerGrid/>
             </div>
             <div className={"flex flex-row justify-center p-3 border-t-2 border-solid border-neutral-700"}>
-                <UserProfile/>
+                <Footer/>
             </div>
         </main>
     </>;
