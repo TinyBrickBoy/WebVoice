@@ -5,6 +5,7 @@ import type {VoiceSocket} from "../socket.ts";
 import {AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
 import {getVolume} from "../util/volumes.ts";
 import {type AudioQueueData, type Position3d, Vector3d} from "../types.ts";
+import type {AudioDeviceManager} from "./audio_devices.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
@@ -18,8 +19,13 @@ type ChannelData = {
 
 export default class AudioPlayer {
 
+    private readonly devices: AudioDeviceManager;
     private ctx?: AudioContext;
     private readonly channels: { [channel: string]: ChannelData } = {};
+
+    constructor(devices: AudioDeviceManager) {
+        this.devices = devices;
+    }
 
     private position: Position3d = {
         pos: new Vector3d(0, 0, 0),
@@ -53,6 +59,22 @@ export default class AudioPlayer {
         }
     }
 
+    public registerSpeakerListener() {
+        return this.devices.getEvents().register(
+            "update_speaker",
+            () => this.refreshSpeaker(),
+        );
+    }
+
+    public refreshSpeaker() {
+        if (this.ctx && "setSinkId" in this.ctx) {
+            const speakerId = this.devices.getSpeakerId();
+            const setSinkId = this.ctx.setSinkId as ((param: string | { type: "none" }) => Promise<void>);
+            setSinkId.call(this.ctx, speakerId || "")
+                .catch(error => console.error(error));
+        }
+    }
+
     public async startContext() {
         if (this.ctx) {
             for (const channel of Object.keys(this.channels)) {
@@ -65,6 +87,7 @@ export default class AudioPlayer {
             latencyHint: "balanced",
         });
         await this.ctx.audioWorklet.addModule(audioQueueReceiverWorkletUrl);
+        this.refreshSpeaker();
     }
 
     private async resolveChannel(channel: string): Promise<ChannelData> {

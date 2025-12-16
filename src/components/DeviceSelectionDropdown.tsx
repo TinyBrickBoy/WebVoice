@@ -2,6 +2,7 @@ import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {useCallback, useEffect, useState} from "preact/hooks";
 import Dropdown from "./Dropdown.tsx";
+import {AudioControls} from "../scripts/audio/audio_controls.ts";
 
 interface Props {
     type: "input" | "output";
@@ -59,10 +60,17 @@ const DeviceSelectionDropdown: FunctionComponent<Props> = ({type}) => {
             });
     }, [devices, type]);
 
+    if (type === "output" && !("setSinkId" in AudioContext.prototype)) {
+        return <>
+            <Dropdown disabled value={"empty"} className={"italic"}>
+                <option value={"empty"}>Unsupported by Browser</option>
+            </Dropdown>
+        </>;
+    }
     if (deviceList.length < 1) {
         return <>
-            <Dropdown disabled value={"empty"}>
-                <option value={"empty"} className={"italic"}>No devices found</option>
+            <Dropdown disabled value={"empty"} className={"italic"}>
+                <option value={"empty"}>No devices found</option>
             </Dropdown>
         </>;
     }

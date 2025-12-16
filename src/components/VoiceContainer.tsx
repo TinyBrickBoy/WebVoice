@@ -14,11 +14,12 @@ interface Props {
 }
 
 const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
-    const {socket: [socket, setSocket], user: [_user, setUser], state: [_state, setState]} = useVoiceStateContext();
+    const {socket: [socket, setSocket], user: [_user, setUser], state: [_state, setState], devices} = useVoiceStateContext();
 
     // audio player handling
-    const audio = useMemo(() => new AudioPlayer(), []);
+    const audio = useMemo(() => new AudioPlayer(devices), [devices]);
     useEffect(() => audio.startGarbageCollector(), [audio]);
+    useEffect(() => audio.registerSpeakerListener(), [audio]);
     useEffect(() => audio.registerSocket(socket), [audio, socket]);
 
     useEffect(() => {
