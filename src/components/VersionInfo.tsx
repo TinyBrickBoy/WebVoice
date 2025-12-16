@@ -1,6 +1,4 @@
 import type {FunctionComponent} from "preact";
-import Modal from "./Modal.tsx";
-import type {StateType} from "../scripts/types.ts";
 
 const VersionInfo: FunctionComponent = () => {
     const hash = import.meta.env.GIT_COMMIT_HASH;

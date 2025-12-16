@@ -4,15 +4,12 @@ import type {StateType} from "../scripts/types.ts";
 import VersionInfo from "./VersionInfo.tsx";
 import DeviceSelectionDropdown from "./DeviceSelectionDropdown.tsx";
 import VolumeSlider from "./VolumeSlider.tsx";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 interface Props {
     visible: StateType<boolean>;
 }
 
 const SettingsModal: FunctionComponent<Props> = ({visible}) => {
-    const {devices} = useVoiceStateContext();
-
     return <>
         <Modal visible={visible} dismissable>
             <div className={"flex flex-col gap-1"}>
