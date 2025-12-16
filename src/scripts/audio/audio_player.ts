@@ -6,6 +6,7 @@ import {AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
 import {getVolume} from "../util/volumes.ts";
 import {type AudioQueueData, type Position3d, Vector3d} from "../types.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
+import type {AudioControls} from "./audio_controls.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
@@ -19,11 +20,14 @@ type ChannelData = {
 
 export default class AudioPlayer {
 
+    private readonly controls: AudioControls;
     private readonly devices: AudioDeviceManager;
+
     private ctx?: AudioContext;
     private readonly channels: { [channel: string]: ChannelData } = {};
 
-    constructor(devices: AudioDeviceManager) {
+    constructor(controls: AudioControls, devices: AudioDeviceManager) {
+        this.controls = controls;
         this.devices = devices;
     }
 
@@ -115,6 +119,8 @@ export default class AudioPlayer {
     public async playFrame(channel: string, volume: number, opus: Uint8Array, position: Vector3d | null) {
         if (!this.ctx) {
             throw new Error("Can't play frame before creation of audio context");
+        } else if (this.controls.deafened) {
+            return; // skip playing if deafened
         }
         const source = this.position;
 

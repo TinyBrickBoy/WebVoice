@@ -7,7 +7,6 @@ export class AudioDeviceManager {
 
     private readonly events = new EventManager();
 
-    private microphoneStream: MediaStream | null = null;
     private selectedMicrophone: string | null = null;
     private microphoneList: MediaDeviceInfo[] = [];
 
@@ -77,16 +76,16 @@ export class AudioDeviceManager {
         }
         try {
             // simply get the microphone stream and trigger refresh events
-            this.microphoneStream = await navigator.mediaDevices.getUserMedia({
+            const media = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     deviceId: deviceId || undefined,
                 },
             });
+            // shutdown again
+            media.getTracks().forEach(track => track.stop());
             this.events.fire(new CustomEvent("update_microphone_stream"));
         } catch (error) {
-            this.microphoneStream = null;
             this.events.fire(new CustomEvent("update_microphone_stream"));
-
             if (error instanceof DOMException) {
                 if (error.name === "NotAllowedError" || error.name === "SecurityError") {
                     return false;
@@ -109,13 +108,6 @@ export class AudioDeviceManager {
             return "microphone";
         }
         return null;
-    }
-
-    public async getMicrophoneStream() {
-        if (!this.microphoneStream?.active) {
-            await this.updateMicrophone(this.selectedMicrophone);
-        }
-        return this.microphoneStream;
     }
 
     public getMicrophoneId() {
