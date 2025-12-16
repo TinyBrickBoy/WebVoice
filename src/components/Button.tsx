@@ -16,7 +16,7 @@ const Button: FunctionComponent<Props> = ({color, className, children, ...other}
     return <>
         <button
             {...other}
-            className={`p-3 ${className || ""} ${cssColor} not-disabled:cursor-pointer rounded-lg`}
+            className={`p-3 ${className || ""} ${cssColor} not-disabled:cursor-pointer disabled:cursor-not-allowed rounded-lg`}
         >
             {children}
         </button>
