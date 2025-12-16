@@ -3,10 +3,10 @@ import {CHANNEL_COUNT, SAMPLE_RATE} from "./audio_constants.ts";
 import {OpusDecoderWebWorker} from "@minceraftmc/opus-decoder";
 import type {VoiceSocket} from "../socket.ts";
 import {AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
-import {getVolume} from "../util/volumes.ts";
 import {type AudioQueueData, type Position3d, Vector3d} from "../types.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {AudioControls} from "./audio_controls.ts";
+import type {VolumeManager} from "./volumes.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
@@ -22,13 +22,19 @@ export default class AudioPlayer {
 
     private readonly controls: AudioControls;
     private readonly devices: AudioDeviceManager;
+    private readonly volumes: VolumeManager;
 
     private ctx?: AudioContext;
     private readonly channels: { [channel: string]: ChannelData } = {};
 
-    constructor(controls: AudioControls, devices: AudioDeviceManager) {
+    constructor(
+        controls: AudioControls,
+        devices: AudioDeviceManager,
+        volumes: VolumeManager,
+    ) {
         this.controls = controls;
         this.devices = devices;
+        this.volumes = volumes;
     }
 
     private position: Position3d = {
@@ -142,9 +148,12 @@ export default class AudioPlayer {
     public registerSocket(socket: VoiceSocket) {
         return socket.registers()
             .register("audio", ({detail: packet}: CustomEvent<AudioPacket>) => {
-                const playerVolume = getVolume("player", packet.senderId.name) / 100;
-                const categoryVolume = getVolume("category", packet.categoryId?.name) / 100;
-                this.playFrame(packet.channelId.name, playerVolume * categoryVolume, packet.audio, packet.position)
+                const outputVolume = this.volumes.get("output", "");
+                const playerVolume = this.volumes.get("player", packet.senderId.name);
+                const categoryVolume = packet.categoryId ? this.volumes.get("category", packet.categoryId.name) : 1;
+                const totalVolume = outputVolume * playerVolume * categoryVolume;
+
+                this.playFrame(packet.channelId.name, totalVolume, packet.audio, packet.position)
                     .catch(error => console.error(error));
             })
             .register("position_update", ({detail: {position, yaw, pitch}}: CustomEvent<PositionUpdatePacket>) => {

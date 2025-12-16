@@ -3,12 +3,15 @@ import Modal from "./Modal.tsx";
 import type {StateType} from "../scripts/types.ts";
 import VersionInfo from "./VersionInfo.tsx";
 import DeviceSelectionDropdown from "./DeviceSelectionDropdown.tsx";
+import VolumeSlider from "./VolumeSlider.tsx";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 interface Props {
     visible: StateType<boolean>;
 }
 
 const SettingsModal: FunctionComponent<Props> = ({visible}) => {
+    const {devices} = useVoiceStateContext();
 
     return <>
         <Modal visible={visible} dismissable>
@@ -21,11 +24,16 @@ const SettingsModal: FunctionComponent<Props> = ({visible}) => {
                         <DeviceSelectionDropdown type={"input"}/>
                     </label>
                     <label className={"flex flex-col gap-0.5"}>
+                        <span>Input Volume</span>
+                        <VolumeSlider type={"input"} name={""}/>
+                    </label>
+                    <label className={"flex flex-col gap-0.5"}>
                         <span>Output Device</span>
                         <DeviceSelectionDropdown type={"output"}/>
                     </label>
-                    <label className={"flex flex-col"}>
-
+                    <label className={"flex flex-col gap-0.5"}>
+                        <span>Output Volume</span>
+                        <VolumeSlider type={"output"} name={""}/>
                     </label>
                 </div>
                 <VersionInfo/>

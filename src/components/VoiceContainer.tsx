@@ -20,10 +20,14 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
         state: [_state, setState],
         devices,
         controls,
+        volumes,
     } = useVoiceStateContext();
 
     // audio player handling
-    const audio = useMemo(() => new AudioPlayer(controls, devices), [controls, devices]);
+    const audio = useMemo(
+        () => new AudioPlayer(controls, devices, volumes),
+        [controls, devices, volumes],
+    );
     useEffect(() => audio.startGarbageCollector(), [audio]);
     useEffect(() => audio.registerSpeakerListener(), [audio]);
     useEffect(() => audio.registerSocket(socket), [audio, socket]);

@@ -12,6 +12,7 @@ import libSamplerateWorkletUrl from "@alexanderolsen/libsamplerate-js/dist/libsa
 import type {VoiceSocket} from "../socket.ts";
 import type {AudioControls} from "./audio_controls.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
+import type {VolumeManager} from "./volumes.ts";
 
 const GAIN_MULTIPLIER = 0.2;
 
@@ -39,6 +40,7 @@ export const setupMicrophonePipeline = async (
     ctx: AudioContext,
     controls: AudioControls,
     devices: AudioDeviceManager,
+    volumes: VolumeManager,
     analyzers: AnalyserNode[] = [],
     // firefox doesn't support automatic resampling, so we have to do it ourselves...
     resampleManually = /firefox/i.test(navigator.userAgent),
@@ -101,12 +103,12 @@ export const setupMicrophonePipeline = async (
     }
 
     // apply volume to pipeline and listen for updates from controller
-    const applyVolume = (volume: number) => {
+    const applyVolume = () => {
+        const volume = volumes.get("input", "");
         gainNode.gain.value = volume * GAIN_MULTIPLIER;
     };
-    applyVolume(controls.inputVolume);
-    freeCallbacks.push(controls.register("update_input_volume",
-        () => applyVolume(controls.inputVolume)));
+    applyVolume();
+    freeCallbacks.push(volumes.register("input", () => applyVolume()));
 
     // setup packet transmitter at the end of the pipeline
     freeCallbacks.push(await setupTransmitter(socket, controls, ctx, node, resampleManually));

@@ -1,7 +1,8 @@
-import {getVolume, setVolume, type VolumeType} from "../scripts/util/volumes.ts";
 import {useEffect, useState} from "preact/hooks";
 import type {FunctionComponent} from "preact";
 import Slider from "./Slider.tsx";
+import type {VolumeType} from "../scripts/audio/volumes.ts";
+import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 
 interface Props {
     type: VolumeType;
@@ -9,17 +10,16 @@ interface Props {
 }
 
 const VolumeSlider: FunctionComponent<Props> = ({type, name}) => {
-    const [volumeSlider, setVolumeSlider] = useState<number>(() => getVolume(type, name));
+    const {volumes} = useVoiceStateContext();
 
-    useEffect(() => {
-        setVolume(type, name, volumeSlider, false);
-    }, [volumeSlider]);
+    const [volumeSlider, setVolumeSlider] = useState<number>(() => volumes.get(type, name));
+    useEffect(() => volumes.set(type, name, volumeSlider / 100, false), [volumeSlider, volumes]);
 
     return <>
         <Slider
             max={100} min={0} step={1} value={volumeSlider}
             onChange={value => setVolumeSlider(value)} // don't save
-            onSave={() => setVolume(type, name, volumeSlider)} // save
+            onSave={() => volumes.set(type, name, volumeSlider / 100)} // save
         >
             {volumeSlider}%
         </Slider>

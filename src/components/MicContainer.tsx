@@ -16,7 +16,7 @@ const setupAudioAnalyzer = (ctx: AudioContext) => {
 };
 
 const MicContainer: FunctionComponent = () => {
-    const {socket: [socket], controls, devices} = useVoiceStateContext();
+    const {socket: [socket], controls, devices, volumes} = useVoiceStateContext();
 
     const canvasRef = useRef<HTMLCanvasElement>();
 
@@ -35,7 +35,7 @@ const MicContainer: FunctionComponent = () => {
         let tearDown = [false];
         let tearDownCalls: (() => void)[] = [() => tearDown[0] = true];
 
-        setupMicrophonePipeline(socket, audioCtx, controls, devices, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer])
+        setupMicrophonePipeline(socket, audioCtx, controls, devices, volumes, [preNoiseAnalyzer, postNoiseAnalyzer, postGateAnalyzer])
             .then(callback => {
                 // check if teardown was triggered during setup
                 if (tearDown[0]) {
@@ -94,11 +94,8 @@ const MicContainer: FunctionComponent = () => {
 
     return (
         <>
-            <h2>Microphone</h2>
-            <div style={{marginTop: "0.5em", display: "flex", flexDirection: "column", gap: "0.2em"}}>
-                {/* @ts-ignore refs are broken*/}
-                <canvas style={{height: "2em", width: "100%", borderRadius: "0.3em"}} ref={canvasRef}/>
-            </div>
+            {/* @ts-ignore refs are broken*/}
+            <canvas style={{height: "2em", width: "100%", borderRadius: "0.3em"}} ref={canvasRef}/>
         </>
     );
 };

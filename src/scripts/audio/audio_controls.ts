@@ -5,14 +5,12 @@ export class AudioControls extends EventManager {
     private _muted: boolean;
     private _deafened: boolean;
     private _noiseReduction: boolean;
-    private _inputVolume: number;
 
     constructor() {
         super();
         this._muted = (localStorage.getItem("sonus:muted") || "true") === "true";
         this._deafened = (localStorage.getItem("sonus:deafened") || "false") === "true";
         this._noiseReduction = (localStorage.getItem("sonus:noise_reduction") || "true") === "true";
-        this._inputVolume = Number(localStorage.getItem("sonus:input_volume") || 1);
         console.log("Loaded audio controls from local storage", this.muted, this.deafened, this.noiseReduction);
     }
 
@@ -44,15 +42,5 @@ export class AudioControls extends EventManager {
         this._noiseReduction = value;
         localStorage.setItem("sonus:noise_reduction", value.toString());
         this.fire(new CustomEvent("update_noise_reduction"));
-    }
-
-    get inputVolume(): number {
-        return this._inputVolume;
-    }
-
-    set inputVolume(inputVolume: number) {
-        this._inputVolume = inputVolume;
-        localStorage.setItem("sonus:input_volume", inputVolume.toString());
-        this.fire(new CustomEvent("update_input_volume"));
     }
 }
