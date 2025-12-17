@@ -26,6 +26,30 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
                     true, true,
                     true, true,
                 ),
+                "f2d0a0e9-937f-418c-b9b2-8bf690a1aa16": new RoomState(
+                    uuidFromString("f2d0a0e9-937f-418c-b9b2-8bf690a1aa16"),
+                    "Testing Room",
+                    true, true,
+                    true, true,
+                ),
+                "c645f5a1-18c3-44de-b7e7-2313af589ed7": new RoomState(
+                    uuidFromString("c645f5a1-18c3-44de-b7e7-2313af589ed7"),
+                    "Testing Room",
+                    true, true,
+                    true, true,
+                ),
+                "d95ac678-1d54-482c-94e1-eaafbbf909f7": new RoomState(
+                    uuidFromString("d95ac678-1d54-482c-94e1-eaafbbf909f7"),
+                    "Testing Room",
+                    true, true,
+                    true, true,
+                ),
+                "7be38518-0267-427e-a91d-f3a7e6901ac9": new RoomState(
+                    uuidFromString("7be38518-0267-427e-a91d-f3a7e6901ac9"),
+                    "Testing Room",
+                    true, true,
+                    true, true,
+                ),
             });
         }
         return socket.registers()
