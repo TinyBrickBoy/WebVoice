@@ -4,6 +4,8 @@ import {useEffect, useMemo} from "preact/hooks";
 import {CategoryAddPacket, CategoryRemovePacket} from "../../scripts/network/packets.ts";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {includesTextLc} from "../../scripts/network/component.ts";
+import {CategoryState} from "../../scripts/types.ts";
+import {uuidFromString} from "../../scripts/util/uuid.ts";
 
 interface Props {
     search: string,
@@ -14,7 +16,12 @@ const CategoryList: FunctionComponent<Props> = ({search}) => {
 
     useEffect(() => {
         if (!socket.isActive()) {
-            setCategories({});
+            setCategories({
+                "6bfd8175-f484-4c0d-bb4d-537d7a978710": new CategoryState(
+                    uuidFromString("6bfd8175-f484-4c0d-bb4d-537d7a978710"),
+                    "Testing Category", "Testing Description"
+                )
+            });
         }
         return socket.registers()
             .register("open", () => setCategories({}))

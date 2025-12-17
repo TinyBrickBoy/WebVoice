@@ -6,6 +6,8 @@ import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {includesTextLc} from "../../scripts/network/component.ts";
 import Button from "../common/Button.tsx";
 import RoomCreateModal from "./RoomCreateModal.tsx";
+import {RoomState} from "../../scripts/types.ts";
+import {uuidFromString} from "../../scripts/util/uuid.ts";
 
 interface Props {
     search: string;
@@ -17,7 +19,14 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
 
     useEffect(() => {
         if (!socket.isActive()) {
-            setRooms({});
+            setRooms({
+                "d87dd345-5b9b-492a-be3d-eeafe70362b0": new RoomState(
+                    uuidFromString("d87dd345-5b9b-492a-be3d-eeafe70362b0"),
+                    "Testing Room",
+                    true, true,
+                    true, true,
+                ),
+            });
         }
         return socket.registers()
             .register("open", () => setRooms({}))

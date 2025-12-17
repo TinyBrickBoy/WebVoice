@@ -1,11 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import ErrorPage from "../components/base/ErrorPage.astro";
+import VoiceStateProvider from "../components/VoiceStateProvider.tsx";
 
-export const prerender = true;
+export const prerender = false;
 ---
 
 <Layout>
-    <!-- TODO proper homepage -->
-    <ErrorPage error={404}/>
+    <VoiceStateProvider client:only socketUrl={new URL(`wss:///example`)} token={"example"}/>
 </Layout>

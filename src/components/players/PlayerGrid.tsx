@@ -4,13 +4,20 @@ import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo, useState} from "preact/hooks";
 import {AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
+import {PlayerState} from "../../scripts/types.ts";
+import {uuidFromString} from "../../scripts/util/uuid.ts";
 
 const PlayerGrid: FunctionComponent = () => {
     const {players: [players, setPlayers], socket: [socket], user: [{serverId, serverName}]} = useVoiceStateContext();
 
     useEffect(() => {
         if (!socket.isActive()) {
-            setPlayers({});
+            setPlayers({
+                "a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97": new PlayerState(
+                    uuidFromString("a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97"),
+                    "B00KY", true, true, null, null,
+                ),
+            });
         }
         return socket
             .registers()
