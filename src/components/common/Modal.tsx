@@ -1,7 +1,7 @@
 import type {FunctionComponent} from "preact";
 import {useCallback, useEffect} from "preact/hooks";
 import XIcon from "~icons/tabler/x";
-import type {StateType} from "../scripts/types.ts";
+import type {StateType} from "../../scripts/types.ts";
 
 interface Props {
     visible: StateType<boolean>;

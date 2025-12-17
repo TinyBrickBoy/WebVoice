@@ -1,8 +1,8 @@
 import {useEffect, useState} from "preact/hooks";
 import type {FunctionComponent} from "preact";
 import Slider from "./Slider.tsx";
-import type {VolumeType} from "../scripts/audio/volumes.ts";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import type {VolumeType} from "../../scripts/audio/volumes.ts";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 
 interface Props {
     type: VolumeType;

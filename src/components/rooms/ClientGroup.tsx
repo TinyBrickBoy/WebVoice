@@ -3,14 +3,14 @@ import {
     RoomJoinResponsePacket,
     RoomLeavePacket,
     RoomLeaveResponsePacket,
-} from "../scripts/network/packets.ts";
-import PlayerInfo from "./PlayerInfo.tsx";
+} from "../../scripts/network/packets.ts";
+import PlayerInfo from "../players/PlayerInfo.tsx";
 import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
-import {type AudioRoom, PlayerState} from "../scripts/types.ts";
-import MinecraftComponent from "./MinecraftComponent.tsx";
+import {type AudioRoom, PlayerState} from "../../scripts/types.ts";
+import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import Button from "./Button.tsx";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
+import Button from "../common/Button.tsx";
 import LockIcon from "~icons/tabler/lock-filled";
 
 interface Props {

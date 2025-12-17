@@ -1,4 +1,4 @@
-import type {UUID} from "../scripts/util/uuid.ts";
+import type {UUID} from "../../scripts/util/uuid.ts";
 import type {FunctionComponent, JSX} from "preact";
 
 interface Props extends JSX.HTMLAttributes {

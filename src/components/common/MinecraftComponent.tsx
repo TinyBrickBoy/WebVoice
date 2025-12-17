@@ -1,4 +1,4 @@
-import {type Component} from "../scripts/network/component.ts";
+import {type Component} from "../../scripts/network/component.ts";
 import type {FunctionComponent, JSX} from "preact";
 
 interface Props extends JSX.HTMLAttributes {

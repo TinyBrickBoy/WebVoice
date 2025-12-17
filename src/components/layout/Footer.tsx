@@ -1,8 +1,8 @@
 import type {FunctionComponent} from "preact";
-import CraftHead from "./CraftHead.tsx";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import SettingsButton from "./SettingsButton.tsx";
-import ControlPanel from "./ControlPanel.tsx";
+import CraftHead from "../common/CraftHead.tsx";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
+import SettingsButton from "../settings/SettingsButton.tsx";
+import ControlPanel from "../settings/ControlPanel.tsx";
 
 const Footer: FunctionComponent = () => {
     const {user: [user]} = useVoiceStateContext();

@@ -1,11 +1,11 @@
 import ClientGroup from "./ClientGroup.tsx";
-import {RoomAddPacket, RoomRemovePacket} from "../scripts/network/packets.ts";
+import {RoomAddPacket, RoomRemovePacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import {AudioRoom} from "../scripts/types.ts";
-import {randomUUID} from "../scripts/util/uuid.ts";
-import {includesTextLc} from "../scripts/network/component.ts";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
+import {AudioRoom} from "../../scripts/types.ts";
+import {randomUUID} from "../../scripts/util/uuid.ts";
+import {includesTextLc} from "../../scripts/network/component.ts";
 
 interface Props {
     search: string;

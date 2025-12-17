@@ -1,9 +1,9 @@
 import type {FunctionComponent} from "preact";
-import Modal from "./Modal.tsx";
-import type {StateType} from "../scripts/types.ts";
+import Modal from "../common/Modal.tsx";
+import type {StateType} from "../../scripts/types.ts";
 import VersionInfo from "./VersionInfo.tsx";
 import DeviceSelectionDropdown from "./DeviceSelectionDropdown.tsx";
-import VolumeSlider from "./VolumeSlider.tsx";
+import VolumeSlider from "../common/VolumeSlider.tsx";
 
 interface Props {
     visible: StateType<boolean>;

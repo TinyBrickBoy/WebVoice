@@ -1,13 +1,13 @@
 import {useEffect, useMemo} from "preact/hooks";
-import {VoiceSocket} from "../scripts/socket.ts";
-import AudioPlayer from "../scripts/audio/audio_player.ts";
-import {ConnectedPacket, PingPacket, StateInfoPacket} from "../scripts/network/packets.ts";
+import {VoiceSocket} from "../../scripts/socket.ts";
+import AudioPlayer from "../../scripts/audio/audio_player.ts";
+import {ConnectedPacket, PingPacket, StateInfoPacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import Navbar from "./Navbar.tsx";
-import PlayerGrid from "./PlayerGrid.tsx";
+import PlayerGrid from "../players/PlayerGrid.tsx";
 import Footer from "./Footer.tsx";
-import VoiceConnectModal from "./VoiceConnectModal.tsx";
+import VoiceConnectModal from "../VoiceConnectModal.tsx";
 
 interface Props {
     socketUrl: URL;

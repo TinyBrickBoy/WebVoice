@@ -2,8 +2,8 @@ import {useCallback, useEffect, useState} from "preact/hooks";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {VoiceSocket} from "../scripts/socket.ts";
-import Button from "./Button.tsx";
-import Modal from "./Modal.tsx";
+import Button from "./common/Button.tsx";
+import Modal from "./common/Modal.tsx";
 
 interface Props {
     demo?: boolean;

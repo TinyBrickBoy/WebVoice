@@ -1,6 +1,6 @@
-import VolumeSlider from "./VolumeSlider.tsx";
-import type {AudioCategory} from "../scripts/types.ts";
-import MinecraftComponent from "./MinecraftComponent.tsx";
+import VolumeSlider from "../common/VolumeSlider.tsx";
+import type {AudioCategory} from "../../scripts/types.ts";
+import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 
 interface Props {

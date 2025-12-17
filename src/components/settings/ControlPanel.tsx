@@ -5,8 +5,8 @@ import HeadphonesIcon from "~icons/tabler/headphones";
 import HeadphonesOffIcon from "~icons/tabler/headphones-off";
 import WaveformIcon from "~icons/ph/waveform-bold";
 import WaveformOffIcon from "~icons/ph/waveform-slash-bold";
-import Button from "./Button.tsx";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import Button from "../common/Button.tsx";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {useEffect, useState} from "preact/hooks";
 
 const ControlPanel: FunctionComponent = () => {

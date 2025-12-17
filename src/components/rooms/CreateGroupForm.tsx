@@ -1,7 +1,7 @@
 import type {FunctionComponent} from "preact";
 import {useCallback, useState} from "preact/hooks";
-import {RoomCreatePacket} from "../scripts/network/packets.ts";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {RoomCreatePacket} from "../../scripts/network/packets.ts";
+import {useVoiceStateContext} from "./../VoiceStateProvider.tsx";
 
 type GroupAudioType = "normal" | "open" | "isolated"
 

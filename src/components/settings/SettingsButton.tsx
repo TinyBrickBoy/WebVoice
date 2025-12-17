@@ -1,5 +1,5 @@
 import type {FunctionComponent} from "preact";
-import Button from "./Button.tsx";
+import Button from "../common/Button.tsx";
 import SettingsIcon from "~icons/tabler/settings";
 import {useState} from "preact/hooks";
 import SettingsModal from "./SettingsModal.tsx";

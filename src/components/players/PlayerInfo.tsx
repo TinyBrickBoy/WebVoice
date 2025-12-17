@@ -1,6 +1,6 @@
-import CraftHead from "./CraftHead.tsx";
-import VolumeSlider from "./VolumeSlider.tsx";
-import type {PlayerState} from "../scripts/types.ts";
+import CraftHead from "../common/CraftHead.tsx";
+import VolumeSlider from "../common/VolumeSlider.tsx";
+import type {PlayerState} from "../../scripts/types.ts";
 import type {FunctionComponent} from "preact";
 
 interface Props {

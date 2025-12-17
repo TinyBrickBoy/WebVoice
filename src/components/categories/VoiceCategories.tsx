@@ -1,11 +1,11 @@
 import VoiceCategory from "./VoiceCategory.tsx";
 import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
-import {CategoryAddPacket, CategoryRemovePacket} from "../scripts/network/packets.ts";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import {AudioCategory} from "../scripts/types.ts";
-import {randomUUID} from "../scripts/util/uuid.ts";
-import {includesTextLc} from "../scripts/network/component.ts";
+import {CategoryAddPacket, CategoryRemovePacket} from "../../scripts/network/packets.ts";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
+import {AudioCategory} from "../../scripts/types.ts";
+import {randomUUID} from "../../scripts/util/uuid.ts";
+import {includesTextLc} from "../../scripts/network/component.ts";
 
 interface Props {
     search: string,

@@ -1,7 +1,7 @@
-import type {PlayerState} from "../scripts/types.ts";
+import type {PlayerState} from "../../scripts/types.ts";
 import type {FunctionComponent, JSX} from "preact";
-import CraftHead from "./CraftHead.tsx";
-import type {UUID} from "../scripts/util/uuid.ts";
+import CraftHead from "../common/CraftHead.tsx";
+import type {UUID} from "../../scripts/util/uuid.ts";
 import {useEffect, useState} from "preact/hooks";
 
 interface Props {

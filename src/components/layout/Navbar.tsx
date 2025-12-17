@@ -1,10 +1,10 @@
 import type {FunctionComponent} from "preact";
-import VoiceCategories from "./VoiceCategories.tsx";
-import ClientGroups from "./ClientGroups.tsx";
+import VoiceCategories from "../categories/VoiceCategories.tsx";
+import ClientGroups from "../rooms/ClientGroups.tsx";
 import SearchBar from "./SearchBar.tsx";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {useMemo, useState} from "preact/hooks";
-import MinecraftComponent from "./MinecraftComponent.tsx";
+import MinecraftComponent from "../common/MinecraftComponent.tsx";
 
 const Navbar: FunctionComponent = () => {
     const {user: [user], rooms: [rooms], players: [players]} = useVoiceStateContext();

@@ -1,11 +1,11 @@
 import type {FunctionComponent} from "preact";
-import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
+import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo, useState} from "preact/hooks";
-import {PlayerState} from "../scripts/types.ts";
-import {AudioPacket, type StateUpdatePacket} from "../scripts/network/packets.ts";
-import {uuidFromString} from "../scripts/util/uuid.ts";
-import MinecraftComponent from "./MinecraftComponent.tsx";
+import {PlayerState} from "../../scripts/types.ts";
+import {AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
+import {uuidFromString} from "../../scripts/util/uuid.ts";
+import MinecraftComponent from "../common/MinecraftComponent.tsx";
 
 const PlayerGrid: FunctionComponent = () => {
     const {players: [players, setPlayers], socket: [socket], user: [{serverId, serverName}]} = useVoiceStateContext();

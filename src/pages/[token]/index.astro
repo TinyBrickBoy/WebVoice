@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import VoiceStateProvider from "../../components/VoiceStateProvider";
 import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util/util.ts";
-import ErrorPage from "../../components/ErrorPage.astro";
+import ErrorPage from "../../components/base/ErrorPage.astro";
 
 export const prerender = false;
 const {token} = Astro.params;

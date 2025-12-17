@@ -9,7 +9,7 @@ import {
     type StateType,
     type UserInfo,
 } from "../scripts/types.ts";
-import VoiceContainer from "./VoiceContainer.tsx";
+import VoiceContainer from "./layout/VoiceContainer.tsx";
 import {uuidFromString} from "../scripts/util/uuid.ts";
 import {AudioDeviceManager} from "../scripts/audio/audio_devices.ts";
 import {AudioControls} from "../scripts/audio/audio_controls.ts";
