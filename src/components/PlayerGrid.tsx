@@ -1,9 +1,9 @@
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
-import {useEffect, useMemo} from "preact/hooks";
+import {useEffect, useMemo, useState} from "preact/hooks";
 import {PlayerState} from "../scripts/types.ts";
-import type {StateUpdatePacket} from "../scripts/network/packets.ts";
+import {AudioPacket, type StateUpdatePacket} from "../scripts/network/packets.ts";
 import {uuidFromString} from "../scripts/util/uuid.ts";
 import MinecraftComponent from "./MinecraftComponent.tsx";
 
@@ -28,6 +28,7 @@ const PlayerGrid: FunctionComponent = () => {
             ["a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97", "B00KY"],
         ].forEach(([uuid, name]) => {
             dplayers[uuid] = new PlayerState(uuidFromString(uuid), name, false, false, null, null);
+            dplayers[uuid].speaking = Math.random() < 0.5;
         });
         setPlayers(dplayers);
 
@@ -36,13 +37,25 @@ const PlayerGrid: FunctionComponent = () => {
             .register("open", () => setPlayers({})) // TODO remove debug
             .register("state_update", ({detail: {state}}: CustomEvent<StateUpdatePacket>) => {
                 setPlayers(players => {
-                    // keep volume and copy rooms record
-                    state.volume = players[state.uniqueId.name]?.volume || 1;
                     return {...players, [state.uniqueId.name]: state};
                 });
             })
             .callback();
     }, [socket]);
+
+    const [_refresh, setRefresh] = useState<number>(0);
+    useEffect(() => {
+        return socket.register("audio", ({detail: {senderId, audio}}: CustomEvent<AudioPacket>) => {
+            const state = players[senderId.name];
+            // zero-length audio data marks the
+            // end of an audio stream and resets the decoder
+            const speakState = audio.length > 0;
+            if (state.speaking !== speakState) {
+                state.speaking = speakState;
+                setRefresh(i => i + 1);
+            }
+        });
+    }, [socket, players]);
 
     const playerList = useMemo(() => Object.values(players)
         .filter(player => player.on(serverId)), [players, serverId]);

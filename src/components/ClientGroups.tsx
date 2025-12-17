@@ -30,8 +30,6 @@ const ClientGroups: FunctionComponent<Props> = ({search}) => {
             .register("open", () => setRooms({})) // TODO remove debug
             .register("room_add", ({detail: {room}}: CustomEvent<RoomAddPacket>) => {
                 setRooms(rooms => {
-                    // keep volume and copy rooms record
-                    room.volume = rooms[room.uniqueId.name]?.volume || 1;
                     return {...rooms, [room.uniqueId.name]: room};
                 });
             })
@@ -54,7 +52,9 @@ const ClientGroups: FunctionComponent<Props> = ({search}) => {
     }
     return <>
         <details open={true}>
-            <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>Groups ({roomValues.length})</summary>
+            <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>
+                Groups ({roomValues.length})
+            </summary>
             <div className={"flex flex-col"}>
                 {roomValues.map(room => (
                     <ClientGroup

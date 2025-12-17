@@ -20,21 +20,21 @@ const fetchColor = async (uuid: UUID) => {
     return `#${rgbColor.toString(16).padStart(6, "0")}`;
 };
 
-const PlayerBlob: FunctionComponent<Props> = ({state}) => {
+const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking}}) => {
     const [color, setColor] = useState<JSX.CSSProperties["background-color"]>("var(--color-neutral-800)");
 
     useEffect(() => {
-        fetchColor(state.uniqueId)
+        fetchColor(uniqueId)
             .then(color => setColor(color))
             .catch(error => console.error(error));
-    }, [state.uniqueId]);
+    }, [uniqueId]);
 
     return <>
         <div
             style={{backgroundColor: color}}
-            className={"flex justify-center items-center p-6 rounded-lg"}
+            className={`flex justify-center items-center p-6 rounded-lg ${speaking ? "border-emerald-500 border-[0.175rem]" : ""}`}
         >
-            <CraftHead uuid={state.uniqueId} size={64}/>
+            <CraftHead uuid={uniqueId} size={64}/>
         </div>
     </>;
 };
