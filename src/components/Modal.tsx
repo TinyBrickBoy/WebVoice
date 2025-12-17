@@ -43,7 +43,8 @@ const Modal: FunctionComponent<Props> = ({visible: [visible, setVisible], dismis
             }}
         >
             <div
-                className={"relative flex flex-col w-full m-auto mb-auto mt-[20%] max-w-4/5 md:max-w-3/5 lg:max-w-2/5"}>
+                className={"relative flex flex-col w-full m-auto max-h-[90%] max-w-4/5 md:max-w-3/5 lg:max-w-2/5"}
+            >
                 <div className={"bg-neutral-800 p-4 rounded-lg shadow-md overflow-y-auto flex flex-col gap-2"}>
                     {dismissable &&
                         <div className={"text-white cursor-pointer opacity-70 hover:opacity-100"} onClick={doHide}>
