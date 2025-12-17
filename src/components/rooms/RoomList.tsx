@@ -15,13 +15,11 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
 
     useEffect(() => {
-        setRooms({});
-        return socket
-            .register("open", () => setRooms({}));
-    }, [socket]);
-
-    useEffect(() => {
+        if (!socket.isActive()) {
+            setRooms({});
+        }
         return socket.registers()
+            .register("open", () => setRooms({}))
             .register("room_add", ({detail: {room}}: CustomEvent<RoomAddPacket>) => {
                 setRooms(rooms => {
                     return {...rooms, [room.uniqueId.name]: room};

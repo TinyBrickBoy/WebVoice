@@ -13,7 +13,9 @@ const CategoryList: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], categories: [categories, setCategories]} = useVoiceStateContext();
 
     useEffect(() => {
-        setCategories({});
+        if (!socket.isActive()) {
+            setCategories({});
+        }
         return socket.registers()
             .register("open", () => setCategories({}))
             .register("category_add", ({detail: {category}}: CustomEvent<CategoryAddPacket>) => {

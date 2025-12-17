@@ -9,7 +9,9 @@ const PlayerGrid: FunctionComponent = () => {
     const {players: [players, setPlayers], socket: [socket], user: [{serverId, serverName}]} = useVoiceStateContext();
 
     useEffect(() => {
-        setPlayers({});
+        if (!socket.isActive()) {
+            setPlayers({});
+        }
         return socket
             .registers()
             .register("open", () => setPlayers({}))
