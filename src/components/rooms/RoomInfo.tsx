@@ -6,7 +6,7 @@ import {
 } from "../../scripts/network/packets.ts";
 import PlayerInfo from "../players/PlayerInfo.tsx";
 import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
-import {type RoomState, PlayerState} from "../../scripts/types.ts";
+import {PlayerState, type RoomState} from "../../scripts/types.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
@@ -62,17 +62,29 @@ const RoomInfo: FunctionComponent<Props> = ({room, players}) => {
         socket.sendPacket(new RoomLeavePacket(room.uniqueId));
     }, [socket, password]);
 
+    const roomAudioType = useMemo(() => {
+        if (room.listenToOthers && room.speakToOthers) {
+            return "open";
+        } else if (!room.listenToOthers) {
+            return "isolated";
+        } else {
+            return "normal";
+        }
+    }, [room.listenToOthers, room.speakToOthers]);
+
     return (
         <div className={"flex flex-col gap-2 p-5 bg-neutral-900 rounded-xl"}>
-            <div className={"flex justify-between"}>
-                <div className={"flex gap-4 items-center"}>
-                    <MinecraftComponent className={"text-lg font-semibold"} component={room.name}/>
-                    <span>PLAYERLIST</span>
+            <div className={"flex justify-between items-center"}>
+                <div className={"flex gap-4 items-center overflow-x-hidden"}>
+                    <div className={"flex flex-row gap-1 items-center"}>
+                        <MinecraftComponent className={"text-lg font-semibold"} component={room.name}/>
+                        {room.password && <LockIcon/>}
+                    </div>
+                    {players.map(state => <PlayerInfo state={state}/>)}
                 </div>
-                <div className={"flex gap-2 items-center"}>
-                    <span>GROUPTYPE</span>
-                    <span><LockIcon/></span>
-                </div>
+                <span className={"uppercase"}>
+                    {roomAudioType}
+                </span>
             </div>
             {players.length > 0 &&
                 <>
