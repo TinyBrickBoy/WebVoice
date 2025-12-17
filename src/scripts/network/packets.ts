@@ -1,6 +1,6 @@
 import type {UUID} from "../util/uuid.ts";
 import Long from "long";
-import {CategoryState, RoomState, PlayerState, Vector3d} from "../types.ts";
+import {CategoryState, PlayerState, RoomState, Vector3d} from "../types.ts";
 import ByteBuffer from "bytebuffer";
 import {
     readBoolean,
@@ -8,10 +8,12 @@ import {
     readComponentJson,
     readString,
     readUniqueId,
+    readVarLong,
     writeBoolean,
     writeByteArray,
     writeString,
     writeUniqueId,
+    writeVarLong,
 } from "./buffer.ts";
 import type {Component} from "./component.ts";
 
@@ -194,11 +196,11 @@ export class KeepAlivePacket extends DecodablePacket {
     constructor(buf: ByteBuffer);
     constructor(param: ByteBuffer | Long) {
         super();
-        this.id = "readLong" in param ? param.readLong() : param;
+        this.id = "readByte" in param ? readVarLong(param) : param;
     }
 
     public encode(buf: ByteBuffer): void {
-        buf.writeLong(this.id);
+        writeVarLong(buf, this.id);
     }
 }
 
@@ -210,11 +212,11 @@ export class PingPacket extends DecodablePacket {
     constructor(buf: ByteBuffer);
     constructor(param: ByteBuffer | Long) {
         super();
-        this.id = "readLong" in param ? param.readLong() : param;
+        this.id = "readByte" in param ? readVarLong(param) : param;
     }
 
     public encode(buf: ByteBuffer): void {
-        buf.writeLong(this.id);
+        writeVarLong(buf, this.id);
     }
 }
 

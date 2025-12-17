@@ -1,6 +1,7 @@
 import ByteBuffer from "bytebuffer";
 import {UUID} from "../util/uuid.ts";
 import type {Component} from "./component.ts";
+import Long from "long";
 
 // https://web.archive.org/web/20241130182130/https://wiki.vg/Data_types#Type:UUID
 export const readUniqueId = (buf: ByteBuffer) => {
@@ -41,6 +42,34 @@ export const writeVarInt = (buf: ByteBuffer, value: number) => {
         }
         buf.writeByte((value & SEGMENT_BITS) | CONTINUE_BIT);
         value >>>= 7; // sign also gets shifted
+    }
+};
+
+export const readVarLong = (buf: ByteBuffer): Long => {
+    let value: Long = new Long(0);
+    let position: number = 0;
+    while (true) {
+        let currentByte = buf.readByte();
+        value = value.or(new Long(currentByte & SEGMENT_BITS).shl(position));
+        if ((currentByte & CONTINUE_BIT) == 0) {
+            break;
+        }
+
+        position += 7;
+        if (position >= 64) {
+            throw new Error("VarLong is too big");
+        }
+    }
+    return value;
+};
+export const writeVarLong = (buf: ByteBuffer, value: Long) => {
+    while (true) {
+        if (value.and(~SEGMENT_BITS).eq(0)) {
+            buf.writeByte(value.low);
+            return;
+        }
+        buf.writeByte(value.and(SEGMENT_BITS).low | CONTINUE_BIT);
+        value = value.shru(7); // sign also gets shifted
     }
 };
 
