@@ -101,6 +101,7 @@ export class PlayerState {
     public readonly deafened: boolean;
     public readonly primaryRoomId: UUID | null;
     public readonly serverId: UUID | null;
+    public lastSpeaking: number = 0;
     public speaking: boolean = false;
 
     constructor(uniqueId: UUID, name: Component, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
