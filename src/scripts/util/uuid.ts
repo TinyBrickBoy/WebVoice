@@ -93,4 +93,8 @@ export class UUID {
         this.least = least;
         this.name = uuidToString(most, least);
     }
+
+    public toString() {
+        return this.name;
+    }
 }

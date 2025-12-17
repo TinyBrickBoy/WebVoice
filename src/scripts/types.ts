@@ -36,7 +36,6 @@ export class CategoryState {
     public readonly uniqueId: UUID;
     public readonly name: Component;
     public readonly description: Component | null;
-    public volume: number = 1;
 
     constructor(uniqueId: UUID, name: Component, description: Component | null);
     constructor(buf: ByteBuffer);

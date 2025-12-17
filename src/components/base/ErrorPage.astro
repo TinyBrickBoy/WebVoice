@@ -9,9 +9,11 @@ const {error} = Astro.props;
 ---
 
 <main class="h-full flex flex-col items-center justify-center gap-6">
-        <span class="text-lg">
-            <span class="text-gray-500">{error} |</span>
-            <span class="text-gray-200">Page not found</span>
-        </span>
-    <Button color="purple"><a href="/">Back to home</a></Button>
+    <div class="text-lg">
+        <span class="text-gray-500">{error} |</span>
+        <span class="text-gray-200">Page not found</span>
+    </div>
+    <Button color="purple">
+        <a href="/">Back to home</a>
+    </Button>
 </main>

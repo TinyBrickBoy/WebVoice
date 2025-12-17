@@ -3,8 +3,6 @@ import {RoomAddPacket, RoomRemovePacket} from "../../scripts/network/packets.ts"
 import type {FunctionComponent} from "preact";
 import {useEffect, useState} from "preact/hooks";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
-import {RoomState} from "../../scripts/types.ts";
-import {randomUUID} from "../../scripts/util/uuid.ts";
 import {includesTextLc} from "../../scripts/network/component.ts";
 import Button from "../common/Button.tsx";
 import RoomCreateModal from "./RoomCreateModal.tsx";
@@ -17,19 +15,13 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
 
     useEffect(() => {
-        setRooms({}); // invalidate
+        setRooms({});
+        return socket
+            .register("open", () => setRooms({}));
+    }, [socket]);
 
-        // TODO remove debug
-        const drooms = {} as Record<string, RoomState>;
-        for (let i = 0; i < 16; i++) {
-            const uuid = randomUUID();
-            drooms[uuid.name] = new RoomState(uuid, `Group ${i + 1}`, i % 2 == 0, true, false, false);
-        }
-        setRooms(drooms);
-
-        // register events
+    useEffect(() => {
         return socket.registers()
-            .register("open", () => setRooms({})) // TODO remove debug
             .register("room_add", ({detail: {room}}: CustomEvent<RoomAddPacket>) => {
                 setRooms(rooms => {
                     return {...rooms, [room.uniqueId.name]: room};

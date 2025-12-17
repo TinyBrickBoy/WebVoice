@@ -3,8 +3,8 @@ import {VoiceSocket} from "../scripts/socket.ts";
 import {useContext, useEffect, useMemo, useState} from "preact/hooks";
 import {
     type CategoryState,
-    type RoomState,
     PlayerState,
+    type RoomState,
     type SocketState,
     type StateType,
     type UserInfo,
@@ -44,8 +44,8 @@ const defaultUser = {
     uuid: uuidFromString("606e2ff0-ed77-4842-9d6c-e1d3321c7838"),
     name: {text: "Unknown", italic: true},
     serverId: null,
-    serverName: {text: "Hide & Seek » Modern Island", color: "gold"}, // TODO remove
-    serverType: "hide_and_seek/modern_island", // TODO remove
+    serverName: null,
+    serverType: null,
 } as UserInfo;
 
 const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
