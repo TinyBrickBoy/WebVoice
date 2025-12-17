@@ -1,15 +1,16 @@
-import type {FunctionComponent} from "preact";
+import type {ComponentChildren, FunctionComponent} from "preact";
 import {useCallback, useEffect} from "preact/hooks";
 import XIcon from "~icons/tabler/x";
 import type {StateType} from "../../scripts/types.ts";
 
 interface Props {
     visible: StateType<boolean>;
+    title?: ComponentChildren;
     dismissable?: boolean;
     onClose?: () => void;
 }
 
-const Modal: FunctionComponent<Props> = ({visible: [visible, setVisible], dismissable, onClose, children}) => {
+const Modal: FunctionComponent<Props> = ({visible: [visible, setVisible], dismissable, onClose, title, children}) => {
     const doHide = useCallback(() => {
         setVisible(false);
         if (onClose) {
@@ -45,12 +46,20 @@ const Modal: FunctionComponent<Props> = ({visible: [visible, setVisible], dismis
             <div
                 className={"relative flex flex-col w-full m-auto max-h-[90%] max-w-4/5 md:max-w-3/5 xl:max-w-2/5"}
             >
-                <div className={"bg-neutral-800 p-4 rounded-lg shadow-md overflow-y-auto flex flex-col gap-2"}>
-                    {dismissable &&
-                        <div className={"text-white cursor-pointer opacity-70 hover:opacity-100"} onClick={doHide}>
-                            <XIcon className={"h-7 w-auto"}/>
+                <div className={"bg-neutral-800 p-4 rounded-lg shadow-md overflow-y-auto flex flex-col gap-4"}>
+                    {(dismissable || title) && <>
+                        <div className={"flex flex-row gap-2 w-full"}>
+                            {dismissable &&
+                                <div className={"cursor-pointer opacity-70 hover:opacity-100"}
+                                     onClick={doHide}>
+                                    <XIcon className={"h-7 w-auto"}/>
+                                </div>
+                            }
+                            {title && <div className={"font-bold text-xl w-full"}>
+                                {title}
+                            </div>}
                         </div>
-                    }
+                    </>}
                     <div>
                         {children}
                     </div>

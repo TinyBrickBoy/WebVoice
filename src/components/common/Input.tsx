@@ -1,0 +1,18 @@
+import type {ComponentChildren, FunctionComponent} from "preact";
+
+interface Props {
+    label: ComponentChildren;
+}
+
+const TextInput: FunctionComponent<Props> = ({label, children}) => {
+    return <>
+        <label className={"flex flex-col"}>
+            <div className={"text-sm text-neutral-400 mb-2"}>
+                {label}
+            </div>
+            {children}
+        </label>
+    </>;
+};
+
+export default TextInput;
