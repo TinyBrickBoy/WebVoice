@@ -13,7 +13,7 @@ const CategoryInfo: FunctionComponent<Props> = ({category}) => {
             <div className={"flex flex-row gap-2 items-center"}>
                 <MinecraftComponent
                     component={category.name}
-                    className={"text-lg font-semibold"}
+                    className={"text-lg font-medium"}
                 />
                 {category.description &&
                     <MinecraftComponent
