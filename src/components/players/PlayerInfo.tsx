@@ -1,29 +1,17 @@
 import CraftHead from "../common/CraftHead.tsx";
-import VolumeSlider from "../common/VolumeSlider.tsx";
 import type {PlayerState} from "../../scripts/types.ts";
 import type {FunctionComponent} from "preact";
+import MinecraftComponent from "../common/MinecraftComponent.tsx";
 
 interface Props {
     state: PlayerState;
-    inline?: boolean;
 }
 
-const PlayerInfo: FunctionComponent<Props> = ({state, inline}) => {
+const PlayerInfo: FunctionComponent<Props> = ({state}) => {
     return (
-        <div style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.2em",
-            marginTop: !inline ? "1em" : undefined,
-        }}>
-            <div style={{display: "flex", gap: "0.4em", alignItems: "center"}}>
-                <CraftHead uuid={state.uniqueId} size={24}/>
-                <span>{state.name}{state.muted && " (muted)"}{state.deafened && (" (deafened)")}</span>
-            </div>
-            {!inline && <>
-                <VolumeSlider type={"player"} name={state.uniqueId.name}/>
-                {!!state.primaryRoomId && <span>Group: <code>{state.primaryRoomId.name}</code></span>}
-            </>}
+        <div className={"flex flex-row gap-2 items-center"}>
+            <CraftHead uuid={state.uniqueId} size={48}/>
+            <MinecraftComponent className={"text-xl"} component={state.name}/>
         </div>
     );
 };

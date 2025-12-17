@@ -76,11 +76,7 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
                     Create Group
                 </Button>
                 {roomValues.map(room => (
-                    <RoomInfo
-                        key={room.uniqueId.name}
-                        room={room}
-                        players={Object.values(players).filter(state => state.in(room.uniqueId))}
-                    />
+                    <RoomInfo key={room.uniqueId.name} room={room}/>
                 ))}</div>
         </details>
     </>;

@@ -6,59 +6,65 @@ import {
 } from "../../scripts/network/packets.ts";
 import PlayerInfo from "../players/PlayerInfo.tsx";
 import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
-import {PlayerState, type RoomState} from "../../scripts/types.ts";
+import {type RoomState} from "../../scripts/types.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import Button from "../common/Button.tsx";
 import LockIcon from "~icons/tabler/lock-filled";
+import Input from "../common/Input.tsx";
+import TextBox from "../common/TextBox.tsx";
 
-export type GroupAudioType = "normal" | "open" | "isolated"
+export type GroupAudioType = "normal" | "open" | "isolated";
+type State = "outside" | "inside" | "entering" | "entering failed" | "exiting" | "exiting failed";
 
 interface Props {
     room: RoomState;
-    players: PlayerState[];
 }
 
-const RoomInfo: FunctionComponent<Props> = ({room, players}) => {
-    const {socket: [socket], user: [user]} = useVoiceStateContext();
+const RoomInfo: FunctionComponent<Props> = ({room}) => {
+    const {socket: [socket], user: [user], players: [players]} = useVoiceStateContext();
 
     const [password, setPassword] = useState<string>("");
-    const [joining, setJoining] = useState<boolean>(false);
-    const [leaving, setLeaving] = useState<boolean>(false);
-    const [joinFailed, setJoinFailed] = useState<boolean>(false);
+    const [state, setState] = useState<State>("outside");
 
-    const hasViewer = useMemo(() => {
-        if (user?.uuid) {
-            return players.some(state => state.is(user.uuid));
-        }
-        return false;
-    }, [user, players]);
+    const members = useMemo(() => {
+        return Object.values(players)
+            .filter(player => player.in(room.uniqueId));
+    }, [room.uniqueId, players]);
+
+    const hasUser = useMemo(() => {
+        return members.some(member => member.is(user.uuid));
+    }, [user, members]);
+    useEffect(() => {
+        setState(hasUser ? "inside" : "outside");
+        setPassword("");
+    }, [hasUser]);
 
     useEffect(() => {
         return socket.registers()
             .register("room_join_response", ({detail: {roomId, success}}: CustomEvent<RoomJoinResponsePacket>) => {
+                console.log("rjs", roomId, success);
                 if (room.uniqueId.name === roomId.name) {
-                    setJoinFailed(!success);
-                    setJoining(false);
+                    setState(success ? "inside" : "entering failed");
                 }
             })
-            .register("room_leave_response", ({detail: {roomId}}: CustomEvent<RoomLeaveResponsePacket>) => {
+            .register("room_leave_response", ({detail: {roomId, success}}: CustomEvent<RoomLeaveResponsePacket>) => {
+                console.log("rlr", roomId, success);
                 if (room.uniqueId.name === roomId.name) {
-                    setLeaving(false);
+                    setState(success ? "outside" : "exiting failed");
                 }
             })
             .callback();
     }, [socket]);
 
     const joinRoom = useCallback(() => {
-        setJoining(true);
-        setJoinFailed(false);
+        setState("entering");
         socket.sendPacket(new RoomJoinRequestPacket(room.uniqueId, password ? password : null));
     }, [socket, password]);
 
     const leaveRoom = useCallback(() => {
-        setLeaving(true);
+        setState("exiting");
         socket.sendPacket(new RoomLeavePacket(room.uniqueId));
     }, [socket, password]);
 
@@ -73,68 +79,57 @@ const RoomInfo: FunctionComponent<Props> = ({room, players}) => {
     }, [room.listenToOthers, room.speakToOthers]);
 
     return (
-        <div className={"flex flex-col gap-2 p-5 bg-neutral-900 rounded-xl"}>
+        <form className={"flex flex-col gap-2 p-5 bg-neutral-900 rounded-xl"}>
             <div className={"flex justify-between items-center"}>
-                <div className={"flex gap-4 items-center overflow-x-hidden"}>
-                    <div className={"flex flex-row gap-1 items-center"}>
+                <div className={"flex flex-row gap-3 items-center"}>
+                    <div className={"flex flex-row items-center gap-1"}>
                         <MinecraftComponent className={"text-lg font-semibold"} component={room.name}/>
                         {room.password && <LockIcon/>}
                     </div>
-                    {players.map(state => <PlayerInfo state={state}/>)}
+                    <span className={"uppercase text-neutral-300"}>
+                        {state}
+                    </span>
+                    <span className={"uppercase text-neutral-300"}>
+                        {members.length} member{members.length === 1 ? "" : "s"}
+                    </span>
                 </div>
                 <span className={"uppercase"}>
                     {roomAudioType}
                 </span>
             </div>
-            {players.length > 0 &&
-                <>
-                    <span style={{marginTop: "0.5em"}}><code>{players.length}</code> Members:</span>
-                    <ul>
-                        {players.map(state => (
-                            <li style={{listStyleType: "none"}} key={state.uniqueId.name}>
-                                <div style={{
-                                    display: "flex",
-                                    gap: "0.5em",
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                }}>
-                                    <span>•</span>
-                                    <PlayerInfo state={state} inline/>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </>
-            }
-            {joinFailed && <span>Failed to join!</span>}
-            {room.password &&
-                <div className={"flex flex-col items-stretch"}>
-                    <input
-                        className={"h-10 w-full p-4 rounded-lg text-sm bg-neutral-900 border border-neutral-700 placeholder:text-neutral-300 focus:outline-2 focus:outline-white"}
-                        onChange={event => setPassword(event.currentTarget.value)}
-                        type={"password"} disabled={hasViewer} placeholder={"Password"}
+            <div className={"flex flex-col gap-2"}>
+                {members.map(member => <PlayerInfo state={member}/>)}
+            </div>
+            {(room.password && !hasUser) &&
+                <Input label={<>Password for group</>}>
+                    <TextBox
+                        value={password} required type={"password"}
+                        placeholder={"Enter password for group"}
+                        disabled={state !== "outside" && state !== "entering failed"}
+                        onChange={val => setPassword(val.trim())}
                     />
-                </div>
+                </Input>
             }
-            <div className={"flex gap-2"}>
+            <div className={"flex flex-row gap-2"}>
                 <Button
                     color={"purple"}
-                    disabled={hasViewer || joining || leaving}
-                    style={{flex: 1}}
+                    disabled={state !== "outside" && state !== "entering failed" || (room.password && password.length < 1)}
+                    className={"grow"}
                     onClick={joinRoom}
+                    type={"submit"}
                 >
                     Join
                 </Button>
                 <Button
                     color={"purple"}
-                    disabled={!hasViewer || joining || leaving}
-                    style={{flex: 1}}
+                    disabled={state !== "inside" && state !== "exiting failed"}
+                    className={"grow"}
                     onClick={leaveRoom}
                 >
                     Leave
                 </Button>
             </div>
-        </div>
+        </form>
     );
 };
 export default RoomInfo;
