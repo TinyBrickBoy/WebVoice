@@ -4,7 +4,7 @@ import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo, useState} from "preact/hooks";
 import {PlayerState} from "../../scripts/types.ts";
 import {AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
-import {uuidFromString} from "../../scripts/util/uuid.ts";
+import {randomUUID, uuidFromString} from "../../scripts/util/uuid.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
 
 const PlayerGrid: FunctionComponent = () => {
@@ -30,6 +30,11 @@ const PlayerGrid: FunctionComponent = () => {
             dplayers[uuid] = new PlayerState(uuidFromString(uuid), name, false, false, null, null);
             dplayers[uuid].speaking = Math.random() < 0.5;
         });
+        for (let i = 0; i < 20; i++) {
+            const uuid = randomUUID();
+            dplayers[uuid.name] = new PlayerState(uuid, uuid.name.substring(0, 8), false, false, null, null);
+            dplayers[uuid.name].speaking = Math.random() < 0.5;
+        }
         setPlayers(dplayers);
 
         // register events
@@ -60,12 +65,12 @@ const PlayerGrid: FunctionComponent = () => {
     const playerList = useMemo(() => Object.values(players)
         .filter(player => player.on(serverId)), [players, serverId]);
     return <>
-        <div className={"p-8 w-1/2 border-l-2 border-solid border-neutral-700"}>
-            <div className={"flex flex-col mb-6"}>
+        <div className={"p-8 pb-0 w-1/2 border-l-2 border-solid border-neutral-700 flex flex-col gap-6"}>
+            <div className={"flex flex-col"}>
                 <span className={"text-sm"}>Current server</span>
                 {serverName && <MinecraftComponent noColor className={"text-xl"} component={serverName}/>}
             </div>
-            <div className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]"}>
+            <div className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] overflow-y-auto grow"}>
                 {playerList.map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}
             </div>
         </div>

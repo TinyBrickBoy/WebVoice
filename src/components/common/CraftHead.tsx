@@ -14,6 +14,7 @@ const CraftHead: FunctionComponent<Props> = ({uuid, size, style, className, ...o
         src={`/head/${uuid.name}/image`}
         className={`block select-none ${className || ""}`}
         draggable={false}
+        loading={"eager"}
         style={{
             ...(styleObj || {}),
             imageRendering: "pixelated",
