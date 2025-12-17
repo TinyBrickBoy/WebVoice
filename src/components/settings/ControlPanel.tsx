@@ -8,19 +8,29 @@ import WaveformOffIcon from "~icons/ph/waveform-slash-bold";
 import Button from "../common/Button.tsx";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {useEffect, useState} from "preact/hooks";
+import {StateInfoPacket} from "../../scripts/network/packets.ts";
 
 const ControlPanel: FunctionComponent = () => {
-    const {controls} = useVoiceStateContext();
+    const {socket: [socket], controls} = useVoiceStateContext();
 
     const [_refresh, setRefresh] = useState<number>(0);
     useEffect(() => {
-        const handler = () => setRefresh(i => i + 1);
+        const triggerRefresh = () => setRefresh(i => i + 1);
+        const sendPacket = () => {
+            socket.sendPacket(new StateInfoPacket(controls.muted, controls.deafened));
+        };
         return controls.registers()
-            .register("update_muted", handler)
-            .register("update_deafened", handler)
-            .register("update_noise_reduction", handler)
+            .register("update_muted", () => {
+                triggerRefresh();
+                sendPacket();
+            })
+            .register("update_deafened", () => {
+                triggerRefresh();
+                sendPacket();
+            })
+            .register("update_noise_reduction", triggerRefresh)
             .callback();
-    }, [controls]);
+    }, [socket, controls]);
 
     return <>
         <Button color={"transparent"} onClick={() => controls.muted = !controls.muted}>
