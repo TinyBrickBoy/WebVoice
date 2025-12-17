@@ -1,7 +1,7 @@
 import RoomInfo from "./RoomInfo.tsx";
 import {RoomAddPacket, RoomRemovePacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
-import {useEffect, useState} from "preact/hooks";
+import {useEffect, useMemo, useState} from "preact/hooks";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {includesTextLc} from "../../scripts/network/component.ts";
 import Button from "../common/Button.tsx";
@@ -12,7 +12,8 @@ interface Props {
 }
 
 const RoomList: FunctionComponent<Props> = ({search}) => {
-    const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
+    const {socket: [socket], players: [players], rooms: [rooms, setRooms], user: [{uuid}]} = useVoiceStateContext();
+    const [creatingGroup, setCreatingGroup] = useState<boolean>(false);
 
     useEffect(() => {
         if (!socket.isActive()) {
@@ -35,15 +36,31 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
             .callback();
     }, [socket]);
 
-    const [creatingGroup, setCreatingGroup] = useState<boolean>(false);
+    const userRoomId = useMemo(() =>
+        players[uuid.name]?.primaryRoomId || null, [uuid, players]);
 
-    let roomValues = Object.values(rooms)
-        .filter(room => room.joinable);
-    if (search) {
-        roomValues = roomValues.filter(room =>
-            includesTextLc(room.name, search)
-            || room.uniqueId.name.includes(search));
-    }
+    const roomValues = useMemo(() => {
+        let list = Object.values(rooms)
+            .filter(room => room.joinable);
+        if (search) {
+            list = list.filter(room =>
+                includesTextLc(room.name, search)
+                || room.uniqueId.name.includes(search));
+        }
+        // move the user's room to the top of the list
+        list.sort((r1, r2) => {
+            if (userRoomId) {
+                if (r1.uniqueId.name === userRoomId.name) {
+                    return -1;
+                } else if (r2.uniqueId.name === userRoomId.name) {
+                    return 1;
+                }
+            }
+            return 0;
+        });
+        return list;
+    }, [rooms, search, userRoomId]);
+
     return <>
         <RoomCreateModal visible={[creatingGroup, setCreatingGroup]}/>
         <details open={true}>
