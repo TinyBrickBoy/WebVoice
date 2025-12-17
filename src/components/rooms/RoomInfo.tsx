@@ -13,6 +13,8 @@ import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import Button from "../common/Button.tsx";
 import LockIcon from "~icons/tabler/lock-filled";
 
+export type GroupAudioType = "normal" | "open" | "isolated"
+
 interface Props {
     room: RoomState;
     players: PlayerState[];
