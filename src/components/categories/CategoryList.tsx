@@ -1,9 +1,9 @@
-import VoiceCategory from "./VoiceCategory.tsx";
+import CategoryInfo from "./CategoryInfo.tsx";
 import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
 import {CategoryAddPacket, CategoryRemovePacket} from "../../scripts/network/packets.ts";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
-import {AudioCategory} from "../../scripts/types.ts";
+import {CategoryState} from "../../scripts/types.ts";
 import {randomUUID} from "../../scripts/util/uuid.ts";
 import {includesTextLc} from "../../scripts/network/component.ts";
 
@@ -11,17 +11,17 @@ interface Props {
     search: string,
 }
 
-const VoiceCategories: FunctionComponent<Props> = ({search}) => {
+const CategoryList: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], categories: [categories, setCategories]} = useVoiceStateContext();
 
     useEffect(() => {
         setCategories({}); // invalidate
 
         // TODO remove debug
-        const dcategories = {} as Record<string, AudioCategory>;
+        const dcategories = {} as Record<string, CategoryState>;
         for (let i = 0; i < 4; i++) {
             const uuid = randomUUID();
-            dcategories[uuid.name] = new AudioCategory(uuid, `Category ${i}`, i % 2 == 0 ? `Epic Description ${i}` : null);
+            dcategories[uuid.name] = new CategoryState(uuid, `Category ${i}`, i % 2 == 0 ? `Epic Description ${i}` : null);
         }
         setCategories(dcategories);
 
@@ -57,10 +57,10 @@ const VoiceCategories: FunctionComponent<Props> = ({search}) => {
             <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>Categories ({categoryValues.length})</summary>
             <div className={"flex flex-col"}>
                 {categoryValues.map(category => (
-                    <VoiceCategory key={category.uniqueId.name} category={category}/>
+                    <CategoryInfo key={category.uniqueId.name} category={category}/>
                 ))}
             </div>
         </details>
     </>;
 };
-export default VoiceCategories;
+export default CategoryList;

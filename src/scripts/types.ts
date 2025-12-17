@@ -31,7 +31,7 @@ export type Position3d = {
     pitch: number,
 }
 
-export class AudioCategory {
+export class CategoryState {
 
     public readonly uniqueId: UUID;
     public readonly name: Component;
@@ -58,7 +58,7 @@ const ROOM_FLAG_JOINABLE = 1 << 1;
 const ROOM_FLAG_SPEAK_TO_OTHERS = 1 << 2;
 const ROOM_FLAG_LISTEN_TO_OTHERS = 1 << 3;
 
-export class AudioRoom {
+export class RoomState {
 
     public readonly uniqueId: UUID;
     public readonly name: Component;

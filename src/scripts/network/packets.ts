@@ -1,6 +1,6 @@
 import type {UUID} from "../util/uuid.ts";
 import Long from "long";
-import {AudioCategory, AudioRoom, PlayerState, Vector3d} from "../types.ts";
+import {CategoryState, RoomState, PlayerState, Vector3d} from "../types.ts";
 import ByteBuffer from "bytebuffer";
 import {
     readBoolean,
@@ -64,11 +64,11 @@ export class AudioPacket extends DecodablePacket {
 
 export class CategoryAddPacket extends DecodablePacket {
 
-    public readonly category: AudioCategory;
+    public readonly category: CategoryState;
 
     constructor(buf: ByteBuffer) {
         super();
-        this.category = new AudioCategory(buf);
+        this.category = new CategoryState(buf);
     }
 }
 
@@ -122,11 +122,11 @@ export class PositionUpdatePacket extends DecodablePacket {
 
 export class RoomAddPacket extends DecodablePacket {
 
-    public readonly room: AudioRoom;
+    public readonly room: RoomState;
 
     constructor(buf: ByteBuffer) {
         super();
-        this.room = new AudioRoom(buf);
+        this.room = new RoomState(buf);
     }
 }
 

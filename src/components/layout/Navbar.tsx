@@ -1,6 +1,6 @@
 import type {FunctionComponent} from "preact";
-import VoiceCategories from "../categories/VoiceCategories.tsx";
-import ClientGroups from "../rooms/ClientGroups.tsx";
+import CategoryList from "../categories/CategoryList.tsx";
+import RoomList from "../rooms/RoomList.tsx";
 import SearchBar from "./SearchBar.tsx";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {useMemo, useState} from "preact/hooks";
@@ -27,8 +27,8 @@ const Navbar: FunctionComponent = () => {
             </div>
             <SearchBar setSearch={setSearch}/>
             <div className={"flex flex-col flex-1 gap-2 overflow-y-auto rounded-lg grow"}>
-                <VoiceCategories search={search}/>
-                <ClientGroups search={search}/>
+                <CategoryList search={search}/>
+                <RoomList search={search}/>
             </div>
         </div>
     </>;

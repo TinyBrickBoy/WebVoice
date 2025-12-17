@@ -2,8 +2,8 @@ import {type Context, createContext, type FunctionComponent} from "preact";
 import {VoiceSocket} from "../scripts/socket.ts";
 import {useContext, useEffect, useMemo, useState} from "preact/hooks";
 import {
-    type AudioCategory,
-    type AudioRoom,
+    type CategoryState,
+    type RoomState,
     PlayerState,
     type SocketState,
     type StateType,
@@ -20,8 +20,8 @@ export type VoiceState = {
     user: StateType<UserInfo>,
     socket: StateType<VoiceSocket>,
     players: StateType<Record<string, PlayerState>>,
-    rooms: StateType<Record<string, AudioRoom>>,
-    categories: StateType<Record<string, AudioCategory>>,
+    rooms: StateType<Record<string, RoomState>>,
+    categories: StateType<Record<string, CategoryState>>,
     state: StateType<SocketState>,
     devices: AudioDeviceManager,
     controls: AudioControls,
@@ -52,8 +52,8 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     const user = useState<UserInfo>(defaultUser);
     const socket = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
     const players = useState<Record<string, PlayerState>>({});
-    const rooms = useState<Record<string, AudioRoom>>({});
-    const categories = useState<Record<string, AudioCategory>>({});
+    const rooms = useState<Record<string, RoomState>>({});
+    const categories = useState<Record<string, CategoryState>>({});
     const state = useState<SocketState>("disconnected");
     const devices = useMemo(() => new AudioDeviceManager(), []);
     useEffect(() => devices.registerMediaListener(), [devices]);

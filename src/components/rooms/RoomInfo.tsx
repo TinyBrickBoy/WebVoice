@@ -6,7 +6,7 @@ import {
 } from "../../scripts/network/packets.ts";
 import PlayerInfo from "../players/PlayerInfo.tsx";
 import {useCallback, useEffect, useMemo, useState} from "preact/hooks";
-import {type AudioRoom, PlayerState} from "../../scripts/types.ts";
+import {type RoomState, PlayerState} from "../../scripts/types.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
@@ -14,11 +14,11 @@ import Button from "../common/Button.tsx";
 import LockIcon from "~icons/tabler/lock-filled";
 
 interface Props {
-    room: AudioRoom;
+    room: RoomState;
     players: PlayerState[];
 }
 
-const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
+const RoomInfo: FunctionComponent<Props> = ({room, players}) => {
     const {socket: [socket], user: [user]} = useVoiceStateContext();
 
     const [password, setPassword] = useState<string>("");
@@ -123,4 +123,4 @@ const ClientGroup: FunctionComponent<Props> = ({room, players}) => {
         </div>
     );
 };
-export default ClientGroup;
+export default RoomInfo;

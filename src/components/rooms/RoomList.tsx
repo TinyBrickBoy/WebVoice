@@ -1,9 +1,9 @@
-import ClientGroup from "./ClientGroup.tsx";
+import RoomInfo from "./RoomInfo.tsx";
 import {RoomAddPacket, RoomRemovePacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useEffect} from "preact/hooks";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
-import {AudioRoom} from "../../scripts/types.ts";
+import {RoomState} from "../../scripts/types.ts";
 import {randomUUID} from "../../scripts/util/uuid.ts";
 import {includesTextLc} from "../../scripts/network/component.ts";
 
@@ -11,17 +11,17 @@ interface Props {
     search: string;
 }
 
-const ClientGroups: FunctionComponent<Props> = ({search}) => {
+const RoomList: FunctionComponent<Props> = ({search}) => {
     const {socket: [socket], players: [players], rooms: [rooms, setRooms]} = useVoiceStateContext();
 
     useEffect(() => {
         setRooms({}); // invalidate
 
         // TODO remove debug
-        const drooms = {} as Record<string, AudioRoom>;
+        const drooms = {} as Record<string, RoomState>;
         for (let i = 0; i < 16; i++) {
             const uuid = randomUUID();
-            drooms[uuid.name] = new AudioRoom(uuid, `Group ${i + 1}`, i % 2 == 0, true, false, false);
+            drooms[uuid.name] = new RoomState(uuid, `Group ${i + 1}`, i % 2 == 0, true, false, false);
         }
         setRooms(drooms);
 
@@ -57,7 +57,7 @@ const ClientGroups: FunctionComponent<Props> = ({search}) => {
             </summary>
             <div className={"flex flex-col"}>
                 {roomValues.map(room => (
-                    <ClientGroup
+                    <RoomInfo
                         key={room.uniqueId.name}
                         room={room}
                         players={Object.values(players).filter(state => state.in(room.uniqueId))}
@@ -67,4 +67,4 @@ const ClientGroups: FunctionComponent<Props> = ({search}) => {
         </details>
     </>;
 };
-export default ClientGroups;
+export default RoomList;
