@@ -7,7 +7,7 @@ interface Props {
 const TextInput: FunctionComponent<Props> = ({label, children}) => {
     return <>
         <label className={"flex flex-col"}>
-            <div className={"text-sm text-neutral-400 mb-2"}>
+            <div className={"text-sm text-neutral-400 mb-1"}>
                 {label}
             </div>
             {children}
