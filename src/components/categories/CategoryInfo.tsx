@@ -9,8 +9,8 @@ interface Props {
 
 const CategoryInfo: FunctionComponent<Props> = ({category}) => {
     return <>
-        <div className={"flex flex-col gap-2 bg-neutral-900 p-5 rounded-xl"}>
-            <div className={"flex flex-row gap-2 items-center"}>
+        <div className={"flex flex-col gap-2 bg-neutral-900 p-5 border-2 border-neutral-800 rounded-2xl"}>
+            <div className={"flex flex-col gap-1"}>
                 <MinecraftComponent
                     component={category.name}
                     className={"text-lg font-medium"}
