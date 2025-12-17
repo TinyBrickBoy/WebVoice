@@ -19,7 +19,7 @@ const CategoryList: FunctionComponent<Props> = ({search}) => {
 
         // TODO remove debug
         const dcategories = {} as Record<string, CategoryState>;
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 3; i++) {
             const uuid = randomUUID();
             dcategories[uuid.name] = new CategoryState(uuid, `Category ${i}`, i % 2 == 0 ? `Epic Description ${i}` : null);
         }
@@ -54,8 +54,10 @@ const CategoryList: FunctionComponent<Props> = ({search}) => {
     }
     return <>
         <details open={true}>
-            <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>Categories ({categoryValues.length})</summary>
-            <div className={"flex flex-col"}>
+            <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>
+                Categories ({categoryValues.length})
+            </summary>
+            <div className={"flex flex-col gap-3 m-2"}>
                 {categoryValues.map(category => (
                     <CategoryInfo key={category.uniqueId.name} category={category}/>
                 ))}

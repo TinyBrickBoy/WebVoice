@@ -63,7 +63,7 @@ const RoomInfo: FunctionComponent<Props> = ({room, players}) => {
     }, [socket, password]);
 
     return (
-        <div className={"flex flex-col mt-3 gap-2 p-5 bg-neutral-900 rounded-xl"}>
+        <div className={"flex flex-col gap-2 p-5 bg-neutral-900 rounded-xl"}>
             <div className={"flex justify-between"}>
                 <div className={"flex gap-4 items-center"}>
                     <MinecraftComponent className={"text-lg font-semibold"} component={room.name}/>

@@ -8,9 +8,9 @@ interface Props {
 }
 
 const CategoryInfo: FunctionComponent<Props> = ({category}) => {
-    return (
-        <div className={"flex flex-col gap-2 mt-3 bg-neutral-900 p-5 rounded-xl"}>
-            <div className={"flex gap-2 items-center"}>
+    return <>
+        <div className={"flex flex-col gap-2 bg-neutral-900 p-5 rounded-xl"}>
+            <div className={"flex flex-row gap-2 items-center"}>
                 <MinecraftComponent
                     component={category.name}
                     className={"text-lg font-semibold"}
@@ -23,6 +23,6 @@ const CategoryInfo: FunctionComponent<Props> = ({category}) => {
             </div>
             <VolumeSlider type={"category"} name={category.uniqueId.name}/>
         </div>
-    );
+    </>;
 };
 export default CategoryInfo;
