@@ -1,13 +1,14 @@
 import {useEffect, useMemo} from "preact/hooks";
 import {VoiceSocket} from "../../scripts/socket.ts";
 import AudioPlayer from "../../scripts/audio/audio_player.ts";
-import {ConnectedPacket, PingPacket, StateInfoPacket} from "../../scripts/network/packets.ts";
+import {ConnectedPacket, StateInfoPacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import Navbar from "./Navbar.tsx";
 import PlayerGrid from "../players/PlayerGrid.tsx";
 import Footer from "./Footer.tsx";
 import VoiceConnectModal from "../VoiceConnectModal.tsx";
+import DraggableHandle from "./DraggableHandle.tsx";
 
 interface Props {
     socketUrl: URL;
@@ -63,9 +64,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
                         .catch(error => console.error(error));
                 }
             })
-            .register("ping", (event: CustomEvent<PingPacket>) => {
-                // TODO
-            })
             .callback();
     }, [socket]);
 
@@ -73,7 +71,13 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
         <main className={"flex flex-col h-full"}>
             <VoiceConnectModal demo={socketUrl.hostname === "example"}/>
             <div className={"flex flex-row grow overflow-y-auto"}>
-                <Navbar/>
+                <div className={"w-1/2 xl:w-2/5"}>
+                    <Navbar/>
+                </div>
+                <DraggableHandle
+                    leftWidthMin={0.25}
+                    leftWidthMax={0.7}
+                />
                 <PlayerGrid/>
             </div>
             <div className={"flex flex-row justify-center p-3 border-t-2 border-solid border-neutral-700"}>
@@ -82,4 +86,5 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
         </main>
     </>;
 };
+
 export default VoiceContainer;

@@ -17,7 +17,7 @@ const Navbar: FunctionComponent = () => {
     }, [user, rooms, players]);
 
     return <>
-        <div className={"flex flex-col p-8 pb-0 gap-2 h-full w-1/2"}>
+        <div className={"flex flex-col p-8 pb-0 gap-2 h-full w-full"}>
             <div className={"flex flex-col mb-6 w-full items-end"}>
                 <span className={"text-sm"}>Current group</span>
                 {room ?

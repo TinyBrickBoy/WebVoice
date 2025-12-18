@@ -68,7 +68,7 @@ const PlayerGrid: FunctionComponent = () => {
     }, [players, serverId]);
 
     return <>
-        <div className={"p-8 pb-0 w-1/2 border-l-2 border-solid border-neutral-700 flex flex-col gap-6"}>
+        <div className={"p-8 pb-0 grow flex flex-col gap-6"}>
             <div className={"flex flex-col"}>
                 <span className={"text-sm"}>Current server</span>
                 <MinecraftComponent noColor className={"text-xl capitalize"} component={serverName || "none"}/>
