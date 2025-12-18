@@ -38,7 +38,7 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
     private async initLibsamplerate(inputSampleRate: number) {
         const {create, ConverterType} = (globalThis as unknown as LibSampleRateGlobal).LibSampleRate;
         this.libsamplerate = await create(1, inputSampleRate, SAMPLE_RATE, {
-            converterType: ConverterType.SRC_SINC_MEDIUM_QUALITY,
+            converterType: ConverterType.SRC_SINC_FASTEST,
         });
     }
 
@@ -58,9 +58,10 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
                     this.libsamplerateOut = new Float32Array(outFrameSize);
                 }
                 // do resample and fill output array
-                this.libsamplerate.full(input, this.libsamplerateOut, {frames: 1});
-                // push the entire output array to samples queue
-                this.samplesQueue.push(...this.libsamplerateOut);
+                const outLength = {frames: 0}; // "frames" is a misleading name, this is the amount of samples
+                this.libsamplerate.full(input, this.libsamplerateOut, outLength);
+                // push all resampled samples to the samples queue
+                this.samplesQueue.push(...this.libsamplerateOut.slice(0, outLength.frames));
             } else {
                 console.warn("Skipped voice frame, libsamplerate not initialized yet");
             }
