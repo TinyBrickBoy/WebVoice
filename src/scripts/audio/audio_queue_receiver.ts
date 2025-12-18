@@ -1,4 +1,4 @@
-import {type AudioQueueData} from "../types.ts";
+import type {AudioQueueData} from "../types.ts";
 import {convertSpatialToStereo} from "./spatial_to_stereo.ts";
 
 class AudioQueueReceiver extends AudioWorkletProcessor {
@@ -17,7 +17,7 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
                 convertSpatialToStereo(
                     data.data,
                     this.samplesQueueLeft, this.samplesQueueRight,
-                    data.source, data.position
+                    data.source, data.position,
                 );
             } else {
                 // statically append new audio samples to the queue
