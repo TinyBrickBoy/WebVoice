@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+    --breakpoint-mg: 50rem;
+}
+
 html {
     font-family: Poppins, system-ui, sans-serif;
     font-size: 1.05rem;

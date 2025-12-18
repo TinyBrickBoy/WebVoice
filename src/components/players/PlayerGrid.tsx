@@ -3,12 +3,11 @@ import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo, useState} from "preact/hooks";
 import {AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
-import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import {PlayerState} from "../../scripts/types.ts";
 import {uuidFromString} from "../../scripts/util/uuid.ts";
 
-const PlayerGrid: FunctionComponent = () => {
-    const {players: [players, setPlayers], socket: [socket], user: [{serverId, serverName}]} = useVoiceStateContext();
+const PlayerGrid: FunctionComponent = ({children}) => {
+    const {players: [players, setPlayers], socket: [socket], user: [{serverId}]} = useVoiceStateContext();
 
     useEffect(() => {
         if (!socket.isActive()) {
@@ -68,11 +67,8 @@ const PlayerGrid: FunctionComponent = () => {
     }, [players, serverId]);
 
     return <>
-        <div className={"p-8 pb-0 grow flex flex-col gap-6"}>
-            <div className={"flex flex-col"}>
-                <span className={"text-sm"}>Current server</span>
-                <MinecraftComponent noColor className={"text-xl capitalize"} component={serverName || "none"}/>
-            </div>
+        <div className={"mb-3 mg:mb-0 p-3 mg:p-8 pb-0 grow flex flex-col gap-6"}>
+            {children}
             <div
                 className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] overflow-y-auto pl-2 pr-2"}
             >

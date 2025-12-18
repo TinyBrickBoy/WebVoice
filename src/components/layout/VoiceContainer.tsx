@@ -9,6 +9,9 @@ import PlayerGrid from "../players/PlayerGrid.tsx";
 import Footer from "./Footer.tsx";
 import VoiceConnectModal from "../VoiceConnectModal.tsx";
 import DraggableHandle from "./DraggableHandle.tsx";
+import {useMediaQuery} from "../../scripts/util/hooks.ts";
+import CurrentRoom from "../rooms/CurrentRoom.tsx";
+import CurrentServer from "../players/CurrentServer.tsx";
 
 interface Props {
     socketUrl: URL;
@@ -67,18 +70,28 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
             .callback();
     }, [socket]);
 
+    // TODO somehow use var(--breakpoint-mg)?
+    const horizontal = useMediaQuery("(width >= 50rem)");
+
     return <>
         <main className={"flex flex-col h-full"}>
             <VoiceConnectModal demo={socketUrl.hostname === "example"}/>
-            <div className={"flex flex-row grow overflow-y-auto"}>
-                <div className={"w-1/2 xl:w-2/5"}>
-                    <Navbar/>
+            <div className={"flex grow overflow-y-auto mg:flex-row flex-col"}>
+                <div className={"mg:w-1/2 xl:w-2/5 w-full"}>
+                    <Navbar>
+                        <div className={"flex flex-row justify-between w-full"}>
+                            {!horizontal && <CurrentServer/>}
+                            <CurrentRoom/>
+                        </div>
+                    </Navbar>
                 </div>
-                <DraggableHandle
+                {horizontal && <DraggableHandle
                     leftWidthMin={0.25}
                     leftWidthMax={0.7}
-                />
-                <PlayerGrid/>
+                />}
+                <PlayerGrid>
+                    {horizontal && <CurrentServer/>}
+                </PlayerGrid>
             </div>
             <div className={"flex flex-row justify-center p-3 border-t-2 border-solid border-neutral-700"}>
                 <Footer/>
