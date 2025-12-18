@@ -10,15 +10,26 @@ interface Props {
 }
 
 const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
-    const {socketUrl, socket: [socket, setSocket], state: [state, setState], devices} = useVoiceStateContext();
+    const {
+        socketUrl,
+        socket: [socket, setSocket],
+        state: [state, setState],
+        devices,
+        microphone,
+    } = useVoiceStateContext();
 
     const [permissionState, setPermissionState] = useState<"checking" | "success" | "failed" | "todo">("todo");
     const checkPermissions = useCallback(async () => {
         setPermissionState("checking");
         try {
             const result = await devices.checkPermission();
-            setPermissionState(!result ? "success" : "failed");
-            return !result;
+            if (!result) {
+                setPermissionState("success");
+                await microphone.createContext();
+                return true;
+            }
+            setPermissionState("failed");
+            return false;
         } catch (error) {
             setPermissionState("failed");
             console.error(error);

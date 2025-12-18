@@ -241,7 +241,7 @@ export class AudioMicrophoneManager extends EventManager {
 
     private ctx: AudioContext | null = null;
     private teardown: (() => void) | null = null;
-    private _analyzers: AnalyserNode[] = [];
+    private _analyzers: AnalyserNode[] | null = null;
 
     constructor(
         socket: VoiceSocket,
@@ -265,6 +265,8 @@ export class AudioMicrophoneManager extends EventManager {
             this.ctx.close()
                 .catch(error => console.error(error));
             this.ctx = null;
+        }
+        if (this._analyzers) {
             // clear analyzers without firing event, audio context is destroyed anyway
             this._analyzers = [];
         }
@@ -277,6 +279,11 @@ export class AudioMicrophoneManager extends EventManager {
             sampleRate: SAMPLE_RATE,
             latencyHint: "interactive",
         });
+
+        // if analyzers are non-null, setup audio analyzer array
+        if (this._analyzers) {
+            this.injectAnalyzers();
+        }
 
         // create microphone audio node graph
         this.teardown = await setupMicrophonePipeline(this.socket, this.ctx,
@@ -291,6 +298,9 @@ export class AudioMicrophoneManager extends EventManager {
         analyzer.maxDecibels = -30;
         analyzer.smoothingTimeConstant = 0.7;
         // push to analyzers array
+        if (!this._analyzers) {
+            this._analyzers = [];
+        }
         this._analyzers.push(analyzer);
         // fire event named by analyzer node index
         const nodeIndex = this._analyzers.length - 1;
@@ -298,21 +308,35 @@ export class AudioMicrophoneManager extends EventManager {
     }
 
     public injectAnalyzers() {
-        // setup three analyzers: start, post noise reduction and post noise gate
-        this.setupAudioAnalyzer();
-        this.setupAudioAnalyzer();
-        this.setupAudioAnalyzer();
+        if (!this.ctx) {
+            // audio context isn't ready yet, just mark analyzers
+            // as "existent" and wait for audio context creation
+            this._analyzers = [];
+        } else {
+            // setup three analyzers: start, post noise reduction and post noise gate
+            this.setupAudioAnalyzer();
+            this.setupAudioAnalyzer();
+            this.setupAudioAnalyzer();
+        }
     }
 
     public uninjectAnalyzers() {
+        if (!this._analyzers) {
+            return; // already uninjected
+        }
         // walk backwards through analyzer array and delete each analyzer node individually
         for (let nodeIndex = this._analyzers.length - 1; nodeIndex >= 0; nodeIndex--) {
             this._analyzers.pop(); // remove last element
             this.fire(new CustomEvent(`analyzer_${nodeIndex}`));
         }
+        this._analyzers = null;
+    }
+
+    public hasContext() {
+        return !!this.ctx;
     }
 
     public get analyzers() {
-        return this._analyzers;
+        return this._analyzers || [];
     }
 }
