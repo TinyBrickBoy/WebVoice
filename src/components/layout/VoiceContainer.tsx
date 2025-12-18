@@ -77,7 +77,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
         <main className={"flex flex-col h-full"}>
             <VoiceConnectModal demo={socketUrl.hostname === "example"}/>
             <div className={"flex grow overflow-y-auto mg:flex-row flex-col"}>
-                <div className={"mg:w-1/2 xl:w-2/5 w-full"}>
+                <div className={`mg:w-1/2 xl:w-2/5 w-full${horizontal ? "" : "!"}`}>
                     <Navbar>
                         <div className={"flex flex-row justify-between w-full"}>
                             {!horizontal && <CurrentServer/>}

@@ -63,7 +63,7 @@ const DraggableHandle: FunctionComponent<Props> = ({leftWidthMin, leftWidthMax})
             onMouseDown={event => startHandler(event)}
             ref={handle}
         >
-            <div className={"bg-neutral-700 p-[1px] h-full"}/>
+            <div className={"bg-neutral-700 p-px h-full"}/>
         </div>
     </>;
 };
