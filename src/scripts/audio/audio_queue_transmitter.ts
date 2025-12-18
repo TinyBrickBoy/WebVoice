@@ -9,31 +9,30 @@ type LibSampleRateGlobal = {
     }
 }
 
-type InitializationData = {
-    senderPort: MessagePort, resample: boolean
-}
-
 class AudioQueueTransmitter extends AudioWorkletProcessor {
 
     private readonly samplesQueue: number[] = [];
     private senderPort: MessagePort | undefined;
 
-    private resample: boolean = false;
+    private resample: boolean = true;
     private libsamplerate?: SRC;
     private libsamplerateOut?: Float32Array;
 
     constructor() {
         super();
-        this.port.addEventListener("message", ({data: {senderPort, resample}}: MessageEvent<InitializationData>) => {
+        this.port.onmessage = ({data: resample, ports: [senderPort]}: MessageEvent<boolean>) => {
             this.senderPort = senderPort;
             this.resample = resample;
 
             // initialize libsamplerate if wanted
             if (resample) {
                 this.initLibsamplerate(sampleRate)
+                    .then(() => console.log("Finished initializing libsamplerate", sampleRate, SAMPLE_RATE))
                     .catch(error => console.error(error));
+            } else {
+                console.log("Will assume samplerate is already correct");
             }
-        });
+        };
     }
 
     private async initLibsamplerate(inputSampleRate: number) {
@@ -55,13 +54,15 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
             if (this.libsamplerate) {
                 if (!this.libsamplerateOut) {
                     // allocate array which will be used as output of resample
-                    const outFrameSize = input.length * (SAMPLE_RATE / sampleRate);
+                    const outFrameSize = Math.ceil(input.length * (SAMPLE_RATE / sampleRate));
                     this.libsamplerateOut = new Float32Array(outFrameSize);
                 }
                 // do resample and fill output array
                 this.libsamplerate.full(input, this.libsamplerateOut, {frames: 1});
                 // push the entire output array to samples queue
                 this.samplesQueue.push(...this.libsamplerateOut);
+            } else {
+                console.warn("Skipped voice frame, libsamplerate not initialized yet");
             }
         } else {
             // fill the samples queue with inputs

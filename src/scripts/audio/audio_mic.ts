@@ -200,10 +200,7 @@ const setupTransmitter = async (
         numberOfInputs: 1,
         numberOfOutputs: 0,
     });
-    transmitterNode.port.postMessage({
-        senderPort: channel.port2,
-        resample: resampleManually,
-    }, [channel.port2]);
+    transmitterNode.port.postMessage(resampleManually, [channel.port2]);
     lastNode.connect(transmitterNode);
 
     // pre-allocate microphone opus encoder
@@ -212,7 +209,7 @@ const setupTransmitter = async (
     const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
 
     // receive voice frames from worker via messaging channel
-    channel.port1.addEventListener("message", async ({data}: MessageEvent<number[]>) => {
+    channel.port1.onmessage = async ({data}: MessageEvent<number[]>) => {
         if (controls.muted) {
             return; // don't send any data if muted
         }
@@ -225,7 +222,7 @@ const setupTransmitter = async (
 
         const opus = await encoder.encodeFrame(frameSamples);
         socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
-    });
+    };
 
     return () => {
         encoder.free().catch(error => console.error(error));
