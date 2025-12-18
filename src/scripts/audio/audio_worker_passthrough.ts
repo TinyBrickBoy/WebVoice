@@ -4,7 +4,10 @@ class AudioWorkerPassthrough extends AudioWorkletProcessor {
         inputs: Float32Array[][],
         outputs: Float32Array[][],
     ): boolean {
-        outputs[0] = inputs[0];
+        const input = inputs[0][0];
+        if (input) {
+            outputs[0][0].set(input);
+        }
         return true; // do not GC!
     }
 }

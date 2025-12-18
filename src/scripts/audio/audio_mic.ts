@@ -74,7 +74,7 @@ const injectAnalyzer = (
     postNode: AudioNode,
 ) => {
     return microphone.register(`analyzer_${index}`,
-        injectAudioNode(() => microphone.analyzers[index], preNode, postNode),
+        injectAudioNode(() => microphone.analyzers[index] || null, preNode, postNode),
     );
 };
 
@@ -125,10 +125,7 @@ const setupMicrophonePipeline = async (
     }));
 
     // connect input node with rnnoise node
-    const startNode = new AudioWorkletNode(ctx, "audio-worker-passthrough", {
-        numberOfInputs: 1,
-        numberOfOutputs: 1,
-    }); // create dummy node
+    const startNode = new AudioWorkletNode(ctx, "audio-worker-passthrough"); // create dummy node
     freeCallbacks.push(injectAnalyzer(microphone, 0, monoNode, startNode));
 
     // setup dynamic noise reduction
