@@ -23,7 +23,7 @@ interface Props {
 }
 
 const RoomInfo: FunctionComponent<Props> = ({room}) => {
-    const {socket: [socket], user: [user], players: [players]} = useVoiceStateContext();
+    const {socket, user: [user], players: [players]} = useVoiceStateContext();
 
     const [password, setPassword] = useState<string>("");
     const [state, setState] = useState<State>("outside");

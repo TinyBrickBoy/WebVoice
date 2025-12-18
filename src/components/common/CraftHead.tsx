@@ -9,12 +9,12 @@ interface Props extends JSX.HTMLAttributes {
 const CraftHead: FunctionComponent<Props> = ({uuid, size, style, className, ...other}) => {
     const styleObj = typeof style !== "string" ? style : null;
     return <img
-        {...other}
-        alt={"Head of " + uuid.name}
-        src={`/head/${uuid.name}/image`}
-        className={`block select-none ${className || ""}`}
         draggable={false}
         loading={"eager"}
+        alt={"Head of " + uuid.name}
+        {...other}
+        src={`/head/${uuid.name}/image`}
+        className={`block select-none ${className || ""}`}
         style={{
             ...(styleObj || {}),
             imageRendering: "pixelated",

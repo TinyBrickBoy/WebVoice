@@ -12,17 +12,20 @@ interface Props {
 }
 
 const CategoryList: FunctionComponent<Props> = ({search}) => {
-    const {socket: [socket], categories: [categories, setCategories]} = useVoiceStateContext();
+    const {socket, state: [state], categories: [categories, setCategories]} = useVoiceStateContext();
 
     useEffect(() => {
-        if (!socket.isActive()) {
+        if (state !== "connected") {
             setCategories({
                 "6bfd8175-f484-4c0d-bb4d-537d7a978710": new CategoryState(
                     uuidFromString("6bfd8175-f484-4c0d-bb4d-537d7a978710"),
-                    "Testing Category", "Testing Description"
-                )
+                    "Testing Category", "Testing Description",
+                ),
             });
         }
+    }, [state === "connected"]);
+
+    useEffect(() => {
         return socket.registers()
             .register("open", () => setCategories({}))
             .register("category_add", ({detail: {category}}: CustomEvent<CategoryAddPacket>) => {
@@ -50,6 +53,7 @@ const CategoryList: FunctionComponent<Props> = ({search}) => {
         }
         return list;
     }, [categories, search]);
+
     return <>
         <details open={true}>
             <summary className={"text-sm text-neutral-400 cursor-pointer select-none"}>

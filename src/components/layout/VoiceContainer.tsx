@@ -1,5 +1,4 @@
 import {useEffect, useMemo} from "preact/hooks";
-import {VoiceSocket} from "../../scripts/socket.ts";
 import AudioPlayer from "../../scripts/audio/audio_player.ts";
 import {ConnectedPacket, StateInfoPacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
@@ -19,7 +18,7 @@ interface Props {
 
 const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     const {
-        socket: [socket, setSocket],
+        socket,
         user: [_user, setUser],
         state: [_state, setState],
         devices,
@@ -45,7 +44,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
             .register("close", (event: CloseEvent) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
                 setState("disconnected");
-                setSocket(new VoiceSocket(socketUrl));
             })
             .register("connected", ({detail: packet}: CustomEvent<ConnectedPacket>) => {
                 // save player info

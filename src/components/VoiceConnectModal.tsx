@@ -1,7 +1,6 @@
 import {useCallback, useEffect, useState} from "preact/hooks";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
-import {VoiceSocket} from "../scripts/socket.ts";
 import Button from "./common/Button.tsx";
 import Modal from "./common/Modal.tsx";
 
@@ -12,7 +11,7 @@ interface Props {
 const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
     const {
         socketUrl,
-        socket: [socket, setSocket],
+        socket,
         state: [state, setState],
         devices,
         microphone,
@@ -63,12 +62,8 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
             setError(null);
             return;
         }
-        socket.close();
-
+        socket.open();
         setState("connecting");
-        const newSocket = new VoiceSocket(socketUrl);
-        newSocket.open();
-        setSocket(newSocket);
     }, [socket, socketUrl, demo]);
 
     const tryOpenSocket = useCallback(() => {

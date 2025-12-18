@@ -19,7 +19,7 @@ import {AudioMicrophoneManager} from "../scripts/audio/audio_mic.ts";
 export type VoiceState = {
     socketUrl: URL,
     user: StateType<UserInfo>,
-    socket: StateType<VoiceSocket>,
+    socket: VoiceSocket,
     players: StateType<Record<string, PlayerState>>,
     rooms: StateType<Record<string, RoomState>>,
     categories: StateType<Record<string, CategoryState>>,
@@ -52,13 +52,13 @@ const defaultUser = {
 
 const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     const user = useState<UserInfo>(defaultUser);
-    const [socket, setSocket] = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
     const players = useState<Record<string, PlayerState>>({});
     const rooms = useState<Record<string, RoomState>>({});
     const categories = useState<Record<string, CategoryState>>({});
     const state = useState<SocketState>("disconnected");
 
     // global manager states
+    const socket = useMemo(() => new VoiceSocket(socketUrl), [socketUrl]);
     const devices = useMemo(() => new AudioDeviceManager(), []);
     useEffect(() => devices.registerMediaListener(), [devices]);
     const controls = useMemo(() => new AudioControls(), []);
@@ -77,7 +77,7 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
             value={{
                 socketUrl,
                 user,
-                socket: [socket, setSocket],
+                socket,
                 players,
                 rooms,
                 categories,

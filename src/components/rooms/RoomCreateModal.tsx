@@ -15,7 +15,7 @@ interface Props {
 }
 
 const RoomCreateModal: FunctionComponent<Props> = ({visible: [visible, setVisible]}) => {
-    const {socket: [socket]} = useVoiceStateContext();
+    const {socket} = useVoiceStateContext();
 
     const [name, setName] = useState<string>("");
     const [password, setPassword] = useState<string | null>(null);
@@ -36,7 +36,6 @@ const RoomCreateModal: FunctionComponent<Props> = ({visible: [visible, setVisibl
 
     // wait for response from service before hiding modal
     useEffect(() => {
-        setSubmitting(false);
         return socket.register("room_join_response", () => setVisible(false));
     }, [socket]);
     // reset state when toggling visibility

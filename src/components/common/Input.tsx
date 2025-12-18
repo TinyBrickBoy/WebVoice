@@ -4,7 +4,7 @@ interface Props {
     label: ComponentChildren;
 }
 
-const TextInput: FunctionComponent<Props> = ({label, children}) => {
+const Input: FunctionComponent<Props> = ({label, children}) => {
     return <>
         <label className={"flex flex-col"}>
             <div className={"text-sm text-neutral-400 mb-1"}>
@@ -15,4 +15,4 @@ const TextInput: FunctionComponent<Props> = ({label, children}) => {
     </>;
 };
 
-export default TextInput;
+export default Input;

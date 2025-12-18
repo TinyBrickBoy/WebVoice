@@ -14,11 +14,17 @@ interface Props {
 }
 
 const RoomList: FunctionComponent<Props> = ({search}) => {
-    const {socket: [socket], players: [players], rooms: [rooms, setRooms], user: [{uuid}]} = useVoiceStateContext();
+    const {
+        socket,
+        state: [state],
+        players: [players],
+        rooms: [rooms, setRooms],
+        user: [{uuid}],
+    } = useVoiceStateContext();
     const [creatingGroup, setCreatingGroup] = useState<boolean>(false);
 
     useEffect(() => {
-        if (!socket.isActive()) {
+        if (state !== "connected") {
             setRooms({
                 "d87dd345-5b9b-492a-be3d-eeafe70362b0": new RoomState(
                     uuidFromString("d87dd345-5b9b-492a-be3d-eeafe70362b0"),
@@ -51,7 +57,11 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
                     true, true,
                 ),
             });
+            setCreatingGroup(false);
         }
+    }, [state === "connected"]);
+
+    useEffect(() => {
         return socket.registers()
             .register("open", () => setRooms({}))
             .register("room_add", ({detail: {room}}: CustomEvent<RoomAddPacket>) => {

@@ -23,6 +23,7 @@ export class VoiceSocket extends EventManager {
             this.fire(new CustomEvent(packet.id, {detail: packet.packet}));
         });
         this.register("error", error => console.error(error));
+        this.register("close", () => this.socket = null);
 
         // always send back keep alive packets
         this.register("keep_alive", ({detail}: CustomEvent<KeepAlivePacket>) => this.sendPacket(detail));

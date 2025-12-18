@@ -11,7 +11,7 @@ import {useEffect, useState} from "preact/hooks";
 import {StateInfoPacket} from "../../scripts/network/packets.ts";
 
 const ControlPanel: FunctionComponent = () => {
-    const {socket: [socket], controls} = useVoiceStateContext();
+    const {socket, controls} = useVoiceStateContext();
 
     const [_refresh, setRefresh] = useState<number>(0);
     useEffect(() => {

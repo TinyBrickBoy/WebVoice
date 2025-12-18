@@ -7,10 +7,10 @@ import {PlayerState} from "../../scripts/types.ts";
 import {uuidFromString} from "../../scripts/util/uuid.ts";
 
 const PlayerGrid: FunctionComponent = ({children}) => {
-    const {players: [players, setPlayers], socket: [socket], user: [{serverId}]} = useVoiceStateContext();
+    const {players: [players, setPlayers], state: [state], socket, user: [{serverId}]} = useVoiceStateContext();
 
     useEffect(() => {
-        if (!socket.isActive()) {
+        if (state !== "connected") {
             setPlayers({
                 "a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97": new PlayerState(
                     uuidFromString("a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97"),
@@ -18,6 +18,9 @@ const PlayerGrid: FunctionComponent = ({children}) => {
                 ),
             });
         }
+    }, [state === "connected"]);
+
+    useEffect(() => {
         return socket
             .registers()
             .register("open", () => setPlayers({}))
