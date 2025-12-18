@@ -8,6 +8,7 @@ import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
 import audioQueueTransmitterWorkletUrl from "./audio_queue_transmitter.ts?worker&url";
+import audioPassthroughWorkletUrl from "./audio_worker_passthrough.ts?worker&url";
 import libSamplerateWorkletUrl from "@alexanderolsen/libsamplerate-js/dist/libsamplerate.worklet.js?worker&url";
 import type {VoiceSocket} from "../socket.ts";
 import type {AudioControls} from "./audio_controls.ts";
@@ -103,11 +104,13 @@ const setupMicrophonePipeline = async (
         // used in audio queue transmitter processor
         await ctx.audioWorklet.addModule(libSamplerateWorkletUrl);
     }
+    await ctx.audioWorklet.addModule(audioPassthroughWorkletUrl);
     await ctx.audioWorklet.addModule(audioQueueTransmitterWorkletUrl);
 
     // get initial mic stream and convert to mono
     let micStream = await getMicrophoneStream(resampleManually, devices.getMicrophoneId());
     const firstNode = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
+    const monoNode = ctx.createMediaStreamSource(firstNode.stream);
     ctx.createMediaStreamSource(micStream).connect(firstNode);
 
     // update if the device manager tells us to
@@ -122,11 +125,14 @@ const setupMicrophonePipeline = async (
     }));
 
     // connect input node with rnnoise node
-    let startNode = new AudioNode(); // create dummy node TODO does this passthrough?
-    freeCallbacks.push(injectAnalyzer(microphone, 0, firstNode, startNode));
+    const startNode = new AudioWorkletNode(ctx, "audio-worker-passthrough", {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+    }); // create dummy node
+    freeCallbacks.push(injectAnalyzer(microphone, 0, monoNode, startNode));
 
     // setup dynamic noise reduction
-    const postRnnoiseNode = new AudioNode(); // TODO does this passthrough?
+    const postRnnoiseNode = new AudioWorkletNode(ctx, "audio-worker-passthrough"); // create dummy node
     freeCallbacks.push(...(await setupNoiseReduction(ctx, controls, rnnoiseWasmBinary, startNode, postRnnoiseNode)));
 
     const noiseGateNode = new NoiseGateWorkletNode(ctx, {
@@ -146,6 +152,7 @@ const setupMicrophonePipeline = async (
     const applyVolume = () => {
         const volume = volumes.get("input", "");
         gainNode.gain.value = volume * GAIN_MULTIPLIER;
+        console.log("Updated gain", volume * GAIN_MULTIPLIER);
     };
     applyVolume();
     freeCallbacks.push(volumes.register("input", () => applyVolume()));
@@ -195,11 +202,11 @@ const setupTransmitter = async (
     const transmitterNode = new AudioWorkletNode(ctx, "audio-queue-transmitter", {
         numberOfInputs: 1,
         numberOfOutputs: 0,
-        processorOptions: {
-            senderPort: channel.port2,
-            resample: resampleManually,
-        },
     });
+    transmitterNode.port.postMessage({
+        senderPort: channel.port2,
+        resample: resampleManually,
+    }, [channel.port2]);
     lastNode.connect(transmitterNode);
 
     // pre-allocate microphone opus encoder
@@ -208,7 +215,7 @@ const setupTransmitter = async (
     const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
 
     // receive voice frames from worker via messaging channel
-    channel.port1.onmessage = async ({data}: MessageEvent<number[]>) => {
+    channel.port1.addEventListener("message", async ({data}: MessageEvent<number[]>) => {
         if (controls.muted) {
             return; // don't send any data if muted
         }
@@ -221,7 +228,7 @@ const setupTransmitter = async (
 
         const opus = await encoder.encodeFrame(frameSamples);
         socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
-    };
+    });
 
     return () => {
         encoder.free().catch(error => console.error(error));
@@ -276,7 +283,6 @@ export class AudioMicrophoneManager extends EventManager {
         this.destroyContext();
 
         this.ctx = new AudioContext({
-            sampleRate: SAMPLE_RATE,
             latencyHint: "interactive",
         });
 

@@ -87,7 +87,7 @@ const MicAnalyzer: FunctionComponent = () => {
 
     return <>
         <canvas
-            className={"w-full rounded-md h-1"}
+            className={"w-full rounded-md h-15"}
             ref={canvasRef}
         />
     </>;

@@ -9,25 +9,31 @@ type LibSampleRateGlobal = {
     }
 }
 
+type InitializationData = {
+    senderPort: MessagePort, resample: boolean
+}
+
 class AudioQueueTransmitter extends AudioWorkletProcessor {
 
     private readonly samplesQueue: number[] = [];
-    private readonly senderPort: MessagePort;
+    private senderPort: MessagePort | undefined;
 
-    private readonly resample: boolean;
+    private resample: boolean = false;
     private libsamplerate?: SRC;
     private libsamplerateOut?: Float32Array;
 
-    constructor({senderPort, resample}: { senderPort: MessagePort, resample: boolean }) {
+    constructor() {
         super();
-        this.senderPort = senderPort;
-        this.resample = resample;
+        this.port.addEventListener("message", ({data: {senderPort, resample}}: MessageEvent<InitializationData>) => {
+            this.senderPort = senderPort;
+            this.resample = resample;
 
-        // initialize libsamplerate if wanted
-        if (resample) {
-            this.initLibsamplerate(sampleRate)
-                .catch(error => console.error(error));
-        }
+            // initialize libsamplerate if wanted
+            if (resample) {
+                this.initLibsamplerate(sampleRate)
+                    .catch(error => console.error(error));
+            }
+        });
     }
 
     private async initLibsamplerate(inputSampleRate: number) {
@@ -60,7 +66,7 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
         }
         // if enough samples exist to send one frame, do it!
         if (this.samplesQueue.length >= FRAME_SIZE) {
-            this.senderPort.postMessage(this.samplesQueue.splice(0, FRAME_SIZE));
+            this.senderPort?.postMessage(this.samplesQueue.splice(0, FRAME_SIZE));
         }
         return true; // do not GC!
     }
