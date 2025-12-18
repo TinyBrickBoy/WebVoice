@@ -21,7 +21,7 @@ const DeviceSelectionDropdown: FunctionComponent<Props> = ({type}) => {
         // initial refresh
         refreshDeviceList();
         // refresh when the device manager tells us to
-        return devices.getEvents().register(
+        return devices.register(
             "update_device_list",
             () => refreshDeviceList(),
         );
@@ -35,7 +35,7 @@ const DeviceSelectionDropdown: FunctionComponent<Props> = ({type}) => {
         // initial refresh
         refreshDeviceId();
         // refresh when the device manager tells us to
-        return devices.getEvents().register(
+        return devices.register(
             type === "input" ? "update_microphone" : "update_speaker",
             () => refreshDeviceId(),
         );

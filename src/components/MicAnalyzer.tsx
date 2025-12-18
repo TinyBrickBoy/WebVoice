@@ -9,7 +9,11 @@ const MicAnalyzer: FunctionComponent = () => {
     // inject analyzer nodes into audio graph while this component is visible
     useEffect(() => {
         microphone.injectAnalyzers();
-        return () => microphone.uninjectAnalyzers();
+        microphone.rebuildPipeline();
+        return () => {
+            microphone.uninjectAnalyzers();
+            microphone.rebuildPipeline();
+        };
     }, [microphone]);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);

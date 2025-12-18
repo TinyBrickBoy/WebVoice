@@ -70,7 +70,7 @@ export default class AudioPlayer {
     }
 
     public registerSpeakerListener() {
-        return this.devices.getEvents().register(
+        return this.devices.register(
             "update_speaker",
             () => this.refreshSpeaker(),
         );

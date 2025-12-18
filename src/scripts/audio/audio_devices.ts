@@ -3,9 +3,7 @@ import {EventManager} from "../util/events.ts";
 // experimental, see https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/selectAudioOutput
 type SelectAudioOutput = (options?: { deviceId?: string }) => Promise<MediaDeviceInfo>
 
-export class AudioDeviceManager {
-
-    private readonly events = new EventManager();
+export class AudioDeviceManager extends EventManager {
 
     private selectedMicrophone: string | null = null;
     private microphoneList: MediaDeviceInfo[] = [];
@@ -14,6 +12,7 @@ export class AudioDeviceManager {
     private speakerList: MediaDeviceInfo[] = [];
 
     constructor() {
+        super();
         this.selectedMicrophone = localStorage.getItem("sonus:microphone") || null;
         this.selectedSpeaker = localStorage.getItem("sonus:speaker") || null;
         console.log("Loaded audio devices from local storage", this.selectedMicrophone, this.selectedSpeaker);
@@ -29,7 +28,7 @@ export class AudioDeviceManager {
         const devices = await navigator.mediaDevices.enumerateDevices();
         this.microphoneList = devices.filter(device => device.kind === "audioinput");
         this.speakerList = devices.filter(device => device.kind === "audiooutput");
-        this.events.fire(new CustomEvent("update_device_list"));
+        this.fire(new CustomEvent("update_device_list"));
     }
 
     public async updateSpeaker(deviceId: string | null): Promise<boolean> {
@@ -37,7 +36,7 @@ export class AudioDeviceManager {
         if (this.selectedSpeaker !== deviceId) {
             this.selectedSpeaker = deviceId;
             localStorage.setItem("sonus:speaker", deviceId || "");
-            this.events.fire(new CustomEvent("update_speaker"));
+            this.fire(new CustomEvent("update_speaker"));
         }
         // only supported on firefox
         if ("selectAudioOutput" in navigator.mediaDevices) {
@@ -72,7 +71,7 @@ export class AudioDeviceManager {
         if (this.selectedMicrophone !== deviceId) {
             this.selectedMicrophone = deviceId;
             localStorage.setItem("sonus:microphone", deviceId || "");
-            this.events.fire(new CustomEvent("update_microphone"));
+            this.fire(new CustomEvent("update_microphone"));
         }
         try {
             // simply get the microphone stream and trigger refresh events
@@ -83,9 +82,9 @@ export class AudioDeviceManager {
             });
             // shutdown again
             media.getTracks().forEach(track => track.stop());
-            this.events.fire(new CustomEvent("update_microphone_stream"));
+            this.fire(new CustomEvent("update_microphone_stream"));
         } catch (error) {
-            this.events.fire(new CustomEvent("update_microphone_stream"));
+            this.fire(new CustomEvent("update_microphone_stream"));
             if (error instanceof DOMException) {
                 if (error.name === "NotAllowedError" || error.name === "SecurityError") {
                     return false;
@@ -130,10 +129,6 @@ export class AudioDeviceManager {
             await this.refreshDeviceList();
         }
         return this.speakerList || [];
-    }
-
-    public getEvents() {
-        return this.events;
     }
 }
 

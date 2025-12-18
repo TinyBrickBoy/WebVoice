@@ -8,13 +8,11 @@ import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
 import audioQueueTransmitterWorkletUrl from "./audio_queue_transmitter.ts?worker&url";
-import audioPassthroughWorkletUrl from "./audio_worker_passthrough.ts?worker&url";
 import libSamplerateWorkletUrl from "@alexanderolsen/libsamplerate-js/dist/libsamplerate.worklet.js?worker&url";
 import type {VoiceSocket} from "../socket.ts";
 import type {AudioControls} from "./audio_controls.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {VolumeManager} from "./volumes.ts";
-import {EventManager} from "../util/events.ts";
 
 const GAIN_MULTIPLIER = 0.2;
 
@@ -37,47 +35,6 @@ const getMicrophoneStream = async (
     return await navigator.mediaDevices!!.getUserMedia({audio: audioConstraints});
 };
 
-const injectAudioNode = (
-    getNode: () => AudioNode | null,
-    preNode: AudioNode,
-    postNode: AudioNode,
-) => {
-    let node: AudioNode | null = null;
-
-    const inject = () => {
-        // break audio graph
-        preNode.disconnect();
-        node?.disconnect();
-
-        node = getNode();
-        if (node) {
-            // node exists, redirect graph through it
-            preNode.connect(node);
-            node.connect(postNode);
-        } else {
-            // no node exists, bypass it
-            preNode.connect(postNode);
-        }
-    };
-
-    // initial injection
-    inject();
-
-    // return injection function, may be used to inject/uninject later
-    return inject;
-};
-
-const injectAnalyzer = (
-    microphone: AudioMicrophoneManager,
-    index: number,
-    preNode: AudioNode,
-    postNode: AudioNode,
-) => {
-    return microphone.register(`analyzer_${index}`,
-        injectAudioNode(() => microphone.analyzers[index] || null, preNode, postNode),
-    );
-};
-
 const setupMicrophonePipeline = async (
     socket: VoiceSocket,
     ctx: AudioContext,
@@ -85,65 +42,49 @@ const setupMicrophonePipeline = async (
     devices: AudioDeviceManager,
     volumes: VolumeManager,
     microphone: AudioMicrophoneManager,
-    // firefox doesn't support automatic resampling, so we have to do it ourselves...
-    resampleManually = /firefox/i.test(navigator.userAgent),
 ) => {
-    // load WASM
-    const rnnoiseWasmBinary = await loadRnnoise({
-        url: rnnoiseWasmPath,
-        simdUrl: rnnoiseWasmSimdPath,
-    });
+    const pipeline: AudioNode[] = [];
+    const freeCallbacks: (() => void)[] = [];
 
-    // load worker modules
-    await ctx.audioWorklet.addModule(noiseGateWorkletPath);
-    // even though noise reduction is optional, always load RNNoise
-    // to allow enabling/disabling it dynamically
-    await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
-    if (resampleManually) {
-        // add libsamplerate worklet to audio context, which will be
-        // used in audio queue transmitter processor
-        await ctx.audioWorklet.addModule(libSamplerateWorkletUrl);
-    }
-    await ctx.audioWorklet.addModule(audioPassthroughWorkletUrl);
-    await ctx.audioWorklet.addModule(audioQueueTransmitterWorkletUrl);
+    // clear pipeline on free
+    freeCallbacks.push(() => pipeline.forEach(node => node.disconnect()));
 
     // get initial mic stream and convert to mono
-    let micStream = await getMicrophoneStream(resampleManually, devices.getMicrophoneId());
-    const firstNode = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
-    const monoNode = ctx.createMediaStreamSource(firstNode.stream);
-    ctx.createMediaStreamSource(micStream).connect(firstNode);
+    const micStream = await getMicrophoneStream(microphone.resampleManually, devices.getMicrophoneId());
+    freeCallbacks.push(() => micStream.getTracks()
+        .forEach(track => track.stop()));
+    const monoDestNode = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
+    const micStreamNode = ctx.createMediaStreamSource(micStream);
+    freeCallbacks.push(() => micStreamNode.disconnect());
+    micStreamNode.connect(monoDestNode);
 
-    // update if the device manager tells us to
-    const freeCallbacks: (() => void)[] = [];
-    freeCallbacks.push(devices.getEvents().register("update_microphone_stream", async () => {
-        // stop previous microphone stream tracks
-        micStream.getTracks().forEach(track => track.stop());
-        // fetch new microphone stream from browser api
-        micStream = await getMicrophoneStream(resampleManually, devices.getMicrophoneId());
-        // start sending microphone stream to our audio pipeline
-        ctx.createMediaStreamSource(micStream).connect(firstNode);
-    }));
+    // push microphone source as first entry in pipeline
+    pipeline.push(ctx.createMediaStreamSource(monoDestNode.stream));
+    microphone.analyzers[0] && pipeline.push(microphone.analyzers[0]);
 
-    // connect input node with rnnoise node
-    const startNode = new AudioWorkletNode(ctx, "audio-worker-passthrough"); // create dummy node
-    freeCallbacks.push(injectAnalyzer(microphone, 0, monoNode, startNode));
+    // apply rnnoise (if enabled)
+    if (controls.noiseReduction) {
+        const rnnoise = new RnnoiseWorkletNode(ctx, {
+            wasmBinary: microphone.rnnoiseWasmBinary!!,
+            maxChannels: 1,
+        });
+        pipeline.push(rnnoise);
+        freeCallbacks.push(rnnoise.destroy.bind(rnnoise));
+        microphone.analyzers[1] && pipeline.push(microphone.analyzers[1]);
+    }
 
-    // setup dynamic noise reduction
-    const postRnnoiseNode = new AudioWorkletNode(ctx, "audio-worker-passthrough"); // create dummy node
-    freeCallbacks.push(...(await setupNoiseReduction(ctx, controls, rnnoiseWasmBinary, startNode, postRnnoiseNode)));
-
-    const noiseGateNode = new NoiseGateWorkletNode(ctx, {
+    // apply noise gate
+    pipeline.push(new NoiseGateWorkletNode(ctx, {
         openThreshold: -50,
         closeThreshold: -60,
         holdMs: 150,
         maxChannels: 1,
-    });
-    // connect post-rnnoise node with noise gate node
-    freeCallbacks.push(injectAnalyzer(microphone, 1, postRnnoiseNode, noiseGateNode));
+    }));
+    microphone.analyzers[2] && pipeline.push(microphone.analyzers[2]);
 
+    // push gain modifier
     const gainNode = new GainNode(ctx, {gain: GAIN_MULTIPLIER});
-    // connect noise gate with gain node
-    freeCallbacks.push(injectAnalyzer(microphone, 2, noiseGateNode, gainNode));
+    pipeline.push(gainNode);
 
     // apply volume to pipeline and listen for updates from controller
     const applyVolume = () => {
@@ -155,42 +96,22 @@ const setupMicrophonePipeline = async (
     freeCallbacks.push(volumes.register("input", () => applyVolume()));
 
     // setup packet transmitter at the end of the pipeline
-    freeCallbacks.push(await setupTransmitter(socket, controls, ctx, startNode, resampleManually));
+    freeCallbacks.push(await pushTransmitter(socket, controls, ctx, pipeline, microphone.resampleManually));
 
-    return () => freeCallbacks.forEach(fn => fn());
+    // connect all nodes in pipeline together
+    for (let i = 1; i < pipeline.length; i++) {
+        pipeline[i - 1].connect(pipeline[i]);
+    }
+
+    console.log("Audio pipeline nodes have been built", pipeline);
+    return freeCallbacks;
 };
 
-const setupNoiseReduction = async (
-    ctx: AudioContext,
-    controls: AudioControls,
-    rnnoiseWasmBinary: ArrayBuffer,
-    preNode: AudioNode,
-    postNode: AudioNode,
-) => {
-    // create RNNoise worklet node
-    const rnnoiseNode = new RnnoiseWorkletNode(ctx, {
-        wasmBinary: rnnoiseWasmBinary,
-        maxChannels: 1,
-    });
-
-    // inject rnnoise node (if enabled)
-    const inject = injectAudioNode(
-        () => controls.noiseReduction ? rnnoiseNode : null,
-        preNode, postNode,
-    );
-
-    // listen for updates and pass down removal callbacks
-    return [
-        controls.register("update_noise_reduction", inject),
-        () => rnnoiseNode.destroy(),
-    ];
-};
-
-const setupTransmitter = async (
+const pushTransmitter = async (
     socket: VoiceSocket,
     controls: AudioControls,
     ctx: AudioContext,
-    lastNode: AudioNode,
+    pipeline: AudioNode[],
     resampleManually: boolean,
 ) => {
     // create channel for receiving voice data from worker
@@ -201,7 +122,7 @@ const setupTransmitter = async (
         numberOfOutputs: 0,
     });
     transmitterNode.port.postMessage(resampleManually, [channel.port2]);
-    lastNode.connect(transmitterNode);
+    pipeline.push(transmitterNode);
 
     // pre-allocate microphone opus encoder
     const encoder = new OpusEncoderWebWorker({sampleRate: SAMPLE_RATE, application: OpusApplication.VOIP});
@@ -233,15 +154,21 @@ export const ANALYZER_FFT_SIZE = 256;
 // defined as half of the FFT size according to https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/frequencyBinCount
 export const ANALYZER_FREQ_BIN_COUNT = ANALYZER_FFT_SIZE / 2;
 
-export class AudioMicrophoneManager extends EventManager {
+export class AudioMicrophoneManager {
 
     private readonly socket: VoiceSocket;
     private readonly devices: AudioDeviceManager;
     private readonly controls: AudioControls;
     private readonly volumes: VolumeManager;
 
+    // firefox doesn't support automatic resampling, so we have to do it ourselves...
+    public readonly resampleManually = /firefox/i.test(navigator.userAgent);
+
+    public rnnoiseWasmBinary: ArrayBuffer | null = null;
+
     private ctx: AudioContext | null = null;
-    private teardown: (() => void) | null = null;
+    private teardown: (() => void)[] = [];
+    private pipelineTeardown: (() => void)[] = [];
     private _analyzers: AnalyserNode[] | null = null;
 
     constructor(
@@ -250,18 +177,25 @@ export class AudioMicrophoneManager extends EventManager {
         controls: AudioControls,
         volumes: VolumeManager,
     ) {
-        super();
         this.socket = socket;
         this.devices = devices;
         this.controls = controls;
         this.volumes = volumes;
+
+        this.teardown.push(devices.register("update_microphone_stream", this.rebuildPipeline.bind(this)));
+        this.teardown.push(controls.register("update_noise_reduction", this.rebuildPipeline.bind(this)));
+    }
+
+    public triggerTeardown() {
+        this.teardown.forEach(fn => fn());
+        this.teardown = [];
+        this.destroyContext();
     }
 
     public destroyContext() {
-        if (this.teardown) {
-            this.teardown();
-            this.teardown = null;
-        }
+        this.pipelineTeardown.forEach(fn => fn());
+        this.pipelineTeardown = [];
+
         if (this.ctx) {
             this.ctx.close()
                 .catch(error => console.error(error));
@@ -273,38 +207,67 @@ export class AudioMicrophoneManager extends EventManager {
         }
     }
 
+    // load audio worklet modules
+    private async initializeContext(ctx: AudioContext) {
+        await ctx.audioWorklet.addModule(noiseGateWorkletPath);
+        // even though noise reduction is optional, always load RNNoise
+        // to allow enabling/disabling it dynamically
+        await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
+        if (this.resampleManually) {
+            // add libsamplerate worklet to audio context, which will be
+            // used in audio queue transmitter processor
+            await ctx.audioWorklet.addModule(libSamplerateWorkletUrl);
+        }
+        await ctx.audioWorklet.addModule(audioQueueTransmitterWorkletUrl);
+    }
+
     public async createContext() {
         this.destroyContext();
+
+        if (!this.rnnoiseWasmBinary) {
+            // load WASM binary
+            this.rnnoiseWasmBinary = await loadRnnoise({
+                url: rnnoiseWasmPath,
+                simdUrl: rnnoiseWasmSimdPath,
+            });
+        }
 
         this.ctx = new AudioContext({
             latencyHint: "interactive",
         });
+        await this.initializeContext(this.ctx);
 
-        // if analyzers are non-null, setup audio analyzer array
-        if (this._analyzers) {
-            this.injectAnalyzers();
+        // setup microphone audio node pipeline
+        this.rebuildPipeline();
+    }
+
+    public rebuildPipeline() {
+        if (!this.ctx) {
+            console.warn("Skipped pipeline rebuild, no audio context found");
+            return;
         }
+        console.log("Rebuilding audio pipeline...");
 
-        // create microphone audio node graph
-        this.teardown = await setupMicrophonePipeline(this.socket, this.ctx,
-            this.controls, this.devices, this.volumes, this);
+        // create new analyzer nodes
+        this._analyzers && this.injectAnalyzers();
+
+        setupMicrophonePipeline(this.socket, this.ctx!!,
+            this.controls, this.devices, this.volumes, this)
+            .then(teardown => {
+                this.pipelineTeardown.forEach(fn => fn());
+                this.pipelineTeardown = teardown;
+            })
+            .catch(error => console.error(error));
     }
 
     private setupAudioAnalyzer() {
         const analyzer = this.ctx!!.createAnalyser();
-        // magic values
+        // magic values, looks good enough
         analyzer.fftSize = 256;
         analyzer.minDecibels = -90;
         analyzer.maxDecibels = -30;
         analyzer.smoothingTimeConstant = 0.7;
-        // push to analyzers array
-        if (!this._analyzers) {
-            this._analyzers = [];
-        }
-        this._analyzers.push(analyzer);
-        // fire event named by analyzer node index
-        const nodeIndex = this._analyzers.length - 1;
-        this.fire(new CustomEvent(`analyzer_${nodeIndex}`));
+        return analyzer;
     }
 
     public injectAnalyzers() {
@@ -314,22 +277,14 @@ export class AudioMicrophoneManager extends EventManager {
             this._analyzers = [];
         } else {
             // setup three analyzers: start, post noise reduction and post noise gate
-            this.setupAudioAnalyzer();
-            this.setupAudioAnalyzer();
-            this.setupAudioAnalyzer();
+            this._analyzers = [this.setupAudioAnalyzer(), this.setupAudioAnalyzer(), this.setupAudioAnalyzer()];
         }
     }
 
     public uninjectAnalyzers() {
-        if (!this._analyzers) {
-            return; // already uninjected
+        if (this._analyzers) {
+            this._analyzers = null;
         }
-        // walk backwards through analyzer array and delete each analyzer node individually
-        for (let nodeIndex = this._analyzers.length - 1; nodeIndex >= 0; nodeIndex--) {
-            this._analyzers.pop(); // remove last element
-            this.fire(new CustomEvent(`analyzer_${nodeIndex}`));
-        }
-        this._analyzers = null;
     }
 
     public hasContext() {

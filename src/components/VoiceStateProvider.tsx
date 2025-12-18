@@ -70,7 +70,7 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
         [socket, devices, controls, volumes],
     );
     // destroy context if microphone manager gets re-created
-    useEffect(() => (() => microphone.destroyContext()), [microphone]);
+    useEffect(() => (() => microphone.triggerTeardown()), [microphone]);
 
     return <>
         <VoiceStateContext.Provider
