@@ -79,19 +79,20 @@ const RoomInfo: FunctionComponent<Props> = ({room}) => {
     }, [room.listenToOthers, room.speakToOthers]);
 
     return (
-        <form className={`flex flex-col gap-2 p-5 bg-neutral-900 border-2 rounded-2xl ${state == "entering" ? "border-orange-300" : state === "inside" ? "border-green-300" : "border-neutral-800"}`}>
+        <form
+            className={`flex flex-col gap-2 p-5 bg-neutral-900 border-2 rounded-2xl ${state == "entering" ? "border-orange-300" : state === "inside" ? "border-green-300" : "border-neutral-800"}`}>
             <div className={"flex flex-col gap-1"}>
                 <div className={"flex flex-row gap-3 items-center"}>
                     <div className={"flex flex-row items-center gap-1"}>
-                        <MinecraftComponent className={"text-lg  font-medium"} component={room.name}/>
+                        <MinecraftComponent className={"text-lg font-medium"} component={room.name}/>
                         {room.password && <LockIcon/>}
                     </div>
                 </div>
-                <div class={"flex text-sm gap-2 text-neutral-300"}>
-                    <span className={"uppercase"}>
+                <div class={"flex text-sm gap-2 text-neutral-300 uppercase"}>
+                    <span>
                         {roomAudioType}
                     </span>
-                    <span className={"uppercase"}>
+                    <span>
                         {members.length} member{members.length === 1 ? "" : "s"}
                     </span>
                 </div>
