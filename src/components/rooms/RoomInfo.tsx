@@ -44,13 +44,11 @@ const RoomInfo: FunctionComponent<Props> = ({room}) => {
     useEffect(() => {
         return socket.registers()
             .register("room_join_response", ({detail: {roomId, success}}: CustomEvent<RoomJoinResponsePacket>) => {
-                console.log("rjs", roomId, success);
                 if (room.uniqueId.name === roomId.name) {
                     setState(success ? "inside" : "entering failed");
                 }
             })
             .register("room_leave_response", ({detail: {roomId, success}}: CustomEvent<RoomLeaveResponsePacket>) => {
-                console.log("rlr", roomId, success);
                 if (room.uniqueId.name === roomId.name) {
                     setState(success ? "outside" : "exiting failed");
                 }
