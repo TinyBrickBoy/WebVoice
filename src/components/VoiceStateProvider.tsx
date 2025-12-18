@@ -14,6 +14,7 @@ import {uuidFromString} from "../scripts/util/uuid.ts";
 import {AudioDeviceManager} from "../scripts/audio/audio_devices.ts";
 import {AudioControls} from "../scripts/audio/audio_controls.ts";
 import {VolumeManager} from "../scripts/audio/volumes.ts";
+import {AudioMicrophoneManager} from "../scripts/audio/audio_mic.ts";
 
 export type VoiceState = {
     socketUrl: URL,
@@ -26,6 +27,7 @@ export type VoiceState = {
     devices: AudioDeviceManager,
     controls: AudioControls,
     volumes: VolumeManager,
+    microphone: AudioMicrophoneManager,
 }
 
 // @ts-ignore it will be fiiiine, I don't want to spam null checks everywhere
@@ -50,19 +52,41 @@ const defaultUser = {
 
 const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     const user = useState<UserInfo>(defaultUser);
-    const socket = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
+    const [socket, setSocket] = useState<VoiceSocket>(() => new VoiceSocket(socketUrl));
     const players = useState<Record<string, PlayerState>>({});
     const rooms = useState<Record<string, RoomState>>({});
     const categories = useState<Record<string, CategoryState>>({});
     const state = useState<SocketState>("disconnected");
+
+    // global manager states
     const devices = useMemo(() => new AudioDeviceManager(), []);
     useEffect(() => devices.registerMediaListener(), [devices]);
     const controls = useMemo(() => new AudioControls(), []);
     const volumes = useMemo(() => new VolumeManager(), []);
 
+    // create global microphone manager
+    const microphone = useMemo(
+        () => new AudioMicrophoneManager(socket, devices, controls, volumes),
+        [socket, devices, controls, volumes],
+    );
+    // destroy context if microphone manager gets re-created
+    useEffect(() => (() => microphone.destroyContext()), [microphone]);
+
     return <>
         <VoiceStateContext.Provider
-            value={{socketUrl, user, socket, players, rooms, categories, state, devices, controls, volumes}}
+            value={{
+                socketUrl,
+                user,
+                socket: [socket, setSocket],
+                players,
+                rooms,
+                categories,
+                state,
+                devices,
+                controls,
+                volumes,
+                microphone,
+            }}
         >
             <VoiceContainer socketUrl={socketUrl}/>
         </VoiceStateContext.Provider>

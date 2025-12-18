@@ -203,3 +203,71 @@ const setupTransmitter = async (
         encoder.free().catch(error => console.error(error));
     };
 };
+
+export class AudioMicrophoneManager {
+
+    private readonly socket: VoiceSocket;
+    private readonly devices: AudioDeviceManager;
+    private readonly controls: AudioControls;
+    private readonly volumes: VolumeManager;
+
+    private ctx: AudioContext | null = null;
+    private teardown: (() => void) | null = null;
+    private analyzers: AnalyserNode[] = [];
+
+    constructor(
+        socket: VoiceSocket,
+        devices: AudioDeviceManager,
+        controls: AudioControls,
+        volumes: VolumeManager,
+    ) {
+        this.socket = socket;
+        this.devices = devices;
+        this.controls = controls;
+        this.volumes = volumes;
+    }
+
+    public destroyContext() {
+        if (this.teardown) {
+            this.teardown();
+            this.teardown = null;
+        }
+        if (this.ctx) {
+            this.ctx.close()
+                .catch(error => console.error(error));
+            this.ctx = null;
+        }
+        this.analyzers = [];
+    }
+
+    private setupAudioAnalyzer() {
+        const analyzer = this.ctx!!.createAnalyser();
+        // magic values
+        analyzer.fftSize = 256;
+        analyzer.minDecibels = -90;
+        analyzer.maxDecibels = -30;
+        analyzer.smoothingTimeConstant = 0.7;
+        // push to analyzers array
+        this.analyzers.push(analyzer);
+    }
+
+    public async createContext(analyze: boolean) {
+        this.destroyContext();
+
+        this.ctx = new AudioContext({
+            sampleRate: SAMPLE_RATE,
+            latencyHint: "interactive",
+        });
+
+        if (analyze) {
+            // setup three analyzers: start, post noise reduction and post noise gate
+            this.setupAudioAnalyzer();
+            this.setupAudioAnalyzer();
+            this.setupAudioAnalyzer();
+        }
+
+        // create microphone audio node graph
+        this.teardown = await setupMicrophonePipeline(this.socket, this.ctx,
+            this.controls, this.devices, this.volumes, this.analyzers);
+    }
+}
