@@ -15,6 +15,7 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
         state: [state, setState],
         devices,
         microphone,
+        audio,
     } = useVoiceStateContext();
 
     const [permissionState, setPermissionState] = useState<"checking" | "success" | "failed" | "todo">("todo");
@@ -25,6 +26,7 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
             if (!result) {
                 setPermissionState("success");
                 await microphone.createContext();
+                await audio.createContext();
                 return true;
             }
             setPermissionState("failed");
@@ -34,7 +36,7 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
             console.error(error);
             return false;
         }
-    }, [devices]);
+    }, [devices, microphone, audio]);
 
     const [visible, setVisible] = useState<boolean>(true);
     useEffect(() => setVisible(state !== "connected"), [state]);
@@ -53,9 +55,10 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
                     setError(`closed (${event.code || -1}, ${event.reason || "unknown"})`);
                 }
                 microphone.destroyContext();
+                audio.destroyContext();
             })
             .callback();
-    }, [socket, microphone]);
+    }, [socket, microphone, audio]);
 
     const openSocket = useCallback(() => {
         if (demo) {

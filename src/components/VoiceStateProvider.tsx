@@ -15,6 +15,7 @@ import {AudioDeviceManager} from "../scripts/audio/audio_devices.ts";
 import {AudioControls} from "../scripts/audio/audio_controls.ts";
 import {VolumeManager} from "../scripts/audio/volumes.ts";
 import {AudioMicrophoneManager} from "../scripts/audio/audio_mic.ts";
+import AudioPlayer from "../scripts/audio/audio_player.ts";
 
 export type VoiceState = {
     socketUrl: URL,
@@ -28,6 +29,7 @@ export type VoiceState = {
     controls: AudioControls,
     volumes: VolumeManager,
     microphone: AudioMicrophoneManager,
+    audio: AudioPlayer,
 }
 
 // @ts-ignore it will be fiiiine, I don't want to spam null checks everywhere
@@ -72,6 +74,14 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     // destroy context if microphone manager gets re-created
     useEffect(() => (() => microphone.triggerTeardown()), [microphone]);
 
+    // create global audio player
+    const audio = useMemo(
+        () => new AudioPlayer(controls, devices, volumes),
+        [controls, devices, volumes],
+    );
+    useEffect(() => audio.startTasks(), [audio]);
+    useEffect(() => audio.registerSocket(socket), [audio, socket]);
+
     return <>
         <VoiceStateContext.Provider
             value={{
@@ -86,6 +96,7 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
                 controls,
                 volumes,
                 microphone,
+                audio,
             }}
         >
             <VoiceContainer socketUrl={socketUrl}/>

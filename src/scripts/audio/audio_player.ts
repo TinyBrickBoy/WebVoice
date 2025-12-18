@@ -24,8 +24,8 @@ export default class AudioPlayer {
     private readonly devices: AudioDeviceManager;
     private readonly volumes: VolumeManager;
 
-    private ctx?: AudioContext;
-    private readonly channels: { [channel: string]: ChannelData } = {};
+    private ctx: AudioContext | null = null;
+    private readonly channels: Record<string, ChannelData> = {};
 
     constructor(
         controls: AudioControls,
@@ -76,6 +76,15 @@ export default class AudioPlayer {
         );
     }
 
+    public startTasks() {
+        const timerCallback = this.startGarbageCollector();
+        const listenerCallback = this.registerSpeakerListener();
+        return () => {
+            timerCallback();
+            listenerCallback();
+        };
+    }
+
     public refreshSpeaker() {
         if (this.ctx && "setSinkId" in this.ctx) {
             const speakerId = this.devices.getSpeakerId();
@@ -85,18 +94,31 @@ export default class AudioPlayer {
         }
     }
 
-    public async startContext() {
-        if (this.ctx) {
-            for (const channel of Object.keys(this.channels)) {
-                await this.closeChannel(channel);
-            }
-            await this.ctx.close();
+    public destroyContext() {
+        if (!this.ctx) {
+            return; // no context
         }
+        this.ctx.close()
+            .catch(error => console.error(error));
+        this.ctx = null;
+
+        // await proper closing
+        for (const channel of Object.keys(this.channels)) {
+            this.closeChannel(channel)
+                .catch(error => console.error(error));
+        }
+    }
+
+    public async createContext() {
+        this.destroyContext();
+
         this.ctx = new AudioContext({
             sampleRate: SAMPLE_RATE,
             latencyHint: "balanced",
         });
+
         await this.ctx.audioWorklet.addModule(audioQueueReceiverWorkletUrl);
+
         this.refreshSpeaker();
     }
 

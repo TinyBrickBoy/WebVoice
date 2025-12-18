@@ -1,6 +1,5 @@
-import {useEffect, useMemo} from "preact/hooks";
-import AudioPlayer from "../../scripts/audio/audio_player.ts";
-import {ConnectedPacket, StateInfoPacket} from "../../scripts/network/packets.ts";
+import {useEffect} from "preact/hooks";
+import {ConnectedPacket} from "../../scripts/network/packets.ts";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import Navbar from "./Navbar.tsx";
@@ -21,23 +20,9 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
         socket,
         user: [_user, setUser],
         state: [_state, setState],
-        devices,
-        controls,
-        volumes,
     } = useVoiceStateContext();
 
-    // audio player handling
-    const audio = useMemo(
-        () => new AudioPlayer(controls, devices, volumes),
-        [controls, devices, volumes],
-    );
-    useEffect(() => audio.startGarbageCollector(), [audio]);
-    useEffect(() => audio.registerSpeakerListener(), [audio]);
-    useEffect(() => audio.registerSocket(socket), [audio, socket]);
-
     useEffect(() => {
-        let connected = false;
-
         // register events
         return socket.registers()
             .register("open", () => setState("connected"))
@@ -52,18 +37,6 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
                     uuid: packet.playerId,
                     name: packet.username,
                 });
-                // this packet may be sent multiple times during one connection,
-                // don't restart audio context if we don't need to
-                if (!connected) {
-                    connected = true;
-                    // start audio
-                    audio.startContext()
-                        .then(() => {
-                            // inform the server we are able to send audio
-                            socket.sendPacket(new StateInfoPacket(false, false));
-                        })
-                        .catch(error => console.error(error));
-                }
             })
             .callback();
     }, [socket]);
