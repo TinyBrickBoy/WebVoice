@@ -10,7 +10,7 @@ const SettingsButton: FunctionComponent = () => {
     const [settingsVisible, setSettingsVisible] = useState<boolean>(false);
 
     useEffect(() => {
-        if (state === "connected") {
+        if (state !== "connected") {
             setSettingsVisible(false);
         }
     }, [state === "connected"]);
