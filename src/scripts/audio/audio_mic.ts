@@ -233,6 +233,7 @@ export class AudioMicrophoneManager {
         }
 
         this.ctx = new AudioContext({
+            sampleRate: this.resampleManually ? undefined : SAMPLE_RATE,
             latencyHint: "interactive",
         });
         await this.initializeContext(this.ctx);
