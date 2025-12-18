@@ -52,9 +52,10 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
                 if (event.code !== 1000) {
                     setError(`closed (${event.code || -1}, ${event.reason || "unknown"})`);
                 }
+                microphone.destroyContext();
             })
             .callback();
-    }, [socket]);
+    }, [socket, microphone]);
 
     const openSocket = useCallback(() => {
         if (demo) {
