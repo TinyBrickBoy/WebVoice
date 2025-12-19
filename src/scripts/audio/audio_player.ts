@@ -125,6 +125,7 @@ export default class AudioPlayer {
     private async resolveChannel(channel: string): Promise<ChannelData> {
         const existingData = this.channels[channel];
         if (existingData) {
+            await existingData.decoder.ready;
             existingData.lastTouch = Date.now();
             return existingData;
         }
