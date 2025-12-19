@@ -32,7 +32,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking}}) => 
     return <>
         <div
             style={{backgroundColor: color}}
-            className={`flex justify-center items-center p-6 rounded-lg ${speaking ? "outline-emerald-500 outline-[0.175rem]" : ""}`}
+            className={`flex justify-center items-center p-6 m-[0.2rem] rounded-lg ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}
         >
             <CraftHead uuid={uniqueId} size={64}/>
         </div>
