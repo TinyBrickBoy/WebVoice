@@ -7,22 +7,22 @@ export const convertSpatialToStereo = (
     input: Float32Array,
     outputLeft: number[],
     outputRight: number[],
-    srcPos: Position3d,
+    {pos: srcPos, yaw, pitch}: Position3d,
     listenerPos: Vector3d,
 ) => {
-    const diffX = srcPos.pos.x - listenerPos.x;
-    const diffY = srcPos.pos.y - listenerPos.y;
-    const diffZ = srcPos.pos.z - listenerPos.z;
+    let diffX = srcPos.x - listenerPos.x;
+    let diffY = srcPos.y - listenerPos.y;
+    let diffZ = srcPos.z - listenerPos.z;
 
     // rotate around y
-    const cosYaw = Math.cos(srcPos.yaw * -DEG_TO_RAD);
-    const sinYaw = Math.sin(srcPos.yaw * -DEG_TO_RAD);
+    const cosYaw = Math.cos(yaw * -DEG_TO_RAD);
+    const sinYaw = Math.sin(yaw * -DEG_TO_RAD);
     let lx = cosYaw * diffX - sinYaw * diffZ;
     let zz = sinYaw * diffX + cosYaw * diffZ;
 
     // rotate around x
-    const cosPitch = Math.cos(srcPos.pitch * -DEG_TO_RAD);
-    const sinPitch = Math.sin(srcPos.pitch * -DEG_TO_RAD);
+    const cosPitch = Math.cos(pitch * -DEG_TO_RAD);
+    const sinPitch = Math.sin(pitch * -DEG_TO_RAD);
     const ly = cosPitch * diffY - sinPitch * zz;
     const lz = sinPitch * diffY + cosPitch * zz;
 
@@ -32,13 +32,15 @@ export const convertSpatialToStereo = (
     const linearRolloff = 1;
     const distanceGain = refDist / (refDist + linearRolloff * Math.max(0, distance - refDist));
 
-    const azimuth = Math.atan2(lx, lz);
-    const leftGain = Math.cos(azimuth / 2);
-    const rightGain = Math.sin(azimuth / 2);
+    // panning
+    const pan = Math.atan2(lx, lz) / (Math.PI / 2);
+    const angle = (pan + 1) * (Math.PI / 4);
+    const leftGain = Math.abs(Math.cos(angle));
+    const rightGain = Math.abs(Math.sin(angle));
 
-    const norm = 1 / Math.sqrt(leftGain * leftGain + rightGain * rightGain);
-    const lg = leftGain * norm * distanceGain;
-    const rg = rightGain * norm * distanceGain;
+    // calculate final gain
+    const lg = leftGain * distanceGain;
+    const rg = rightGain * distanceGain;
 
     for (let i = 0; i < input.length; i++) {
         outputLeft.push(input[i] * lg);
