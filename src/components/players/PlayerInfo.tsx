@@ -7,11 +7,13 @@ interface Props {
     state: PlayerState;
 }
 
-const PlayerInfo: FunctionComponent<Props> = ({state}) => {
+const PlayerInfo: FunctionComponent<Props> = ({state: {uniqueId, name, speaking}}) => {
     return (
         <div className={"flex flex-row gap-2 items-center"}>
-            <CraftHead uuid={state.uniqueId} size={48}/>
-            <MinecraftComponent className={"text-xl"} component={state.name}/>
+            <div className={`rounded-md m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}>
+                <CraftHead uuid={uniqueId} size={48}/>
+            </div>
+            <MinecraftComponent className={"text-xl"} component={name}/>
         </div>
     );
 };
