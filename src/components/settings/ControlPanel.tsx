@@ -19,7 +19,7 @@ const ControlPanel: FunctionComponent = () => {
         const sendPacket = () => {
             socket.sendPacket(new StateInfoPacket(controls.muted, controls.deafened));
         };
-        return controls.registers()
+        const controlsCallback = controls.registers()
             .register("update_muted", () => {
                 triggerRefresh();
                 sendPacket();
@@ -30,6 +30,12 @@ const ControlPanel: FunctionComponent = () => {
             })
             .register("update_noise_reduction", triggerRefresh)
             .callback();
+        // trigger packet sending on connected send
+        const socketCallback = socket.register("connected", () => sendPacket());
+        return () => {
+            controlsCallback();
+            socketCallback();
+        };
     }, [socket, controls]);
 
     return <>
