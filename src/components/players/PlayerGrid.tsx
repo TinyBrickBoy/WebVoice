@@ -64,6 +64,11 @@ const PlayerGrid: FunctionComponent = ({children}) => {
             if (mute !== 0) {
                 return mute;
             }
+            // @ts-ignore // this is intended and should be a fast method for comparing two bools
+            const speaking = p1.speaking - p2.speaking;
+            if (speaking !== 0) {
+                return speaking;
+            }
             return p1.lastSpeaking - p2.lastSpeaking;
         });
         return list;

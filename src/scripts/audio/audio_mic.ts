@@ -141,6 +141,7 @@ const pushTransmitter = async (
             return;
         }
 
+        controls.lastSound = Date.now(); // abuse shared state
         const opus = await encoder.encodeFrame(frameSamples);
         socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
     };

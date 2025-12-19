@@ -96,7 +96,7 @@ const RoomInfo: FunctionComponent<Props> = ({room}) => {
                 </div>
             </div>
             <div className={"flex flex-col gap-2"}>
-                {members.map(member => <PlayerInfo state={member}/>)}
+                {members.map(member => <PlayerInfo key={member.uniqueId.name} state={member}/>)}
             </div>
             {(room.password && !hasUser) &&
                 <Input label={<>Password for group</>}>

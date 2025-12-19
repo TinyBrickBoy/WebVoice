@@ -5,6 +5,7 @@ export class AudioControls extends EventManager {
     private _muted: boolean;
     private _deafened: boolean;
     private _noiseReduction: boolean;
+    public lastSound: number = 0;
 
     constructor() {
         super();
