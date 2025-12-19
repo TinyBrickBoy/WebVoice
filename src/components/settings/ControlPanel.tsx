@@ -39,22 +39,13 @@ const ControlPanel: FunctionComponent = () => {
     }, [socket, controls]);
 
     return <>
-        <Button color={"transparent"} onClick={() => {
-            controls.muted = !controls.muted || controls.deafened;
-        }}>
+        <Button color={"transparent"} onClick={() => controls.muted = !controls.muted}>
             {controls.muted ?
                 <MicrophoneOffIcon aria-label={"Microphone Off"} stroke-width={2} className={"h-full w-auto"}/> :
                 <MicrophoneIcon aria-label={"Microphone On"} stroke-width={2} className={"h-full w-auto"}/>
             }
         </Button>
-        <Button color={"transparent"} onClick={() => {
-            if (controls.deafened) {
-                controls.deafened = false;
-            } else {
-                controls.deafened = true;
-                controls.muted = true;
-            }
-        }}>
+        <Button color={"transparent"} onClick={() => controls.deafened = !controls.deafened}>
             {controls.deafened ?
                 <HeadphonesOffIcon aria-label={"Speaker Off"} stroke-width={2} className={"h-full w-auto"}/> :
                 <HeadphonesIcon aria-label={"Speaker On"} stroke-width={2} className={"h-full w-auto"}/>

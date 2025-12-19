@@ -15,10 +15,13 @@ export class AudioControls extends EventManager {
     }
 
     get muted(): boolean {
-        return this._muted;
+        return this._muted || this._deafened;
     }
 
     set muted(value: boolean) {
+        if (this._deafened) {
+            this.deafened = false;
+        }
         this._muted = value;
         localStorage.setItem("sonus:muted", value.toString());
         this.fire(new CustomEvent("update_muted"));
