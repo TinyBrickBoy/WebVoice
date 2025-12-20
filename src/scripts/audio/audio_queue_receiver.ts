@@ -44,7 +44,7 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
         for (let i = 0; i < leftOutput.length; ++i) {
             const leftSample = this.samplesQueueLeft.shift();
             const rightSample = this.samplesQueueRight.shift();
-            if (!leftSample || !rightSample) {
+            if (leftSample === undefined || rightSample === undefined) {
                 break;
             }
             leftOutput[i] = leftSample;
