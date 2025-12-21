@@ -22,10 +22,10 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
         super();
         this.port.onmessage = ({data: resample, ports: [senderPort]}: MessageEvent<boolean>) => {
             this.senderPort = senderPort;
-            this.resample = resample;
+            this.resample = resample && sampleRate !== SAMPLE_RATE;
 
             // initialize libsamplerate if wanted
-            if (resample && sampleRate !== SAMPLE_RATE) {
+            if (this.resample) {
                 this.initLibsamplerate(sampleRate)
                     .then(() => console.log("Finished initializing libsamplerate", sampleRate, SAMPLE_RATE))
                     .catch(error => console.error(error));
