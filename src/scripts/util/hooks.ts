@@ -1,4 +1,4 @@
-import {useEffect, useState} from "preact/hooks";
+import {type Inputs, useEffect, useMemo, useState} from "preact/hooks";
 
 // inspired by https://upmostly.com/tutorials/how-to-use-media-queries-in-react
 export const useMediaQuery = (query: string) => {
@@ -14,4 +14,11 @@ export const useMediaQuery = (query: string) => {
     }, [query]);
 
     return matches;
+};
+
+// inspired by https://github.com/yairEO/react-hooks/tree/e956c9b85f4c366b26b78d7797652acd317b95c9/hooks/useAbortSignal
+export const useAbortSignal = (inputs: Inputs | undefined) => {
+    const controller = useMemo(() => new AbortController(), inputs);
+    useEffect(() => (() => controller.abort()), [controller]);
+    return controller.signal; // returns a boolean
 };
