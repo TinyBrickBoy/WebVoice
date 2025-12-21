@@ -1,5 +1,8 @@
 import type {AudioQueueData} from "../types.ts";
 import {convertSpatialToStereo} from "./spatial_to_stereo.ts";
+import {FRAME_SIZE} from "./audio_constants.ts";
+
+const SAMPLE_QUEUE_LIMIT = FRAME_SIZE * 25;
 
 class AudioQueueReceiver extends AudioWorkletProcessor {
 
@@ -9,6 +12,11 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
     constructor() {
         super();
         this.port.onmessage = ({data}: MessageEvent<AudioQueueData>) => {
+            if (this.samplesQueueLeft.length > SAMPLE_QUEUE_LIMIT) {
+                console.warn("Dropped frame, queue has too many entries", this.samplesQueueLeft.length, data.channel);
+                return;
+            }
+
             // transform volume after decoding
             this.transformVolume(data.data, data.volume);
 
@@ -24,7 +32,6 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
                 this.samplesQueueLeft.push(...data.data);
                 this.samplesQueueRight.push(...data.data);
             }
-            console.log("queue size", data.channel, this.samplesQueueLeft.length, this.samplesQueueRight.length);
         };
     }
 
