@@ -8,7 +8,7 @@ const CurrentRoom: FunctionComponent = () => {
 
     // find out which room the user is in
     const room = useMemo(() => {
-        const roomId = players[user.uuid.name]?.primaryRoomId;
+        const roomId = players[user.uniqueId.name]?.primaryRoomId;
         return roomId ? rooms[roomId.name] : null;
     }, [user, rooms, players]);
 

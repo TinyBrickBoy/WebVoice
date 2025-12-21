@@ -19,7 +19,7 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
         state: [state],
         players: [players],
         rooms: [rooms, setRooms],
-        user: [{uuid}],
+        user: [{uniqueId}],
     } = useVoiceStateContext();
     const [creatingGroup, setCreatingGroup] = useState<boolean>(false);
 
@@ -80,7 +80,7 @@ const RoomList: FunctionComponent<Props> = ({search}) => {
     }, [socket]);
 
     const userRoomId = useMemo(() =>
-        players[uuid.name]?.primaryRoomId || null, [uuid, players]);
+        players[uniqueId.name]?.primaryRoomId || null, [uniqueId, players]);
 
     const roomValues = useMemo(() => {
         let list = Object.values(rooms)

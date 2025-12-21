@@ -34,7 +34,7 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
                 // save player info
                 setUser({
                     ...packet,
-                    uuid: packet.playerId,
+                    uniqueId: packet.playerId,
                     name: packet.username,
                 });
             })

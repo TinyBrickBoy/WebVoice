@@ -147,7 +147,7 @@ export class PlayerState {
 }
 
 export interface UserInfo {
-    uuid: UUID;
+    uniqueId: UUID;
     name: Component;
     serverId: UUID | null;
     serverName: Component | null;

@@ -34,7 +34,7 @@ const RoomInfo: FunctionComponent<Props> = ({room}) => {
     }, [room.uniqueId, players]);
 
     const hasUser = useMemo(() => {
-        return members.some(member => member.is(user.uuid));
+        return members.some(member => member.is(user.uniqueId));
     }, [user, members]);
     useEffect(() => {
         setState(hasUser ? "inside" : "outside");

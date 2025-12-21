@@ -46,7 +46,7 @@ interface Props {
 }
 
 const defaultUser = {
-    uuid: uuidFromString("606e2ff0-ed77-4842-9d6c-e1d3321c7838"),
+    uniqueId: uuidFromString("606e2ff0-ed77-4842-9d6c-e1d3321c7838"),
     name: {text: "Unknown", italic: true},
     serverId: null,
     serverName: null,

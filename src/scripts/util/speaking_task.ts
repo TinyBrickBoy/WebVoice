@@ -13,7 +13,7 @@ const tickSpeaking = (
     const minTimestamp = Date.now() - SPEAK_DURATION_MILLIS;
 
     // update last speaking state for user
-    const userState = players[user.uuid.name];
+    const userState = players[user.uniqueId.name];
     if (userState) {
         userState.lastSpeaking = controls.lastSound;
     }

@@ -3,17 +3,22 @@ import type {PlayerState} from "../../scripts/types.ts";
 import type {FunctionComponent} from "preact";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
 
+type State = Pick<PlayerState, "uniqueId" | "name" | "speaking">
+
 interface Props {
-    state: PlayerState;
+    state: State;
+    hideHead?: boolean;
+    hideName?: boolean;
 }
 
-const PlayerInfo: FunctionComponent<Props> = ({state: {uniqueId, name, speaking}}) => {
+const PlayerInfo: FunctionComponent<Props> = ({state: {uniqueId, name, speaking}, hideHead, hideName}) => {
     return (
         <div className={"flex flex-row gap-2 items-center"}>
-            <div className={`rounded-md m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}>
-                <CraftHead uuid={uniqueId} size={48}/>
-            </div>
-            <MinecraftComponent className={"text-xl"} component={name}/>
+            {!hideHead &&
+                <div className={`rounded-md m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}>
+                    <CraftHead className={"rounded-md"} uuid={uniqueId} size={48}/>
+                </div>}
+            {!hideName && <MinecraftComponent className={"text-xl"} component={name}/>}
         </div>
     );
 };
