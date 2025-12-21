@@ -21,7 +21,7 @@ export class VolumeManager extends EventManager {
         const typeData = this.volumes[type];
         const volume = typeData ? typeData[id] : 1;
         const defVolume = volume === undefined ? 1 : volume;
-        return Math.min(1, Math.max(0, defVolume));
+        return Math.min(2, Math.max(0, defVolume));
     }
 
     public set(type: VolumeType, id: string, volume: number, save: boolean = true) {
