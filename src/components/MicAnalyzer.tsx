@@ -33,7 +33,7 @@ const MicAnalyzer: FunctionComponent = () => {
             // immediately request drawing new animation frame
             frameId = requestAnimationFrame(draw);
 
-            const [startAnalyzer, rnnoiseAnalyzer, noiseGateAnalyzer] = microphone.analyzers;
+            const [startAnalyzer, rnnoiseAnalyzer, noiseGateAnalyzer, finalAnalyzer] = microphone.analyzers;
 
             // extract data from audio analyzer nodes
             const bufferLength = ANALYZER_FREQ_BIN_COUNT;
@@ -43,6 +43,8 @@ const MicAnalyzer: FunctionComponent = () => {
             rnnoiseAnalyzer?.getByteFrequencyData(postNoiseData);
             const postGateData = new Uint8Array(bufferLength);
             noiseGateAnalyzer?.getByteFrequencyData(postGateData);
+            const finalData = new Uint8Array(bufferLength);
+            finalAnalyzer?.getByteFrequencyData(finalData);
 
             // create canvas drawing context
             const ctx = canvas.getContext("2d")!!;
@@ -57,6 +59,7 @@ const MicAnalyzer: FunctionComponent = () => {
                 const startHeight = preNoiseData[i];
                 const rnnoiseHeight = postNoiseData[i];
                 const noiseGateHeight = postGateData[i];
+                const finalHeight = finalData[i];
                 // draw start bar in dark gray
                 ctx.fillStyle = "#444";
                 ctx.fillRect(
@@ -73,7 +76,13 @@ const MicAnalyzer: FunctionComponent = () => {
                 ctx.fillStyle = "#fff";
                 ctx.fillRect(
                     i * barWidth, canvas.height - noiseGateHeight,
-                    barWidth + 1, noiseGateHeight,
+                    barWidth + 1, noiseGateHeight - finalHeight,
+                );
+                // draw final bar in white
+                ctx.fillStyle = "#b273e6";
+                ctx.fillRect(
+                    i * barWidth, canvas.height - finalHeight,
+                    barWidth + 1, finalHeight,
                 );
             }
         };

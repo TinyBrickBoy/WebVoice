@@ -85,6 +85,7 @@ const setupMicrophonePipeline = async (
     // push gain modifier
     const gainNode = new GainNode(ctx, {gain: GAIN_MULTIPLIER});
     pipeline.push(gainNode);
+    microphone.analyzers[3] && pipeline.push(microphone.analyzers[3]);
 
     // apply volume to pipeline and listen for updates from controller
     const applyVolume = () => {
@@ -278,8 +279,8 @@ export class AudioMicrophoneManager {
             // as "existent" and wait for audio context creation
             this._analyzers = [];
         } else {
-            // setup three analyzers: start, post noise reduction and post noise gate
-            this._analyzers = [this.setupAudioAnalyzer(), this.setupAudioAnalyzer(), this.setupAudioAnalyzer()];
+            // setup three analyzers: start, post noise reduction, post noise gate and final
+            this._analyzers = [0, 0, 0, 0].map(() => this.setupAudioAnalyzer());
         }
     }
 
