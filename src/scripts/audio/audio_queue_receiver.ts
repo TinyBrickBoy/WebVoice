@@ -2,7 +2,7 @@ import type {AudioQueueData} from "../types.ts";
 import {convertSpatialToStereo} from "./spatial_to_stereo.ts";
 import {FRAME_SIZE} from "./audio_constants.ts";
 
-const SAMPLE_QUEUE_LIMIT = FRAME_SIZE * 25;
+const SAMPLE_QUEUE_LIMIT = FRAME_SIZE * 35;
 
 class AudioQueueReceiver extends AudioWorkletProcessor {
 
@@ -59,7 +59,7 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
             leftOutput[i] = leftSample;
             rightOutput[i] = rightSample;
         }
-        console.log(`Flushed ${this.samplesQueueLeft.length - prevQueueLength} samples`, sampleRate);
+        console.log(`Flushed ${prevQueueLength - this.samplesQueueLeft.length}/${this.samplesQueueLeft.length} samples`, sampleRate);
         return true; // do not GC!
     }
 }
