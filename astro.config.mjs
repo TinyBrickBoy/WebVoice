@@ -21,10 +21,10 @@ export default defineConfig({
 
     env: {
         schema: {
-            WEBSOCKET_URL: envField.string({
+            DEFAULT_WEBSOCKET_URL: envField.string({
                 context: "client",
                 access: "public",
-                default: "wss://sonus.froglight.eu/api",
+                default: "",
             }),
             SKIN_ENDPOINT: envField.string({
                 context: "server",

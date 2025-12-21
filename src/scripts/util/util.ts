@@ -1,14 +1,8 @@
-import {WEBSOCKET_URL} from "astro:env/client";
-
-export const respondRedirect = (path: string = "/", status: number = 303) => {
-    return new Response(null, {status, headers: {Location: path}});
-};
-
 export const TOKEN_LENGTH = 16;
 const apiVersion = "v1";
 
-export const constructSocketUrl = (token: string) => {
-    return new URL(`${WEBSOCKET_URL}/${apiVersion}/socket/${token}`);
+export const constructSocketUrl = (apiUrl: string, token: string) => {
+    return new URL(`${apiUrl}/${apiVersion}/socket/${token}`);
 };
 
 export const calculateAudioLevel = (samples: Float32Array, offset: number, length: number) => {
@@ -33,5 +27,3 @@ export const getHighestAudioPercent = (samples: Float32Array) => {
     }
     return (highest + 127) / 127;
 };
-
-export const pad = (num: number, amount: number) => String(num).padStart(amount, "0");

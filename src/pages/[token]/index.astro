@@ -3,18 +3,20 @@ import Layout from "../../layouts/Layout.astro";
 import VoiceStateProvider from "../../components/VoiceStateProvider";
 import {constructSocketUrl, TOKEN_LENGTH} from "../../scripts/util/util.ts";
 import ErrorPage from "../../components/base/ErrorPage.astro";
+import {DEFAULT_WEBSOCKET_URL} from "astro:env/client";
 
 export const prerender = false;
 const {token} = Astro.params;
+const apiUrl = Astro.url.searchParams.get("api") ?? DEFAULT_WEBSOCKET_URL;
 
-if (!token || token.length !== TOKEN_LENGTH) {
+if (!token || !apiUrl || token.length !== TOKEN_LENGTH) {
     Astro.response.status = 404;
 }
 ---
 
 <Layout>
-    {token && token.length === TOKEN_LENGTH ?
-        <VoiceStateProvider client:only socketUrl={constructSocketUrl(token)} token={token}/> :
+    {token && apiUrl && token.length === TOKEN_LENGTH ?
+        <VoiceStateProvider client:only socketUrl={constructSocketUrl(apiUrl, token)} token={token}/> :
         <ErrorPage error={404}/>
     }
 </Layout>
