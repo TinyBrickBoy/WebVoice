@@ -4,6 +4,10 @@
     --breakpoint-mg: 50rem;
 }
 
+@utility image-pixelated {
+    image-rendering: pixelated;
+}
+
 html {
     font-family: Poppins, system-ui, sans-serif;
     font-size: 1.05rem;

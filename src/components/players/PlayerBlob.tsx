@@ -39,7 +39,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name,
             style={{backgroundColor: color}}
             className={`relative flex justify-center h-32 items-center p-6 rounded-lg m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}
         >
-            <CraftHead uuid={uniqueId} size={64}/>
+            <CraftHead uuid={uniqueId} className={"w-16"}/>
             <div
                 className={"absolute bottom-0 left-0 m-0.5 bg-neutral-700/70 leading-none rounded-sm p-1 flex flex-row gap-1"}
             >

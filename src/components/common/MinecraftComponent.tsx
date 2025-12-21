@@ -68,10 +68,10 @@ const MinecraftComponent: FunctionComponent<Props> = ({component, noColor, style
             styling["fontWeight"] = component.bold ? "bold" : "normal";
         }
         if ("strikethrough" in component) {
-            styling["textDecoration"] = component.italic ? "line-through" : "";
+            styling["textDecoration"] = component.strikethrough ? "line-through" : "";
         }
         if ("underlined" in component) {
-            styling["textDecoration"] = component.italic ? "underline" : "";
+            styling["textDecoration"] = component.underlined ? "underline" : "";
         }
         if ("italic" in component) {
             styling["fontStyle"] = component.italic ? "italic" : "normal";

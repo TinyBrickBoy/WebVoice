@@ -20,7 +20,7 @@ const PlayerInfo: FunctionComponent<Props> = ({state, hideHead, hideName, hideCo
         <div className={"flex flex-row gap-2 items-center"}>
             {!hideHead &&
                 <div className={`rounded-md m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}>
-                    <CraftHead className={"rounded-md"} uuid={uniqueId} size={48}/>
+                    <CraftHead className={"rounded-md w-12"} uuid={uniqueId}/>
                 </div>}
             {!hideName && <MinecraftComponent className={"text-xl"} component={name}/>}
             {!hideControls && <>
