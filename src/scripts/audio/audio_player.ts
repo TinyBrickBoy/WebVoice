@@ -86,7 +86,7 @@ export default class AudioPlayer {
     }
 
     public refreshSpeaker() {
-        if (this.ctx && "setSinkId" in this.ctx) {
+        if (false && this.ctx && "setSinkId" in this.ctx) {
             const speakerId = this.devices.getSpeakerId();
             const setSinkId = this.ctx.setSinkId as ((param: string | { type: "none" }) => Promise<void>);
             setSinkId.call(this.ctx, speakerId || "")
