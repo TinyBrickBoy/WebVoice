@@ -4,7 +4,10 @@ import {decode as decodePng} from "fast-png";
 import {GLOBAL_CACHE, SKIN_ENDPOINT} from "astro:env/server";
 import {CachedMap} from "./cached_map.ts";
 
-export const buildHeadUrl = (uuid: UUID) => SKIN_ENDPOINT.replace("%s", uuid.name);
+const skinEndpoint = process?.env?.SKIN_ENDPOINT ?? SKIN_ENDPOINT;
+const globalCache = (process?.env?.GLOBAL_CACHE ?? `${GLOBAL_CACHE}`) === "true";
+
+export const buildHeadUrl = (uuid: UUID) => skinEndpoint.replace("%s", uuid.name);
 
 export type HeadResponse = {
     image: Buffer | null,
@@ -17,8 +20,8 @@ export type HeadColorResponse = HeadResponse & {
 
 export const CACHE_DURATION_SEC = 60n * 3n; // cache for 3min
 export const CACHE_DURATION_MS = 1000n * CACHE_DURATION_SEC;
-const heads = GLOBAL_CACHE ? new CachedMap<string, HeadResponse>(CACHE_DURATION_MS) : null;
-const colors = GLOBAL_CACHE ? new CachedMap<string, HeadColorResponse>(CACHE_DURATION_MS) : null;
+const heads = globalCache ? new CachedMap<string, HeadResponse>(CACHE_DURATION_MS) : null;
+const colors = globalCache ? new CachedMap<string, HeadColorResponse>(CACHE_DURATION_MS) : null;
 
 const generateHeadColor = (head: HeadResponse): HeadColorResponse => {
     if (!head.image) {

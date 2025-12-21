@@ -7,7 +7,9 @@ import {DEFAULT_WEBSOCKET_URL} from "astro:env/client";
 
 export const prerender = false;
 const {token} = Astro.params;
-const apiUrl = Astro.url.searchParams.get("api") ?? DEFAULT_WEBSOCKET_URL;
+
+const apiUrlFallback = process?.env?.DEFAULT_WEBSOCKET_URL || DEFAULT_WEBSOCKET_URL;
+const apiUrl = Astro.url.searchParams.get("api") ?? apiUrlFallback;
 
 if (!token || !apiUrl || token.length !== TOKEN_LENGTH) {
     Astro.response.status = 404;
