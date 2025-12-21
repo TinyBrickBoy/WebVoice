@@ -14,7 +14,7 @@ const PlayerGrid: FunctionComponent = ({children}) => {
             setPlayers({
                 "a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97": new PlayerState(
                     uuidFromString("a62f4c41-f9cc-4d4a-8a2f-1dcccf6dfa97"),
-                    "B00KY", true, true, null, null,
+                    "B00KY", true, true, uuidFromString("d87dd345-5b9b-492a-be3d-eeafe70362b0"), null,
                 ),
             });
         }
