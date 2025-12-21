@@ -25,12 +25,12 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
             this.resample = resample;
 
             // initialize libsamplerate if wanted
-            if (resample) {
+            if (resample && sampleRate !== SAMPLE_RATE) {
                 this.initLibsamplerate(sampleRate)
                     .then(() => console.log("Finished initializing libsamplerate", sampleRate, SAMPLE_RATE))
                     .catch(error => console.error(error));
             } else {
-                console.log("Will assume samplerate is already correct");
+                console.log(`Will assume samplerate of ${sampleRate} is already correct`);
             }
         };
     }
