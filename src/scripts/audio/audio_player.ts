@@ -158,7 +158,7 @@ export default class AudioPlayer {
         // decode opus audio frame to signed pcm audio frame
         const pcmAudio = await data.decoder.decodeFrame(opus);
 
-        const frame = {data: pcmAudio.channelData[0], volume} as AudioQueueData;
+        const frame = {data: pcmAudio.channelData[0], volume, channel: channel} as AudioQueueData;
         // set positional data if present
         if (position) {
             frame.source = source;

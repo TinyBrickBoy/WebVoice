@@ -24,6 +24,7 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
                 this.samplesQueueLeft.push(...data.data);
                 this.samplesQueueRight.push(...data.data);
             }
+            console.log("queue size", data.channel, this.samplesQueueLeft.length, this.samplesQueueRight.length);
         };
     }
 

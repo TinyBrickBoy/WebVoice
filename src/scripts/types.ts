@@ -159,6 +159,7 @@ export type AudioQueueData = {
     volume: number,
     source: Position3d | null,
     position: Vector3d | null,
+    channel: string,
 }
 
 export type StateType<S> = [S, Dispatch<StateUpdater<S>>];
