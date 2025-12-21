@@ -45,6 +45,7 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
         _inputs: Float32Array[][],
         outputs: Float32Array[][],
     ): boolean {
+        const prevQueueLength = this.samplesQueueLeft.length;
         // stereo channel output
         const leftOutput = outputs[0][0];
         const rightOutput = outputs[0][1];
@@ -58,6 +59,7 @@ class AudioQueueReceiver extends AudioWorkletProcessor {
             leftOutput[i] = leftSample;
             rightOutput[i] = rightSample;
         }
+        console.log(`Flushed ${this.samplesQueueLeft.length - prevQueueLength} samples`, sampleRate);
         return true; // do not GC!
     }
 }
