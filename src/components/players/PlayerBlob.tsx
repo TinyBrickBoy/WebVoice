@@ -37,21 +37,23 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name,
     return <>
         <div
             style={{backgroundColor: color}}
-            className={`relative flex justify-center h-32 items-center p-6 rounded-lg m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}
+            className={`group relative flex justify-center h-32 items-center p-6 rounded-lg m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}
         >
-            <CraftHead uuid={uniqueId} className={"w-16"}/>
+            <CraftHead uuid={uniqueId} className={"w-18"}/>
             <div
-                className={"absolute bottom-0 left-0 m-0.5 bg-neutral-700/70 leading-none rounded-sm p-1 flex flex-row gap-1"}
+                className={"absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex flex-row gap-2 text-sm items-center"}
             >
-                <MinecraftComponent component={name}/>
-                <div className={"flex flex-row gap-0.5"}>
-                    {muted &&
-                        <MicrophoneOffIcon aria-label={"Muted"} stroke-width={2} className={"h-full w-auto"}/>
-                    }
-                    {deafened &&
-                        <HeadphonesOffIcon aria-label={"Deafened"} stroke-width={2} className={"h-full w-auto"}/>
-                    }
-                </div>
+                {(muted || deafened) &&
+                    <div className={"flex flex-row gap-1"}>
+                        {muted && !deafened &&
+                            <MicrophoneOffIcon aria-label={"Muted"} stroke-width={2} className={"h-full w-auto"}/>
+                        }
+                        {deafened &&
+                            <HeadphonesOffIcon aria-label={"Deafened"} stroke-width={2} className={"h-full w-auto"}/>
+                        }
+                    </div>
+                }
+                <MinecraftComponent component={name} className={"hidden group-hover:flex"}/>
             </div>
         </div>
     </>;
