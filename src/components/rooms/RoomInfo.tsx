@@ -11,9 +11,9 @@ import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import Button from "../common/Button.tsx";
-import LockIcon from "~icons/tabler/lock-filled";
 import Input from "../common/Input.tsx";
 import TextBox from "../common/TextBox.tsx";
+import LockedIcon from "../icons/LockedIcon.tsx";
 
 export type GroupAudioType = "normal" | "open" | "isolated";
 type State = "outside" | "inside" | "entering" | "entering failed" | "exiting" | "exiting failed";
@@ -83,7 +83,7 @@ const RoomInfo: FunctionComponent<Props> = ({room}) => {
                 <div className={"flex flex-row gap-3 items-center"}>
                     <div className={"flex flex-row items-center gap-1"}>
                         <MinecraftComponent className={"text-lg font-medium"} component={room.name}/>
-                        {room.password && <LockIcon/>}
+                        {room.password && <LockedIcon/>}
                     </div>
                 </div>
                 <div class={"flex text-sm gap-2 text-neutral-300 uppercase"}>
