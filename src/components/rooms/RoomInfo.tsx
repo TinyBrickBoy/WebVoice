@@ -98,34 +98,36 @@ const RoomInfo: FunctionComponent<Props> = ({room}) => {
             <div className={"flex flex-col gap-2"}>
                 {members.map(member => <PlayerInfo key={member.uniqueId.name} state={member}/>)}
             </div>
-            {(room.password && !hasUser) &&
-                <Input label={<>Password for group</>}>
-                    <TextBox
-                        value={password} required type={"password"}
-                        placeholder={"Enter password for group"}
-                        disabled={state !== "outside" && state !== "entering failed"}
-                        onChange={val => setPassword(val.trim())}
-                    />
-                </Input>
-            }
-            <div className={"flex flex-row gap-2"}>
-                <Button
-                    color={"purple"}
-                    disabled={state !== "outside" && state !== "entering failed" || (room.password && password.length < 1)}
-                    className={"grow"}
-                    onClick={joinRoom}
-                    type={"submit"}
-                >
-                    Join
-                </Button>
-                <Button
-                    color={"purple"}
-                    disabled={state !== "inside" && state !== "exiting failed"}
-                    className={"grow"}
-                    onClick={leaveRoom}
-                >
-                    Leave
-                </Button>
+            <div className={"flex flex-col mt-4 gap-2"}>
+                {(room.password && !hasUser) &&
+                    <Input label={<>Password for group</>}>
+                        <TextBox
+                            value={password} required type={"password"}
+                            placeholder={"Enter password for group"}
+                            disabled={state !== "outside" && state !== "entering failed"}
+                            onChange={val => setPassword(val.trim())}
+                        />
+                    </Input>
+                }
+                <div className={"flex flex-row gap-2"}>
+                    <Button
+                        color={"purple"}
+                        disabled={state !== "outside" && state !== "entering failed" || (room.password && password.length < 1)}
+                        className={"grow"}
+                        onClick={joinRoom}
+                        type={"submit"}
+                    >
+                        Join
+                    </Button>
+                    <Button
+                        color={"purple"}
+                        disabled={state !== "inside" && state !== "exiting failed"}
+                        className={"grow"}
+                        onClick={leaveRoom}
+                    >
+                        Leave
+                    </Button>
+                </div>
             </div>
         </form>
     );
