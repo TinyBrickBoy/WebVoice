@@ -7,6 +7,7 @@ import {type AudioQueueData, type Position3d, Vector3d} from "../types.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {AudioControls} from "./audio_controls.ts";
 import type {VolumeManager} from "./volumes.ts";
+import type {AudioMicrophoneManager} from "./audio_mic.ts";
 
 const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
 const CHANNEL_TIMEOUT_TIME = 15 * 1000;
@@ -20,6 +21,7 @@ type ChannelData = {
 
 export default class AudioPlayer {
 
+    private readonly microphone: AudioMicrophoneManager;
     private readonly controls: AudioControls;
     private readonly devices: AudioDeviceManager;
     private readonly volumes: VolumeManager;
@@ -28,10 +30,12 @@ export default class AudioPlayer {
     private readonly channels: Record<string, ChannelData> = {};
 
     constructor(
+        microphone: AudioMicrophoneManager,
         controls: AudioControls,
         devices: AudioDeviceManager,
         volumes: VolumeManager,
     ) {
+        this.microphone = microphone;
         this.controls = controls;
         this.devices = devices;
         this.volumes = volumes;
@@ -98,8 +102,10 @@ export default class AudioPlayer {
         if (!this.ctx) {
             return; // no context
         }
-        this.ctx.close()
-            .catch(error => console.error(error));
+        if (this.ctx !== this.microphone.ctx) {
+            this.ctx.close()
+                .catch(error => console.error(error));
+        }
         this.ctx = null;
 
         // await proper closing
@@ -112,10 +118,14 @@ export default class AudioPlayer {
     public async createContext() {
         this.destroyContext();
 
-        this.ctx = new AudioContext({
-            sampleRate: SAMPLE_RATE,
-            latencyHint: "balanced",
-        });
+        if (this.microphone.resampleManually) {
+            this.ctx = new AudioContext({
+                sampleRate: SAMPLE_RATE,
+                latencyHint: "balanced",
+            });
+        } else {
+            this.ctx = this.microphone.ctx;
+        }
 
         await this.ctx.audioWorklet.addModule(audioQueueReceiverWorkletUrl);
 

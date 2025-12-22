@@ -168,7 +168,7 @@ export class AudioMicrophoneManager {
 
     public rnnoiseWasmBinary: ArrayBuffer | null = null;
 
-    private ctx: AudioContext | null = null;
+    private _ctx: AudioContext | null = null;
     private teardown: (() => void)[] = [];
     private pipelineTeardown: (() => void)[] = [];
     private _analyzers: AnalyserNode[] | null = null;
@@ -198,10 +198,10 @@ export class AudioMicrophoneManager {
         this.pipelineTeardown.forEach(fn => fn());
         this.pipelineTeardown = [];
 
-        if (this.ctx) {
-            this.ctx.close()
+        if (this._ctx) {
+            this._ctx.close()
                 .catch(error => console.error(error));
-            this.ctx = null;
+            this._ctx = null;
         }
         if (this._analyzers) {
             // clear analyzers without firing event, audio context is destroyed anyway
@@ -234,18 +234,18 @@ export class AudioMicrophoneManager {
             });
         }
 
-        this.ctx = new AudioContext({
+        this._ctx = new AudioContext({
             sampleRate: this.resampleManually ? undefined : SAMPLE_RATE,
             latencyHint: "interactive",
         });
-        await this.initializeContext(this.ctx);
+        await this.initializeContext(this._ctx);
 
         // setup microphone audio node pipeline
         this.rebuildPipeline();
     }
 
     public rebuildPipeline() {
-        if (!this.ctx) {
+        if (!this._ctx) {
             console.warn("Skipped pipeline rebuild, no audio context found");
             return;
         }
@@ -254,7 +254,7 @@ export class AudioMicrophoneManager {
         // create new analyzer nodes
         this._analyzers && this.injectAnalyzers();
 
-        setupMicrophonePipeline(this.socket, this.ctx!!,
+        setupMicrophonePipeline(this.socket, this._ctx!!,
             this.controls, this.devices, this.volumes, this)
             .then(teardown => {
                 this.pipelineTeardown.forEach(fn => fn());
@@ -264,7 +264,7 @@ export class AudioMicrophoneManager {
     }
 
     private setupAudioAnalyzer() {
-        const analyzer = this.ctx!!.createAnalyser();
+        const analyzer = this._ctx!!.createAnalyser();
         // magic values, looks good enough
         analyzer.fftSize = 256;
         analyzer.minDecibels = -90;
@@ -274,7 +274,7 @@ export class AudioMicrophoneManager {
     }
 
     public injectAnalyzers() {
-        if (!this.ctx) {
+        if (!this._ctx) {
             // audio context isn't ready yet, just mark analyzers
             // as "existent" and wait for audio context creation
             this._analyzers = [];
@@ -291,7 +291,11 @@ export class AudioMicrophoneManager {
     }
 
     public hasContext() {
-        return !!this.ctx;
+        return !!this._ctx;
+    }
+
+    public get ctx() {
+        return this._ctx!!;
     }
 
     public get analyzers() {

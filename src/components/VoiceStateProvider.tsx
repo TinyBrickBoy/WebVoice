@@ -77,8 +77,8 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
 
     // create global audio player
     const audio = useMemo(
-        () => new AudioPlayer(controls, devices, volumes),
-        [controls, devices, volumes],
+        () => new AudioPlayer(microphone, controls, devices, volumes),
+        [microphone, controls, devices, volumes],
     );
     useEffect(() => audio.startTasks(), [audio]);
     useEffect(() => audio.registerSocket(socket), [audio, socket]);
