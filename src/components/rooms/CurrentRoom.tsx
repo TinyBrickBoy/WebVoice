@@ -13,7 +13,7 @@ const CurrentRoom: FunctionComponent = () => {
     }, [user, rooms, players]);
 
     return <>
-        <div className={"flex flex-col mb-6 items-end w-full"}>
+        <div className={"flex flex-col mb-6 items-end w-full select-none"}>
             <span className={"text-sm"}>Current group</span>
             {room ?
                 <MinecraftComponent className={"text-xl"} component={room.name}/> :

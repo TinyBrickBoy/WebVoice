@@ -5,7 +5,7 @@ import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 const CurrentServer: FunctionComponent = () => {
     const {user: [{serverName}]} = useVoiceStateContext();
     return <>
-        <div className={"flex flex-col w-full"}>
+        <div className={"flex flex-col w-full select-none"}>
             <span className={"text-sm"}>Current server</span>
             <MinecraftComponent noColor className={"text-xl capitalize"} component={serverName || "none"}/>
         </div>

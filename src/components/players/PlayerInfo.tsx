@@ -2,8 +2,9 @@ import CraftHead from "../common/CraftHead.tsx";
 import type {PlayerState} from "../../scripts/types.ts";
 import type {FunctionComponent} from "preact";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
-import MicrophoneOffIcon from "~icons/tabler/microphone-off";
-import HeadphonesOffIcon from "~icons/tabler/headphones-off";
+import DeafenedIcon from "../icons/DeafenedIcon.tsx";
+import MutedIcon from "../icons/MutedIcon.tsx";
+import Tooltip from "../common/Tooltip.tsx";
 
 type State = Pick<PlayerState, "uniqueId" | "name" | "speaking" | "muted" | "deafened">
 
@@ -20,13 +21,12 @@ const PlayerInfo: FunctionComponent<Props> = ({state, hideHead, hideName, hideCo
         <div className={"flex flex-row gap-2 items-center"}>
             {!hideHead &&
                 <div className={`rounded-md m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}>
-                    <CraftHead className={"rounded-md w-12"} uuid={uniqueId}/>
+                    <Tooltip align={"top"} hint={<MinecraftComponent component={name}/>}>
+                        <CraftHead className={"rounded-md w-12"} uuid={uniqueId}/>
+                    </Tooltip>
                 </div>}
             {!hideName && <MinecraftComponent className={"text-xl"} component={name}/>}
-            {!hideControls && <>
-                {muted && !deafened && <MicrophoneOffIcon aria-label={"Muted"} stroke-width={2} className={"h-full w-auto"}/>}
-                {deafened && <HeadphonesOffIcon aria-label={"Deafened"} stroke-width={2} className={"h-full w-auto"}/>}
-            </>}
+            {!hideControls && (deafened ? <DeafenedIcon/> : muted ? <MutedIcon/> : <></>)}
         </div>
     </>;
 };

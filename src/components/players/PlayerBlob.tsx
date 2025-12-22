@@ -5,8 +5,8 @@ import type {UUID} from "../../scripts/util/uuid.ts";
 import {useEffect, useState} from "preact/hooks";
 import {useAbortSignal} from "../../scripts/util/hooks.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
-import MicrophoneOffIcon from "~icons/tabler/microphone-off";
-import HeadphonesOffIcon from "~icons/tabler/headphones-off";
+import MutedIcon from "../icons/MutedIcon.tsx";
+import DeafenedIcon from "../icons/DeafenedIcon.tsx";
 
 interface Props {
     state: PlayerState;
@@ -41,18 +41,9 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name,
         >
             <CraftHead uuid={uniqueId} className={"w-18"}/>
             <div
-                className={`absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex-row gap-2 text-sm items-center ${(muted || deafened) ? "flex": "hidden group-hover:flex"}`}
+                className={`absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex-row gap-1.5 text-sm items-center ${(muted || deafened) ? "flex" : "hidden group-hover:flex"}`}
             >
-                {(muted || deafened) &&
-                    <div className={"flex flex-row gap-1"}>
-                        {muted && !deafened &&
-                            <MicrophoneOffIcon aria-label={"Muted"} stroke-width={2} className={"h-full w-auto"}/>
-                        }
-                        {deafened &&
-                            <HeadphonesOffIcon aria-label={"Deafened"} stroke-width={2} className={"h-full w-auto"}/>
-                        }
-                    </div>
-                }
+                {deafened ? <DeafenedIcon noHover/> : muted ? <MutedIcon noHover/> : <></>}
                 <MinecraftComponent component={name} className={"hidden group-hover:flex select-none"}/>
             </div>
         </div>

@@ -4,6 +4,7 @@ import SettingsIcon from "~icons/tabler/settings";
 import {useEffect, useState} from "preact/hooks";
 import SettingsModal from "./SettingsModal.tsx";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
+import Tooltip from "../common/Tooltip.tsx";
 
 const SettingsButton: FunctionComponent = () => {
     const {state: [state]} = useVoiceStateContext();
@@ -17,9 +18,15 @@ const SettingsButton: FunctionComponent = () => {
 
     return <>
         <SettingsModal visible={[settingsVisible, setSettingsVisible]}/>
-        <Button color={"transparent"} className={"h-full"} onClick={() => setSettingsVisible(true)}>
-            <SettingsIcon aria-label={"Settings"} stroke-width={2} className={"h-full w-auto"}/>
-        </Button>
+        <Tooltip hint={<>Settings</>} align={"top"}>
+            <Button
+                className={"h-full"}
+                color={"transparent"}
+                onClick={() => setSettingsVisible(true)}
+            >
+                <SettingsIcon aria-label={"Settings"} stroke-width={2} className={"h-full w-auto"}/>
+            </Button>
+        </Tooltip>
     </>;
 };
 

@@ -9,6 +9,7 @@ import Button from "../common/Button.tsx";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import {useEffect, useState} from "preact/hooks";
 import {StateInfoPacket} from "../../scripts/network/packets.ts";
+import Tooltip from "../common/Tooltip.tsx";
 
 const ControlPanel: FunctionComponent = () => {
     const {socket, controls} = useVoiceStateContext();
@@ -39,24 +40,54 @@ const ControlPanel: FunctionComponent = () => {
     }, [socket, controls]);
 
     return <>
-        <Button color={"transparent"} onClick={() => controls.muted = !controls.muted}>
-            {controls.muted ?
-                <MicrophoneOffIcon aria-label={"Microphone Off"} stroke-width={2} className={"h-full w-auto"}/> :
-                <MicrophoneIcon aria-label={"Microphone On"} stroke-width={2} className={"h-full w-auto"}/>
-            }
-        </Button>
-        <Button color={"transparent"} onClick={() => controls.deafened = !controls.deafened}>
-            {controls.deafened ?
-                <HeadphonesOffIcon aria-label={"Speaker Off"} stroke-width={2} className={"h-full w-auto"}/> :
-                <HeadphonesIcon aria-label={"Speaker On"} stroke-width={2} className={"h-full w-auto"}/>
-            }
-        </Button>
-        <Button color={"transparent"} onClick={() => controls.noiseReduction = !controls.noiseReduction}>
-            {controls.noiseReduction ?
-                <WaveformIcon aria-label={"Noise Reduction On"} className={"h-full w-auto"}/> :
-                <WaveformOffIcon aria-label={"Noise Reduction Off"} className={"h-full w-auto"}/>
-            }
-        </Button>
+        <Tooltip
+            hint={controls.muted ? <>Unmute</> : <>Mute</>}
+            className={"h-full"}
+            align={"top"}
+        >
+            <Button
+                className={"h-full"}
+                color={"transparent"}
+                onClick={() => controls.muted = !controls.muted}
+            >
+                {controls.muted ?
+                    <MicrophoneOffIcon aria-label={"Microphone Off"} stroke-width={2} className={"h-full w-auto"}/> :
+                    <MicrophoneIcon aria-label={"Microphone On"} stroke-width={2} className={"h-full w-auto"}/>
+                }
+            </Button>
+        </Tooltip>
+        <Tooltip
+            hint={controls.deafened ? <>Undeafen</> : <>Deafen</>}
+            className={"h-full"}
+            align={"top"}
+        >
+            <Button
+                className={"h-full"}
+                color={"transparent"}
+                onClick={() => controls.deafened = !controls.deafened}
+            >
+                {controls.deafened ?
+                    <HeadphonesOffIcon aria-label={"Speaker Off"} stroke-width={2} className={"h-full w-auto"}/> :
+                    <HeadphonesIcon aria-label={"Speaker On"} stroke-width={2} className={"h-full w-auto"}/>
+                }
+            </Button>
+        </Tooltip>
+        <Tooltip
+            hint={controls.noiseReduction ? <>Disable Noise Reduction</> : <>Enable Noise Reduction</>}
+            className={"h-full"}
+            align={"top"}
+        >
+            <Button
+                className={"h-full"}
+                color={"transparent"}
+                onClick={() => controls.noiseReduction = !controls.noiseReduction}
+            >
+                {controls.noiseReduction ?
+                    <WaveformIcon aria-label={"Noise Reduction On"} className={"h-full w-auto"}/> :
+                    <WaveformOffIcon aria-label={"Noise Reduction Off"} className={"h-full w-auto"}/>
+                }
+            </Button>
+        </Tooltip>
     </>;
 };
 
