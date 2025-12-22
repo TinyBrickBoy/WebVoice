@@ -52,5 +52,8 @@ export default defineConfig({
         define: {
             "import.meta.env.GIT_COMMIT_HASH": JSON.stringify(GIT_COMMIT_HASH),
         },
+        build: {
+            sourcemap: true,
+        },
     },
 });
