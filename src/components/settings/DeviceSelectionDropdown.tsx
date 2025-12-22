@@ -59,7 +59,7 @@ const DeviceSelectionDropdown: FunctionComponent<Props> = ({type}) => {
             });
     }, [devices, type]);
 
-    if (type === "output" && !(false && "setSinkId" in AudioContext.prototype)) {
+    if (type === "output" && !("setSinkId" in AudioContext.prototype)) {
         return <>
             <Dropdown disabled value={"empty"} className={"italic"}>
                 <option value={"empty"}>Unsupported by Browser</option>

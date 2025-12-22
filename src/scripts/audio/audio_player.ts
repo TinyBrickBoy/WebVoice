@@ -82,10 +82,10 @@ export default class AudioPlayer {
 
     public startTasks() {
         const timerCallback = this.startGarbageCollector();
-        // const listenerCallback = this.registerSpeakerListener();
+        const listenerCallback = this.registerSpeakerListener();
         return () => {
             timerCallback();
-            // listenerCallback();
+            listenerCallback();
         };
     }
 
@@ -129,7 +129,7 @@ export default class AudioPlayer {
 
         await this.ctx.audioWorklet.addModule(audioQueueReceiverWorkletUrl);
 
-        // this.refreshSpeaker();
+        this.refreshSpeaker();
     }
 
     private async resolveChannel(channel: string): Promise<ChannelData> {
