@@ -41,7 +41,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name,
         >
             <CraftHead uuid={uniqueId} className={"w-18"}/>
             <div
-                className={"absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex flex-row gap-2 text-sm items-center"}
+                className={`absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex-row gap-2 text-sm items-center ${(muted || deafened) ? "flex": "hidden group-hover:flex"}`}
             >
                 {(muted || deafened) &&
                     <div className={"flex flex-row gap-1"}>
