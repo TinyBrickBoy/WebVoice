@@ -53,7 +53,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name,
                         }
                     </div>
                 }
-                <MinecraftComponent component={name} className={"hidden group-hover:flex"}/>
+                <MinecraftComponent component={name} className={"hidden group-hover:flex select-none"}/>
             </div>
         </div>
     </>;
