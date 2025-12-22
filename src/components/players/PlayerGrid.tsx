@@ -78,7 +78,7 @@ const PlayerGrid: FunctionComponent = ({children}) => {
         <div className={"mb-3 mg:mb-0 p-3 mg:p-8 pb-0 grow flex flex-col gap-6"}>
             {children}
             <div
-                className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] overflow-y-auto pl-2 pr-2"}
+                className={"gap-2 xl:gap-4 grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] overflow-y-auto pl-2 pr-2"}
             >
                 {playerList.map(state => <PlayerBlob key={state.uniqueId.name} state={state}/>)}
             </div>
