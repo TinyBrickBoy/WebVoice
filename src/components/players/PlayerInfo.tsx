@@ -24,7 +24,7 @@ const PlayerInfo: FunctionComponent<Props> = ({state, hideHead, hideName, hideCo
                 </div>}
             {!hideName && <MinecraftComponent className={"text-xl"} component={name}/>}
             {!hideControls && <>
-                {muted && <MicrophoneOffIcon aria-label={"Muted"} stroke-width={2} className={"h-full w-auto"}/>}
+                {muted && !deafened && <MicrophoneOffIcon aria-label={"Muted"} stroke-width={2} className={"h-full w-auto"}/>}
                 {deafened && <HeadphonesOffIcon aria-label={"Deafened"} stroke-width={2} className={"h-full w-auto"}/>}
             </>}
         </div>
