@@ -81,7 +81,7 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
     }, [permissionState, checkPermissions, openSocket]);
 
     return <>
-        <Modal visible={[visible, setVisible]} dismissable={demo}>
+        <Modal visible={[visible, setVisible]} dismissable={demo} title={<>Connect to Voicechat</>}>
             <div className={"flex flex-col"}>
                 <div className={"flex p-3"}>
                     <Button
@@ -90,7 +90,7 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
                         onClick={tryOpenSocket}
                         className={"grow"}
                     >
-                        Connect to Voice
+                        Confirm
                     </Button>
                 </div>
                 {permissionState === "checking" ?
