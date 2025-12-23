@@ -43,7 +43,7 @@ const ContextMenu: FunctionComponent<Props> = ({children, attributes, content, .
                     left: `${pos[0]}px`,
                     top: `${pos[1]}px`,
                 }}
-                className={`border-neutral-700 border-2 fixed p-4 rounded-lg bg-neutral-800 z-10 ${attributes?.className || ""}`}
+                className={`border-neutral-800 border-2 fixed p-5 rounded-xl bg-neutral-900 z-10 ${attributes?.className || ""}`}
             >
                 {content}
             </div>}
