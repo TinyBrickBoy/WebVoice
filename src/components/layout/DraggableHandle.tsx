@@ -59,7 +59,7 @@ const DraggableHandle: FunctionComponent<Props> = ({leftWidthMin, leftWidthMax})
 
     return <>
         <div
-            className={"p-1 cursor-col-resize"}
+            className={"pl-1 pr-1 cursor-col-resize"}
             onMouseDown={event => startHandler(event)}
             ref={handle}
         >
