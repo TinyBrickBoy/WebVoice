@@ -1,15 +1,16 @@
 import type {ComponentChildren, FunctionComponent, JSX} from "preact";
-import {useCallback, useEffect, useState} from "preact/hooks";
+import {useCallback, useEffect, useRef, useState} from "preact/hooks";
 
 interface Props extends Omit<JSX.HTMLAttributes, "onContextMenu"> {
-    contextAttributes?: Omit<JSX.HTMLAttributes, "style" | "ref">;
-    contextContent: ComponentChildren;
+    attributes?: Omit<JSX.HTMLAttributes, "style" | "ref">;
+    content: ComponentChildren;
 }
 
 type Pos = [number, number] | null
 
-const PlayerContextMenu: FunctionComponent<Props> = ({children, contextAttributes, contextContent, ...other}) => {
+const ContextMenu: FunctionComponent<Props> = ({children, attributes, content, ...other}) => {
     const [pos, setPos] = useState<Pos>(null);
+    const contextRef = useRef<HTMLDivElement | null>(null);
 
     const onContextMenu = useCallback((event: MouseEvent) => {
         event.preventDefault();
@@ -20,7 +21,12 @@ const PlayerContextMenu: FunctionComponent<Props> = ({children, contextAttribute
         if (!pos) {
             return;
         }
-        const handler = () => setPos(null);
+        const handler = (event: MouseEvent) => {
+            if (!contextRef.current?.contains(event.target as Node)) {
+                event.preventDefault();
+                setPos(null);
+            }
+        };
         window.addEventListener("click", handler);
         return () => window.removeEventListener("click", handler);
     }, [pos]);
@@ -31,18 +37,19 @@ const PlayerContextMenu: FunctionComponent<Props> = ({children, contextAttribute
             onContextMenu={onContextMenu}
         >
             {pos && <div
-                {...(contextAttributes ?? {})}
+                {...(attributes ?? {})}
+                ref={contextRef}
                 style={{
                     left: `${pos[0]}px`,
                     top: `${pos[1]}px`,
                 }}
-                className={`border-neutral-700 border-2 fixed p-4 rounded-lg bg-neutral-800 z-10 ${contextAttributes?.className || ""}`}
+                className={`border-neutral-700 border-2 fixed p-4 rounded-lg bg-neutral-800 z-10 ${attributes?.className || ""}`}
             >
-                {contextContent}
+                {content}
             </div>}
             {children}
         </div>
     </>;
 };
 
-export default PlayerContextMenu;
+export default ContextMenu;

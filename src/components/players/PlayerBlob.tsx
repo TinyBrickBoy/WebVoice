@@ -8,7 +8,7 @@ import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import MutedIcon from "../icons/MutedIcon.tsx";
 import DeafenedIcon from "../icons/DeafenedIcon.tsx";
 import SpeakingOutline from "./SpeakingOutline.tsx";
-import PlayerContextMenu from "./PlayerContextMenu.tsx";
+import ContextMenu from "../common/ContextMenu.tsx";
 import VolumeSlider from "../common/VolumeSlider.tsx";
 import Input from "../common/Input.tsx";
 
@@ -40,7 +40,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
     }, [signal]);
 
     return <>
-        <PlayerContextMenu contextContent={<>
+        <ContextMenu content={<>
             <MinecraftComponent className={"font-bold text-xl"} component={state.name}/>
             <Input label={"Volume"}>
                 <VolumeSlider type={"player"} name={state.uniqueId.name}/>
@@ -59,7 +59,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
                     <MinecraftComponent component={name} className={"hidden group-hover:flex select-none"}/>
                 </div>
             </SpeakingOutline>
-        </PlayerContextMenu>
+        </ContextMenu>
     </>;
 };
 
