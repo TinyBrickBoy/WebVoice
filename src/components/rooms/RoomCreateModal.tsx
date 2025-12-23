@@ -69,9 +69,9 @@ const RoomCreateModal: FunctionComponent<Props> = ({visible: [visible, setVisibl
                         value={type}
                         onUpdate={value => setType(value as GroupAudioType)}
                     >
-                        <option value={"normal"}>Normal</option>
-                        <option value={"open"}>Open</option>
-                        <option value={"isolated"}>Isolated</option>
+                        <option value={"normal"}>Normal: You can hear, but not talk to other players</option>
+                        <option value={"open"}>Open: You can talk and hear other players</option>
+                        <option value={"isolated"}>Isolated: You can't speak with or hear other players</option>
                     </Dropdown>
                 </Input>
                 <Button
