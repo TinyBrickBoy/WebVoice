@@ -8,13 +8,15 @@ interface Props extends Omit<JSX.HTMLAttributes, "onContextMenu"> {
 
 type Pos = [number, number] | null
 
-const ContextMenu: FunctionComponent<Props> = ({children, attributes, content, ...other}) => {
+const ContextMenu: FunctionComponent<Props> = ({className, children, attributes, content, ...other}) => {
     const [pos, setPos] = useState<Pos>(null);
     const contextRef = useRef<HTMLDivElement | null>(null);
 
-    const onContextMenu = useCallback((event: MouseEvent) => {
-        event.preventDefault();
-        setPos([event.pageX, event.pageY]);
+    const onClick = useCallback((event: MouseEvent) => {
+        if (!contextRef.current?.contains(event.target as Node)) {
+            event.preventDefault();
+            setPos([event.pageX, event.pageY]);
+        }
     }, []);
 
     useEffect(() => {
@@ -28,13 +30,19 @@ const ContextMenu: FunctionComponent<Props> = ({children, attributes, content, .
             }
         };
         window.addEventListener("click", handler);
-        return () => window.removeEventListener("click", handler);
+        window.addEventListener("contextmenu", handler);
+        return () => {
+            window.removeEventListener("click", handler);
+            window.removeEventListener("contextmenu", handler);
+        };
     }, [pos]);
 
     return <>
         <div
             {...other}
-            onContextMenu={onContextMenu}
+            className={`cursor-pointer ${className || ""}`}
+            onClick={onClick}
+            onContextMenu={onClick}
         >
             {pos && <div
                 {...(attributes ?? {})}
@@ -43,7 +51,7 @@ const ContextMenu: FunctionComponent<Props> = ({children, attributes, content, .
                     left: `${pos[0]}px`,
                     top: `${pos[1]}px`,
                 }}
-                className={`border-neutral-700 border-2 fixed p-4 rounded-lg bg-neutral-800 z-10 ${attributes?.className || ""}`}
+                className={`cursor-auto border-neutral-700 border-2 fixed p-4 rounded-lg bg-neutral-800 z-10 ${attributes?.className || ""}`}
             >
                 {content}
             </div>}
