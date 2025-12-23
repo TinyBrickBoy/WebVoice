@@ -10,32 +10,7 @@ const SliderInput: FunctionComponent<Props> = ({onChange, onSave, className, chi
         <label className={"flex flex-row gap-4 items-center"}>
             <input
                 {...other} type={"range"}
-                className={`
-                    grow cursor-pointer ${className || ""}
-                    bg-indigo-500 accent-indigo-700
-                    h-1 hover:h-1.5 rounded-full
-                    duration-100
-                    
-                    [&::-webkit-slider-thumb]:h-4
-                    hover:[&::-webkit-slider-thumb]:h-4.5
-                    [&::-webkit-slider-thumb]:w-4
-                    hover:[&::-webkit-slider-thumb]:w-4.5
-                    [&::-webkit-slider-thumb]:border-0
-                    [&::-webkit-slider-thumb]:rounded-full
-                    [&::-webkit-slider-thumb]:bg-white
-                    [&::-webkit-slider-thumb]:cursor-pointer
-                    [&::-webkit-slider-thumb]:duration-100
-                    
-                    [&::-moz-range-thumb]:h-4
-                    hover:[&::-moz-range-thumb]:h-4.5
-                    [&::-moz-range-thumb]:w-4
-                    hover:[&::-moz-range-thumb]:w-4.5
-                    [&::-moz-range-thumb]:border-0
-                    [&::-moz-range-thumb]:rounded-full
-                    [&::-moz-range-thumb]:bg-white
-                    [&::-moz-range-thumb]:cursor-pointer
-                    [&::-moz-range-thumb]:duration-100
-                `}
+                className={`grow rounded-lg bg-neutral-500 accent-indigo-500 cursor-pointer ${className || ""}`}
                 onInput={({currentTarget: {value}}) => onChange(Number(value))}
                 onChange={({currentTarget: {value}}) => !onSave || onSave(Number(value))}
             />
