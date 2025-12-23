@@ -8,6 +8,9 @@ import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import MutedIcon from "../icons/MutedIcon.tsx";
 import DeafenedIcon from "../icons/DeafenedIcon.tsx";
 import SpeakingOutline from "./SpeakingOutline.tsx";
+import PlayerContextMenu from "./PlayerContextMenu.tsx";
+import VolumeSlider from "../common/VolumeSlider.tsx";
+import Input from "../common/Input.tsx";
 
 interface Props {
     state: PlayerState;
@@ -37,19 +40,26 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
     }, [signal]);
 
     return <>
-        <SpeakingOutline
-            state={state}
-            style={{backgroundColor: color}}
-            className={`group relative flex justify-center h-32 items-center p-6 rounded-lg`}
-        >
-            <CraftHead uuid={uniqueId} className={"w-18"}/>
-            <div
-                className={`absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex-row gap-1.5 text-sm items-center ${(muted || deafened) ? "flex" : "hidden group-hover:flex"}`}
+        <PlayerContextMenu contextContent={<>
+            <MinecraftComponent className={"font-bold text-xl"} component={state.name}/>
+            <Input label={"Volume"}>
+                <VolumeSlider type={"player"} name={state.uniqueId.name}/>
+            </Input>
+        </>}>
+            <SpeakingOutline
+                state={state}
+                style={{backgroundColor: color}}
+                className={`group relative flex justify-center h-32 items-center p-6 rounded-lg`}
             >
-                {deafened ? <DeafenedIcon noHover/> : muted ? <MutedIcon noHover/> : <></>}
-                <MinecraftComponent component={name} className={"hidden group-hover:flex select-none"}/>
-            </div>
-        </SpeakingOutline>
+                <CraftHead uuid={uniqueId} className={"w-18"}/>
+                <div
+                    className={`absolute bottom-0 left-0 m-1 bg-neutral-800/70 leading-none rounded-sm p-[7px] h-6.5 flex-row gap-1.5 text-sm items-center ${(muted || deafened) ? "flex" : "hidden group-hover:flex"}`}
+                >
+                    {deafened ? <DeafenedIcon noHover/> : muted ? <MutedIcon noHover/> : <></>}
+                    <MinecraftComponent component={name} className={"hidden group-hover:flex select-none"}/>
+                </div>
+            </SpeakingOutline>
+        </PlayerContextMenu>
     </>;
 };
 
