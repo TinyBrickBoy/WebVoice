@@ -74,15 +74,14 @@ export const writeVarLong = (buf: ByteBuffer, value: Long) => {
 };
 
 // https://web.archive.org/web/20241130182130/https://wiki.vg/Data_types#Type:String
+const textDecoder = new TextDecoder();
 export const readString = (buf: ByteBuffer): string => {
-    const byteLength = readVarInt(buf);
-    return buf.readUTF8String(byteLength); // FIXME not correct, the parameter excepts the amount of chars to read
+    return textDecoder.decode(readByteArray(buf));
 };
 const textEncoder = new TextEncoder();
 export const writeString = (buf: ByteBuffer, value: string) => {
     const bytes = textEncoder.encode(value);
     writeVarInt(buf, bytes.length);
-    // TODO why doesn't ByteBuffer#writeBytes work?
     for (let i = 0; i < bytes.length; ++i) {
         buf.writeUint8(bytes[i]);
     }
