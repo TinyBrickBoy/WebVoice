@@ -16,7 +16,6 @@ import {AudioControls} from "../scripts/audio/audio_controls.ts";
 import {VolumeManager} from "../scripts/audio/volumes.ts";
 import {AudioMicrophoneManager} from "../scripts/audio/audio_mic.ts";
 import AudioPlayer from "../scripts/audio/audio_player.ts";
-import {startSpeakingTask} from "../scripts/util/speaking_task.ts";
 
 export type VoiceState = {
     socketUrl: URL,
@@ -70,22 +69,17 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     // create global microphone manager
     const microphone = useMemo(
         () => new AudioMicrophoneManager(socket, devices, controls, volumes),
-        [socket, devices, controls, volumes],
+        [socket],
     );
-    // destroy context if microphone manager gets re-created
     useEffect(() => (() => microphone.triggerTeardown()), [microphone]);
+    useEffect(() => microphone.registerInputListener(user, players), [microphone, user, players]);
 
     // create global audio player
     const audio = useMemo(
         () => new AudioPlayer(microphone, controls, devices, volumes),
-        [microphone, controls, devices, volumes],
+        [microphone],
     );
-    useEffect(() => audio.startTasks(), [audio]);
-    useEffect(() => audio.registerSocket(socket), [audio, socket]);
-
-    // create audio speaking ticker task
-    const [_refresh, setRefresh] = useState<number>(0);
-    useEffect(() => startSpeakingTask(controls, user, players, setRefresh), [controls, players]);
+    useEffect(() => audio.startTasks(socket), [audio]);
 
     return <>
         <VoiceStateContext.Provider

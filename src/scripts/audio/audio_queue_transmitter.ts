@@ -47,7 +47,8 @@ class AudioQueueTransmitter extends AudioWorkletProcessor {
         _outputs: Float32Array[][],
     ): boolean {
         const input = inputs[0][0]; // single channel input
-        if (!input) {
+        if (!input || input.length === 0) {
+            this.senderPort?.postMessage(null);
             return true; // no input
         }
         if (this.resample) {

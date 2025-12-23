@@ -13,6 +13,8 @@ import type {VoiceSocket} from "../socket.ts";
 import type {AudioControls} from "./audio_controls.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {VolumeManager} from "./volumes.ts";
+import {EventManager} from "../util/events.ts";
+import type {PlayerState, StateType, UserInfo} from "../types.ts";
 
 const GAIN_MULTIPLIER = 0.2;
 
@@ -97,7 +99,7 @@ const setupMicrophonePipeline = async (
     freeCallbacks.push(volumes.register("input", () => applyVolume()));
 
     // setup packet transmitter at the end of the pipeline
-    freeCallbacks.push(await pushTransmitter(socket, controls, ctx, pipeline, microphone.resampleManually));
+    freeCallbacks.push(await pushTransmitter(socket, controls, microphone, ctx, pipeline, microphone.resampleManually));
 
     // connect all nodes in pipeline together
     for (let i = 1; i < pipeline.length; i++) {
@@ -108,9 +110,13 @@ const setupMicrophonePipeline = async (
     return freeCallbacks;
 };
 
+const INPUT_EVENT_ON = new CustomEvent("input", {detail: true});
+const INPUT_EVENT_OFF = new CustomEvent("input", {detail: false});
+
 const pushTransmitter = async (
     socket: VoiceSocket,
     controls: AudioControls,
+    microphone: AudioMicrophoneManager,
     ctx: AudioContext,
     pipeline: AudioNode[],
     resampleManually: boolean,
@@ -131,24 +137,27 @@ const pushTransmitter = async (
     const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
 
     // receive voice frames from worker via messaging channel
-    channel.port1.onmessage = async ({data}: MessageEvent<number[]>) => {
-        if (controls.muted) {
+    channel.port1.onmessage = async ({data}: MessageEvent<number[] | null>) => {
+        if (!data || controls.muted) {
+            microphone.fire(INPUT_EVENT_OFF);
             return; // don't send any data if muted
         }
         frameSamples.set(data);
 
         const inputVol = getHighestAudioPercent(frameSamples);
         if (inputVol < 0.01) { // skip if quieter than 1%
+            microphone.fire(INPUT_EVENT_OFF);
             return;
         }
+        microphone.fire(INPUT_EVENT_ON);
 
-        controls.lastSound = Date.now(); // abuse shared state
         const opus = await encoder.encodeFrame(frameSamples);
         socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
     };
 
     return () => {
         encoder.free().catch(error => console.error(error));
+        channel.port1.close();
     };
 };
 
@@ -156,7 +165,7 @@ export const ANALYZER_FFT_SIZE = 256;
 // defined as half of the FFT size according to https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/frequencyBinCount
 export const ANALYZER_FREQ_BIN_COUNT = ANALYZER_FFT_SIZE / 2;
 
-export class AudioMicrophoneManager {
+export class AudioMicrophoneManager extends EventManager {
 
     private readonly socket: VoiceSocket;
     private readonly devices: AudioDeviceManager;
@@ -179,6 +188,7 @@ export class AudioMicrophoneManager {
         controls: AudioControls,
         volumes: VolumeManager,
     ) {
+        super();
         this.socket = socket;
         this.devices = devices;
         this.controls = controls;
@@ -288,6 +298,18 @@ export class AudioMicrophoneManager {
         if (this._analyzers) {
             this._analyzers = null;
         }
+    }
+
+    public registerInputListener(
+        [user]: StateType<UserInfo>,
+        [players]: StateType<Record<string, PlayerState>>,
+    ) {
+        return this.register(
+            "input",
+            ({detail: speaking}: CustomEvent<boolean>) => {
+                players[user.uniqueId.name]?.tickSpeaking(speaking || undefined);
+            },
+        );
     }
 
     public hasContext() {

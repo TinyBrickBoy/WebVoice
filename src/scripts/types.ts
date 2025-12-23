@@ -3,6 +3,7 @@ import type {UUID} from "./util/uuid.ts";
 import type {Component} from "./network/component.ts";
 import {readBoolean, readComponentJson, readUniqueId} from "./network/buffer.ts";
 import type {Dispatch, StateUpdater} from "preact/hooks";
+import {EventManager} from "./util/events.ts";
 
 export class Vector3d {
 
@@ -93,7 +94,10 @@ const STATE_FLAG_DEAFENED = 1 << 1;
 const STATE_FLAG_HAS_GROUP = 1 << 2;
 const STATE_FLAG_HAS_SERVER = 1 << 3;
 
-export class PlayerState {
+const STATE_SPEAK_EVENT_ON = new CustomEvent("speak", {detail: true});
+const STATE_SPEAK_EVENT_OFF = new CustomEvent("speak", {detail: false});
+
+export class PlayerState extends EventManager {
 
     public readonly uniqueId: UUID;
     public readonly name: Component;
@@ -107,6 +111,7 @@ export class PlayerState {
     constructor(uniqueId: UUID, name: Component, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
     constructor(buf: ByteBuffer);
     constructor(param: ByteBuffer | UUID, name?: Component, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null, serverId?: UUID | null) {
+        super();
         if ("readByte" in param) {
             this.uniqueId = readUniqueId(param);
             this.name = readComponentJson(param);
@@ -143,6 +148,23 @@ export class PlayerState {
 
     public on(serverId: UUID | null) {
         return this.serverId?.name === serverId?.name;
+    }
+
+    public tickSpeaking(speaking?: boolean) {
+        if (speaking === undefined) {
+            speaking = Date.now() - this.lastSpeaking <= 130;
+        } else if (speaking) {
+            this.lastSpeaking = Date.now();
+        }
+        if (this.speaking !== speaking) {
+            if (speaking) {
+                this.speaking = true;
+                this.fire(STATE_SPEAK_EVENT_ON);
+            } else {
+                this.speaking = false;
+                this.fire(STATE_SPEAK_EVENT_OFF);
+            }
+        }
     }
 }
 

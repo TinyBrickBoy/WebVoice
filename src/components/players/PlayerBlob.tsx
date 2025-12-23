@@ -7,6 +7,7 @@ import {useAbortSignal} from "../../scripts/util/hooks.ts";
 import MinecraftComponent from "../common/MinecraftComponent.tsx";
 import MutedIcon from "../icons/MutedIcon.tsx";
 import DeafenedIcon from "../icons/DeafenedIcon.tsx";
+import SpeakingOutline from "./SpeakingOutline.tsx";
 
 interface Props {
     state: PlayerState;
@@ -14,8 +15,8 @@ interface Props {
 
 type ColorResponse = { error: string } | { color: number }
 
-const fetchColor = async (uuid: UUID, abort: AbortSignal) => {
-    const resp = await fetch(`/head/${uuid.name}/color`, {signal: abort});
+const fetchColor = async (uuid: UUID, signal: AbortSignal) => {
+    const resp = await fetch(`/head/${uuid.name}/color`, {signal});
     const respBody = await resp.json() as ColorResponse;
     if ("error" in respBody) {
         throw new Error(`Failed to fetch color for ${uuid}: ${respBody.error}`);
@@ -24,20 +25,22 @@ const fetchColor = async (uuid: UUID, abort: AbortSignal) => {
     return `#${rgbColor.toString(16).padStart(6, "0")}`;
 };
 
-const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name, muted, deafened}}) => {
-    const [color, setColor] = useState<JSX.CSSProperties["background-color"]>("var(--color-neutral-800)");
+const PlayerBlob: FunctionComponent<Props> = ({state}) => {
+    const {uniqueId, name, muted, deafened} = state;
 
-    const abort = useAbortSignal([uniqueId]);
+    const [color, setColor] = useState<JSX.CSSProperties["background-color"]>("var(--color-neutral-800)");
+    const signal = useAbortSignal([uniqueId.name]);
     useEffect(() => {
-        fetchColor(uniqueId, abort)
+        fetchColor(uniqueId, signal)
             .then(color => setColor(color))
             .catch(error => console.error(error));
-    }, [abort]);
+    }, [signal]);
 
     return <>
-        <div
+        <SpeakingOutline
+            state={state}
             style={{backgroundColor: color}}
-            className={`group relative flex justify-center h-32 items-center p-6 rounded-lg m-[0.2rem] ${speaking ? "outline-emerald-500 outline-[0.2rem]" : ""}`}
+            className={`group relative flex justify-center h-32 items-center p-6 rounded-lg`}
         >
             <CraftHead uuid={uniqueId} className={"w-18"}/>
             <div
@@ -46,7 +49,7 @@ const PlayerBlob: FunctionComponent<Props> = ({state: {uniqueId, speaking, name,
                 {deafened ? <DeafenedIcon noHover/> : muted ? <MutedIcon noHover/> : <></>}
                 <MinecraftComponent component={name} className={"hidden group-hover:flex select-none"}/>
             </div>
-        </div>
+        </SpeakingOutline>
     </>;
 };
 

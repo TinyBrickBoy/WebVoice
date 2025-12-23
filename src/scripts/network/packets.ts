@@ -29,6 +29,23 @@ export abstract class DecodablePacket extends Packet {
 
 // clientbound
 
+export class AudioEndPacket extends DecodablePacket {
+
+    public readonly channelId: UUID;
+    public readonly senderId: UUID;
+
+    constructor(buf: ByteBuffer) {
+        super();
+        const senderIsChannel = readBoolean(buf);
+        this.channelId = readUniqueId(buf);
+        if (senderIsChannel) {
+            this.senderId = this.channelId;
+        } else {
+            this.senderId = readUniqueId(buf);
+        }
+    }
+}
+
 const AUDIO_FLAG_HAS_CATEGORY = 1 << 0;
 const AUDIO_FLAG_HAS_POSITION = 1 << 1;
 const AUDIO_FLAG_SENDER_IS_CHANNEL = 1 << 2;

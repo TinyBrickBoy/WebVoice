@@ -2,7 +2,7 @@ import audioQueueReceiverWorkletUrl from "./audio_queue_receiver.ts?worker&url";
 import {CHANNEL_COUNT, SAMPLE_RATE} from "./audio_constants.ts";
 import {OpusDecoderWebWorker} from "@minceraftmc/opus-decoder";
 import type {VoiceSocket} from "../socket.ts";
-import {AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
+import type {AudioEndPacket, AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
 import {type AudioQueueData, type Position3d, Vector3d} from "../types.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {AudioControls} from "./audio_controls.ts";
@@ -80,12 +80,14 @@ export default class AudioPlayer {
         );
     }
 
-    public startTasks() {
+    public startTasks(socket: VoiceSocket) {
         const timerCallback = this.startGarbageCollector();
         const listenerCallback = this.registerSpeakerListener();
+        const socketCallback = this.registerSocket(socket);
         return () => {
             timerCallback();
             listenerCallback();
+            socketCallback();
         };
     }
 
@@ -130,6 +132,16 @@ export default class AudioPlayer {
         await this.ctx.audioWorklet.addModule(audioQueueReceiverWorkletUrl);
 
         this.refreshSpeaker();
+    }
+
+    private async resolveExistingChannel(channel: string): Promise<ChannelData | null> {
+        const existingData = this.channels[channel];
+        if (existingData) {
+            await existingData.decoder.ready;
+            existingData.lastTouch = Date.now();
+            return existingData;
+        }
+        return null;
     }
 
     private async resolveChannel(channel: string): Promise<ChannelData> {
@@ -187,6 +199,13 @@ export default class AudioPlayer {
                 const totalVolume = outputVolume * playerVolume * categoryVolume;
 
                 this.playFrame(packet.channelId.name, totalVolume, packet.audio, packet.position)
+                    .catch(error => console.error(error));
+            })
+            .register("audio_end", ({detail: packet}: CustomEvent<AudioEndPacket>) => {
+                console.log("audio end packet received");
+                // reset decoder state when receiving audio end packet
+                this.resolveExistingChannel(packet.channelId.name)
+                    .then(channel => channel?.decoder.reset())
                     .catch(error => console.error(error));
             })
             .register("position_update", ({detail: {position, yaw, pitch}}: CustomEvent<PositionUpdatePacket>) => {

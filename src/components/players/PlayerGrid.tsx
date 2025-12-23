@@ -1,8 +1,8 @@
 import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
-import {useEffect, useMemo, useState} from "preact/hooks";
-import {AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
+import {useEffect, useMemo} from "preact/hooks";
+import {AudioEndPacket, AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
 import {PlayerState} from "../../scripts/types.ts";
 import {uuidFromString} from "../../scripts/util/uuid.ts";
 
@@ -32,21 +32,16 @@ const PlayerGrid: FunctionComponent = ({children}) => {
             .callback();
     }, [socket]);
 
-    const [_refresh, setRefresh] = useState<number>(0);
     useEffect(() => {
-        return socket.register("audio", ({detail: {senderId, audio}}: CustomEvent<AudioPacket>) => {
-            const state = players[senderId.name];
-            if (!state) {
-                return; // unknown player
-            }
-            state.lastSpeaking = Date.now();
-            // zero-length audio data marks the end of an audio stream
-            const speakState = audio.length > 0;
-            if (state.speaking !== speakState) {
-                state.speaking = speakState;
-                setRefresh(i => i + 1);
-            }
-        });
+        return socket
+            .registers()
+            .register("audio", ({detail: {senderId}}: CustomEvent<AudioPacket>) => {
+                players[senderId.name]?.tickSpeaking(true);
+            })
+            .register("audio_end", ({detail: {senderId}}: CustomEvent<AudioEndPacket>) => {
+                players[senderId.name]?.tickSpeaking(false);
+            })
+            .callback();
     }, [socket, players]);
 
     const playerList = useMemo(() => {

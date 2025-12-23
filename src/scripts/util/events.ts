@@ -2,6 +2,10 @@ export type EventListener = (event: any) => void
 
 export type RemovalCallback = () => void;
 
+export const NOOP_REMOVAL_CALLBACK: RemovalCallback = () => {
+    // NO-OP
+};
+
 export class Registers {
 
     private manager: EventManager;
@@ -26,7 +30,7 @@ export class EventManager {
     private listeners: Record<string, EventListener[]> = {};
 
     public fire(event: Event): boolean {
-        const listeners = this.listeners[event.type] || [];
+        const listeners = this.listeners[event.type] ?? [];
         if (listeners.length) {
             listeners.forEach(listener => listener(event));
             return true;

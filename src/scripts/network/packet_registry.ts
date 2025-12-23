@@ -1,4 +1,5 @@
 import {
+    AudioEndPacket,
     AudioPacket,
     CategoryAddPacket,
     CategoryRemovePacket,
@@ -61,6 +62,8 @@ const packetCtors = [
     ["room_join_request", RoomJoinRequestPacket],
     ["room_leave", RoomLeavePacket],
     ["state_info", StateInfoPacket],
+    // "newer" packets added at the bottom to increase backwards compat
+    ["audio_end", AudioEndPacket],
 ] as PacketEntry[];
 
 // save packet id in packet constructor to use when writing the packet
