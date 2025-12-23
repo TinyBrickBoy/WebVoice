@@ -41,10 +41,12 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
 
     return <>
         <ContextMenu content={<>
-            <MinecraftComponent className={"font-semibold text-lg"} component={state.name}/>
-            <Input label={"Volume"}>
-                <VolumeSlider type={"player"} name={state.uniqueId.name}/>
-            </Input>
+            <div className={"flex flex-col"}>
+                <MinecraftComponent className={"text-xs mb-3"} component={state.name}/>
+                <Input label={<><span className={"font-medium text-white"}>Volume</span></>}>
+                    <VolumeSlider type={"player"} name={state.uniqueId.name}/>
+                </Input>
+            </div>
         </>}>
             <SpeakingOutline
                 state={state}
