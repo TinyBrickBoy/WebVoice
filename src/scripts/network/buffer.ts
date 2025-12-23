@@ -80,11 +80,7 @@ export const readString = (buf: ByteBuffer): string => {
 };
 const textEncoder = new TextEncoder();
 export const writeString = (buf: ByteBuffer, value: string) => {
-    const bytes = textEncoder.encode(value);
-    writeVarInt(buf, bytes.length);
-    for (let i = 0; i < bytes.length; ++i) {
-        buf.writeUint8(bytes[i]);
-    }
+    writeByteArray(buf, textEncoder.encode(value));
 };
 
 // why is this not a default method? seems strange...
