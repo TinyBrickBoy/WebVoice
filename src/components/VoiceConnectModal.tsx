@@ -66,12 +66,13 @@ const VoiceConnectModal: FunctionComponent<Props> = ({demo}) => {
             setError(null);
             return;
         }
-        socket.open();
         setState("connecting");
+        socket.open();
     }, [socket, socketUrl, demo]);
 
     const tryOpenSocket = useCallback(() => {
         if (permissionState === "todo") {
+            setState("checking");
             checkPermissions()
                 .then(result => !result || openSocket())
                 .catch(error => console.error(error));

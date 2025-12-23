@@ -185,4 +185,4 @@ export type AudioQueueData = {
 }
 
 export type StateType<S> = [S, Dispatch<StateUpdater<S>>];
-export type SocketState = "disconnected" | "connecting" | "connected"
+export type SocketState = "disconnected" | "checking" | "connecting" | "connected"

@@ -19,16 +19,12 @@ const VoiceContainer: FunctionComponent<Props> = ({socketUrl}) => {
     const {
         socket,
         user: [_user, setUser],
-        state: [_state, setState],
     } = useVoiceStateContext();
 
     useEffect(() => {
-        // register events
         return socket.registers()
-            .register("open", () => setState("connected"))
             .register("close", (event: CloseEvent) => {
                 console.error(`Websocket closed with ${event.code}: ${event.reason}`, event);
-                setState("disconnected");
             })
             .register("connected", ({detail: packet}: CustomEvent<ConnectedPacket>) => {
                 // save player info
