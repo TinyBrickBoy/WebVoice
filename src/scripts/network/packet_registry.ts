@@ -5,6 +5,7 @@ import {
     CategoryRemovePacket,
     ConnectedPacket,
     DecodablePacket,
+    InputEndPacket,
     InputSoundPacket,
     KeepAlivePacket,
     type Packet,
@@ -64,6 +65,7 @@ const packetCtors = [
     ["state_info", StateInfoPacket],
     // "newer" packets added at the bottom to increase backwards compat
     ["audio_end", AudioEndPacket],
+    ["input_end", InputEndPacket],
 ] as PacketEntry[];
 
 // save packet id in packet constructor to use when writing the packet

@@ -2,7 +2,7 @@ import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "./audio_constants.ts";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
 import {OpusApplication, OpusEncoderWebWorker} from "@minceraftmc/opus-encoder";
 import {getHighestAudioPercent} from "../util/util.ts";
-import {InputSoundPacket} from "../network/packets.ts";
+import {InputEndPacket, InputSoundPacket} from "../network/packets.ts";
 import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWorklet.js?url";
 import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
@@ -155,9 +155,15 @@ const pushTransmitter = async (
         socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
     };
 
+    // reset encoder state if microphone input ends
+    const listenerCallback = microphone.register("input_end", () => {
+        encoder.reset().catch(error => console.error(error));
+    });
+
     return () => {
         encoder.free().catch(error => console.error(error));
         channel.port1.close();
+        listenerCallback();
     };
 };
 
@@ -307,7 +313,18 @@ export class AudioMicrophoneManager extends EventManager {
         return this.register(
             "input",
             ({detail: speaking}: CustomEvent<boolean>) => {
-                players[user.uniqueId.name]?.tickSpeaking(speaking || undefined);
+                const player = players[user.uniqueId.name];
+                if (!player) {
+                    return; // own player state isn't known
+                }
+                const prevSpeaking = player.speaking;
+                player.tickSpeaking(speaking || undefined);
+
+                if (prevSpeaking && !player.speaking) {
+                    // if we stopped speaking, send audio end packet
+                    this.socket.sendPacket(InputEndPacket.INSTANCE);
+                    this.fire(new CustomEvent("input_end"));
+                }
             },
         );
     }

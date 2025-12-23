@@ -239,6 +239,19 @@ export class PingPacket extends DecodablePacket {
 
 // servicebound
 
+export class InputEndPacket extends Packet {
+
+    static INSTANCE = new InputEndPacket();
+
+    constructor() {
+        super();
+    }
+
+    public encode(_buf: ByteBuffer) {
+        // NO-OP
+    }
+}
+
 export class InputSoundPacket extends Packet {
 
     public readonly audio: Uint8Array;
