@@ -10,7 +10,7 @@ const Footer: FunctionComponent = () => {
     const state = players[user.uniqueId.name];
 
     return <>
-        <div className={"flex flex-row justify-center gap-2 mt-2 w-1/4"}>
+        <div className={"flex flex-row justify-center gap-2 mt-2 w-full"}>
             <PlayerInfo
                 state={state ?? {
                     ...user,
