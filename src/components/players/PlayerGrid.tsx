@@ -2,7 +2,7 @@ import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo} from "preact/hooks";
-import {AudioEndPacket, AudioPacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
+import {AudioEndPacket, AudioPacket, StateRemovePacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
 import {PlayerState} from "../../scripts/types.ts";
 import {uuidFromString} from "../../scripts/util/uuid.ts";
 
@@ -27,6 +27,13 @@ const PlayerGrid: FunctionComponent = ({children}) => {
             .register("state_update", ({detail: {state}}: CustomEvent<StateUpdatePacket>) => {
                 setPlayers(players => {
                     return {...players, [state.uniqueId.name]: state};
+                });
+            })
+            .register("state_remove", ({detail: {playerId}}: CustomEvent<StateRemovePacket>) => {
+                setPlayers(players => {
+                    const newPlayers = {...players};
+                    delete newPlayers[playerId.name];
+                    return newPlayers;
                 });
             })
             .callback();
