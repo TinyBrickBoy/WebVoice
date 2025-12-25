@@ -21,12 +21,33 @@ const PlayerGrid: FunctionComponent = ({children}) => {
     }, [state === "connected"]);
 
     useEffect(() => {
+        const interval = setInterval(() => {
+            // periodically tick speaking state of players to ensure
+            // there are no players marked as speaking without actually speaking
+            setPlayers(players => {
+                for (const player of Object.values(players)) {
+                    player.tickSpeaking(undefined);
+                }
+                return players; // no change
+            });
+        }, 1000 / 2);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
         return socket
             .registers()
             .register("open", () => setPlayers({}))
             .register("state_update", ({detail: {state}}: CustomEvent<StateUpdatePacket>) => {
                 setPlayers(players => {
-                    return {...players, [state.uniqueId.name]: state};
+                    const playerId = state.uniqueId.name;
+                    // transfer old speaking state
+                    const oldState = players[playerId];
+                    if (oldState) {
+                        state.lastSpeaking = oldState.lastSpeaking;
+                        state.speaking = oldState.speaking;
+                    }
+                    return {...players, [playerId]: state};
                 });
             })
             .register("state_remove", ({detail: {playerId}}: CustomEvent<StateRemovePacket>) => {
