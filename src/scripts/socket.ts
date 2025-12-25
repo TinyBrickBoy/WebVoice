@@ -19,8 +19,8 @@ export class VoiceSocket extends EventManager {
             // read the packet
             const buf = ByteBuffer.wrap(event.data);
             const packet = readPacket(buf.reset());
-            if (!(packet.packet instanceof AudioPacket) && !(packet.packet instanceof PositionUpdatePacket)) {
-                console.log("CLIENTBOUND", packet.packet);
+            if (!(packet.packet instanceof AudioPacket) && !(packet.packet instanceof PositionUpdatePacket) && !(packet.packet in KeepAlivePacket)) {
+                console.log("CLIENTBOUND", packet.id, packet.packet);
             }
             // fire as event to be handled
             this.fire(new CustomEvent(packet.id, {detail: packet.packet}));
@@ -37,7 +37,7 @@ export class VoiceSocket extends EventManager {
             console.warn("Skipped sending packet because socket isn't connected", packet);
             return;
         }
-        if (!(packet instanceof InputSoundPacket)) {
+        if (!(packet instanceof InputSoundPacket) && !(packet instanceof KeepAlivePacket)) {
             console.log("SERVICEBOUND", packet);
         }
         // write to new buffer
