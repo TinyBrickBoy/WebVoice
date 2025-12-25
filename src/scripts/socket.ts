@@ -1,6 +1,6 @@
 import {EventManager} from "./util/events";
 import ByteBuffer from "bytebuffer";
-import {KeepAlivePacket, Packet} from "./network/packets.ts";
+import {AudioPacket, InputSoundPacket, KeepAlivePacket, Packet, PositionUpdatePacket} from "./network/packets.ts";
 import {readPacket, writePacket} from "./network/packet_registry.ts";
 
 export class VoiceSocket extends EventManager {
@@ -19,6 +19,9 @@ export class VoiceSocket extends EventManager {
             // read the packet
             const buf = ByteBuffer.wrap(event.data);
             const packet = readPacket(buf.reset());
+            if (!(packet.packet instanceof AudioPacket) && !(packet.packet instanceof PositionUpdatePacket)) {
+                console.log("CLIENTBOUND", packet.packet);
+            }
             // fire as event to be handled
             this.fire(new CustomEvent(packet.id, {detail: packet.packet}));
         });
@@ -33,6 +36,9 @@ export class VoiceSocket extends EventManager {
         if (!this.socket) {
             console.warn("Skipped sending packet because socket isn't connected", packet);
             return;
+        }
+        if (!(packet instanceof InputSoundPacket)) {
+            console.log("SERVICEBOUND", packet);
         }
         // write to new buffer
         const buf = ByteBuffer.allocate();
