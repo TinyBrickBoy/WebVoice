@@ -19,7 +19,7 @@ export class VoiceSocket extends EventManager {
             // read the packet
             const buf = ByteBuffer.wrap(event.data);
             const packet = readPacket(buf.reset());
-            if (!(packet.packet instanceof AudioPacket) && !(packet.packet instanceof PositionUpdatePacket) && !(packet.packet in KeepAlivePacket)) {
+            if (!(packet.packet instanceof AudioPacket) && !(packet.packet instanceof PositionUpdatePacket) && !(packet.packet instanceof KeepAlivePacket)) {
                 console.log("CLIENTBOUND", packet.id, packet.packet);
             }
             // fire as event to be handled
