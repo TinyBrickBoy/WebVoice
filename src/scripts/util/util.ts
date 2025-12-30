@@ -27,3 +27,8 @@ export const getHighestAudioPercent = (samples: Float32Array) => {
     }
     return (highest + 127) / 127;
 };
+
+// pads the passed string with zeros to the full length of a sha256 hash string
+export const fixSha256 = (hash?: string | null) => {
+    return !hash ? null : hash.padStart(64, "0");
+};

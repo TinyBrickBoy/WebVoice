@@ -1,7 +1,7 @@
 import ByteBuffer from "bytebuffer";
 import type {UUID} from "./util/uuid.ts";
 import type {Component} from "./network/component.ts";
-import {readBoolean, readComponentJson, readUniqueId} from "./network/buffer.ts";
+import {readBoolean, readComponentJson, readString, readUniqueId} from "./network/buffer.ts";
 import type {Dispatch, StateUpdater} from "preact/hooks";
 import {EventManager} from "./util/events.ts";
 
@@ -93,6 +93,7 @@ const STATE_FLAG_MUTED = 1 << 0;
 const STATE_FLAG_DEAFENED = 1 << 1;
 const STATE_FLAG_HAS_GROUP = 1 << 2;
 const STATE_FLAG_HAS_SERVER = 1 << 3;
+const STATE_FLAG_HAS_TEXTURE_HASH = 1 << 4;
 
 const STATE_SPEAK_EVENT_ON = new CustomEvent("speak", {detail: true});
 const STATE_SPEAK_EVENT_OFF = new CustomEvent("speak", {detail: false});
@@ -101,6 +102,7 @@ export class PlayerState extends EventManager {
 
     public readonly uniqueId: UUID;
     public readonly name: Component;
+    public readonly textureHash: string | null;
     public readonly muted: boolean;
     public readonly deafened: boolean;
     public readonly primaryRoomId: UUID | null;
@@ -108,33 +110,39 @@ export class PlayerState extends EventManager {
     public lastSpeaking: number = 0;
     public speaking: boolean = false;
 
-    constructor(uniqueId: UUID, name: Component, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
+    constructor(uniqueId: UUID, name: Component, textureHash: string | null, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
     constructor(buf: ByteBuffer);
-    constructor(param: ByteBuffer | UUID, name?: Component, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null, serverId?: UUID | null) {
+    constructor(param: ByteBuffer | UUID, name?: Component, textureHash?: string | null, muted?: boolean, deafened?: boolean, primaryRoomId?: UUID | null, serverId?: UUID | null) {
         super();
         if ("readByte" in param) {
             this.uniqueId = readUniqueId(param);
             this.name = readComponentJson(param);
             const flags = param.readByte();
-            this.muted = (flags & STATE_FLAG_MUTED) != 0;
-            this.deafened = (flags & STATE_FLAG_DEAFENED) != 0;
-            if ((flags & STATE_FLAG_HAS_GROUP) != 0) {
+            this.muted = (flags & STATE_FLAG_MUTED) !== 0;
+            this.deafened = (flags & STATE_FLAG_DEAFENED) !== 0;
+            if ((flags & STATE_FLAG_HAS_GROUP) !== 0) {
                 this.primaryRoomId = readUniqueId(param);
             } else {
                 this.primaryRoomId = null;
             }
-            if ((flags & STATE_FLAG_HAS_SERVER) != 0) {
+            if ((flags & STATE_FLAG_HAS_SERVER) !== 0) {
                 this.serverId = readUniqueId(param);
             } else {
                 this.serverId = null;
             }
+            if ((flags & STATE_FLAG_HAS_TEXTURE_HASH) !== 0) {
+                this.textureHash = readString(param);
+            } else {
+                this.textureHash = null;
+            }
         } else {
             this.uniqueId = param;
             this.name = name!!;
+            this.textureHash = textureHash ?? null;
             this.muted = muted!!;
             this.deafened = deafened!!;
-            this.primaryRoomId = primaryRoomId || null;
-            this.serverId = serverId || null;
+            this.primaryRoomId = primaryRoomId ?? null;
+            this.serverId = serverId ?? null;
         }
     }
 

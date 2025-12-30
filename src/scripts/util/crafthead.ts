@@ -1,13 +1,35 @@
-import type {UUID} from "./uuid.ts";
 import {boostVibrance, convertHslToRgb, getAverageHSL, packRgb} from "./image_colors.ts";
 import {decode as decodePng} from "fast-png";
 import {GLOBAL_CACHE, SKIN_ENDPOINT} from "astro:env/server";
 import {CachedMap} from "./cached_map.ts";
+import {uuidFromString} from "./uuid.ts";
 
 const skinEndpoint = process?.env?.SKIN_ENDPOINT ?? SKIN_ENDPOINT;
 const globalCache = (process?.env?.GLOBAL_CACHE ?? `${GLOBAL_CACHE}`) === "true";
 
-export const buildHeadUrl = (uuid: UUID) => skinEndpoint.replace("%s", uuid.name);
+const TEXTURE_SHA256_HASH_BYTES = 256 / 8;
+
+export const validateInput = (input?: string) => {
+    if (!input) {
+        return null;
+    }
+    // validate sha256 texture hashes
+    if (input.length === TEXTURE_SHA256_HASH_BYTES * 2) {
+        const hashBuf = Buffer.from(input, "hex");
+        if (hashBuf.length !== TEXTURE_SHA256_HASH_BYTES) {
+            return null; // invalid input
+        }
+        return hashBuf.toString("hex");
+    }
+    // validate uuids
+    try {
+        return uuidFromString(input).toString();
+    } catch (error) {
+        return null;
+    }
+};
+
+export const buildHeadUrl = (input: string) => skinEndpoint.replace("%s", input);
 
 export type HeadResponse = {
     image: Buffer | null,
@@ -39,18 +61,18 @@ const generateHeadColor = (head: HeadResponse): HeadColorResponse => {
     return {...head, color: packRgb(r, g, b)} as HeadColorResponse;
 };
 
-export const getOrFetchHeadColor = async (uuid: UUID) => {
+export const getOrFetchHeadColor = async (input: string) => {
     if (!colors) {
         // cloudflare workers will cache the outgoing http request for us
-        return generateHeadColor(await fetchHeadImage(uuid));
+        return generateHeadColor(await fetchHeadImage(input));
     }
-    return colors.getOrLoad(uuid.name, async () => {
-        return generateHeadColor(await getOrFetchHead(uuid));
+    return colors.getOrLoad(input, async () => {
+        return generateHeadColor(await getOrFetchHead(input));
     });
 };
 
-const fetchHeadImage = async (uuid: UUID) => {
-    const resp = await fetch(buildHeadUrl(uuid), {
+const fetchHeadImage = async (input: string) => {
+    const resp = await fetch(buildHeadUrl(input), {
         headers: {
             "User-Agent": "SonusWeb (https://github.com/MinceraftMC/SonusWeb, mailto:contact@minceraft.dev)",
         },
@@ -72,9 +94,9 @@ const fetchHeadImage = async (uuid: UUID) => {
     return {error: null, image: Buffer.from(await resp.arrayBuffer()), status: 200} as HeadResponse;
 };
 
-export const getOrFetchHead = (uuid: UUID) => {
+export const getOrFetchHead = (input: string) => {
     if (!heads) {
-        return fetchHeadImage(uuid);
+        return fetchHeadImage(input);
     }
-    return heads.getOrLoad(uuid.name, async () => fetchHeadImage(uuid));
+    return heads.getOrLoad(input, async () => fetchHeadImage(input));
 };

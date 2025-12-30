@@ -1,16 +1,13 @@
 import type {APIRoute} from "astro";
-import {UUID, uuidFromString} from "../../../scripts/util/uuid.ts";
 import {respondJson} from "../../../scripts/util/apiutil.ts";
-import {CACHE_DURATION_SEC, getOrFetchHeadColor} from "../../../scripts/util/crafthead.ts";
+import {CACHE_DURATION_SEC, getOrFetchHeadColor, validateInput} from "../../../scripts/util/crafthead.ts";
 
-export const GET: APIRoute = async ({params: {uuid: uuidStr}}) => {
-    let uuid: UUID;
-    try {
-        uuid = uuidFromString(uuidStr!!);
-    } catch (error) {
-        return respondJson({error}, 400);
+export const GET: APIRoute = async ({params: {input}}) => {
+    const validatedInput = validateInput(input);
+    if (!validatedInput) {
+        return respondJson({error: "invalid input"}, 400);
     }
-    const resp = await getOrFetchHeadColor(uuid);
+    const resp = await getOrFetchHeadColor(validatedInput);
     if (!resp.color || resp.error) {
         return respondJson(
             {error: resp.error}, resp.status, {

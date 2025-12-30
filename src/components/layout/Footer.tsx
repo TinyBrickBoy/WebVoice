@@ -14,6 +14,7 @@ const Footer: FunctionComponent = () => {
             <PlayerInfo
                 state={state ?? {
                     ...user,
+                    textureHash: null,
                     speaking: false,
                     muted: controls.muted,
                     deafened: controls.deafened,
