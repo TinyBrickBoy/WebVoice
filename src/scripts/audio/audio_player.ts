@@ -3,12 +3,7 @@ import type {VoiceSocket} from "../socket.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {AudioMicrophoneManager} from "./audio_mic.ts";
 import {ICE_SERVER, ICE_SERVER_AUTH, ICE_SERVER_USER} from "astro:env/client";
-import {
-    RtcAnswerPacket,
-    RtcRemoteIceCandidateInitPacket,
-    RtcIceCandidatePacket,
-    RtcOfferPacket,
-} from "../network/packets.ts";
+import {RtcIceCandidatePacket, RtcOfferPacket} from "../network/packets.ts";
 
 export default class AudioPlayer {
 
@@ -131,7 +126,7 @@ export default class AudioPlayer {
                 // handle ice candidates
                 this.peer.addEventListener("icecandidate", ({candidate}) => {
                     if (candidate) {
-                        socket.sendPacket(new RtcIceCandidatePacket(candidate));
+                        socket.sendPacket(new RtcIceCandidatePacket(candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex));
                     }
                 });
                 // log messages
@@ -146,20 +141,19 @@ export default class AudioPlayer {
                 // create offer
                 const offer = await this.peer.createOffer({offerToReceiveAudio: true});
                 await this.peer.setLocalDescription(offer);
-                socket.sendPacket(new RtcOfferPacket(offer.sdp!!));
+                socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
             })
-            .register("rtc_answer", async ({detail: {type, sdp}}: CustomEvent<RtcAnswerPacket>) => {
+            .register("rtc_answer", async ({detail: {type, sdp}}: CustomEvent<RtcOfferPacket>) => {
                 await this.peer?.setRemoteDescription({
                     type: type as RTCSdpType,
                     sdp: sdp ?? undefined,
                 });
             })
-            .register("rtc_remote_ice_candidate", async ({detail: packet}: CustomEvent<RtcRemoteIceCandidateInitPacket>) => {
+            .register("rtc_remote_ice_candidate", async ({detail: packet}: CustomEvent<RtcIceCandidatePacket>) => {
                 await this.peer?.addIceCandidate(new RTCIceCandidate({
-                    candidate: packet.candidate ?? undefined,
+                    candidate: packet.sdp ?? undefined,
                     sdpMid: packet.sdpMid,
                     sdpMLineIndex: packet.sdpMLineIndex,
-                    usernameFragment: packet.usernameFragment,
                 }));
             })
             .callback();

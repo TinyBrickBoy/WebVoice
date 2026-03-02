@@ -2,11 +2,7 @@ import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo} from "preact/hooks";
-import {
-    type RemoteVoiceActivityPacket,
-    StateRemovePacket,
-    type StateUpdatePacket,
-} from "../../scripts/network/packets.ts";
+import type {VoiceActivityPacket, StateRemovePacket, StateUpdatePacket} from "../../scripts/network/packets.ts";
 import {PlayerState} from "../../scripts/types.ts";
 import {uuidFromString} from "../../scripts/util/uuid.ts";
 
@@ -52,7 +48,7 @@ const PlayerGrid: FunctionComponent = ({children}) => {
     useEffect(() => {
         return socket
             .registers()
-            .register("remote_voice_activity", ({detail: packet}: CustomEvent<RemoteVoiceActivityPacket>) => {
+            .register("remote_voice_activity", ({detail: packet}: CustomEvent<VoiceActivityPacket>) => {
                 players[packet.playerId.name]?.setSpeaking(packet.active);
             })
             .callback();

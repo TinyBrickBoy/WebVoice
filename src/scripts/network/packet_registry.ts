@@ -12,10 +12,14 @@ import {
     RoomJoinResponsePacket,
     RoomLeavePacket,
     RoomLeaveResponsePacket,
-    RoomRemovePacket, RtcAnswerPacket, RtcRemoteIceCandidateInitPacket, RtcIceCandidatePacket, RtcOfferPacket,
+    RoomRemovePacket,
+    RtcOfferPacket,
+    RtcIceCandidatePacket,
     StateInfoPacket,
     StateRemovePacket,
-    StateUpdatePacket, RemoteVoiceActivityPacket, VoiceActivityPacket, VolumePacket,
+    StateUpdatePacket,
+    VoiceActivityPacket,
+    VolumePacket,
 } from "./packets.ts";
 import ByteBuffer from "bytebuffer";
 import {readVarInt, writeVarInt} from "./buffer.ts";
@@ -47,20 +51,17 @@ const packetCtors = [
     ["room_remove", RoomRemovePacket],
     ["state_remove", StateRemovePacket],
     ["state_update", StateUpdatePacket],
-    ["rtc_answer", RtcAnswerPacket],
-    ["rtc_remote_ice_candidate", RtcRemoteIceCandidateInitPacket],
-    ["remote_voice_activity", RemoteVoiceActivityPacket],
+    ["voice_activity", VoiceActivityPacket],
     // commonbound
     ["keep_alive", KeepAlivePacket],
     ["ping", PingPacket],
+    ["rtc_offer", RtcOfferPacket],
+    ["rtc_ice_candidate", RtcIceCandidatePacket],
     // servicebound
     ["room_create", RoomCreatePacket],
     ["room_join_request", RoomJoinRequestPacket],
     ["room_leave", RoomLeavePacket],
     ["state_info", StateInfoPacket],
-    ["rtc_offer", RtcOfferPacket],
-    ["rtc_ice_candidate", RtcIceCandidatePacket],
-    ["voice_activity", VoiceActivityPacket],
     ["volume", VolumePacket],
 ] as PacketEntry[];
 

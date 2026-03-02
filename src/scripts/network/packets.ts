@@ -139,35 +139,7 @@ export class StateUpdatePacket extends DecodablePacket {
     }
 }
 
-export class RtcAnswerPacket extends DecodablePacket {
-
-    public readonly type: string;
-    public readonly sdp: string | null;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        this.type = readString(buf);
-        this.sdp = readOptional(buf, () => readString(buf));
-    }
-}
-
-export class RtcRemoteIceCandidateInitPacket extends DecodablePacket {
-
-    public readonly candidate: string | null;
-    public readonly sdpMid: string | null;
-    public readonly sdpMLineIndex: number | null;
-    public readonly usernameFragment: string | null;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        this.candidate = readOptional(buf, () => readString(buf));
-        this.sdpMid = readOptional(buf, () => readString(buf));
-        this.sdpMLineIndex = readOptional(buf, () => readVarInt(buf));
-        this.usernameFragment = readOptional(buf, () => readString(buf));
-    }
-}
-
-export class RemoteVoiceActivityPacket extends DecodablePacket {
+export class VoiceActivityPacket extends DecodablePacket {
 
     public readonly playerId: UUID;
     public readonly active: boolean;
@@ -210,6 +182,58 @@ export class PingPacket extends DecodablePacket {
 
     public encode(buf: ByteBuffer): void {
         writeVarLong(buf, this.id);
+    }
+}
+
+export class RtcOfferPacket extends DecodablePacket {
+
+    public readonly type: string;
+    public readonly sdp: string | null;
+
+    constructor(type: string, sdp: string | null);
+    constructor(buf: ByteBuffer);
+    constructor(param: ByteBuffer | string, sdp?: string | null) {
+        super();
+        if (typeof param !== "string") {
+            this.type = readString(param);
+            this.sdp = readOptional(param, () => readString(param));
+        } else {
+            this.type = param;
+            this.sdp = sdp ?? null;
+        }
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeString(buf, this.type);
+        writeOptional(buf, this.sdp, val => writeString(buf, val));
+    }
+}
+
+export class RtcIceCandidatePacket extends DecodablePacket {
+
+    public readonly sdp: string | null;
+    public readonly sdpMid: string | null;
+    public readonly sdpMLineIndex: number | null;
+
+    constructor(sdp: string | null, sdpMid: string | null, sdpMLineIndex: number | null);
+    constructor(buf: ByteBuffer);
+    constructor(param: ByteBuffer | string | null, sdpMid?: string | null, sdpMLineIndex?: number | null) {
+        super();
+        if (param && typeof param !== "string") {
+            this.sdp = readOptional(param, () => readString(param));
+            this.sdpMid = readOptional(param, () => readString(param));
+            this.sdpMLineIndex = readOptional(param, () => readVarInt(param));
+        } else {
+            this.sdp = param;
+            this.sdpMid = sdpMid ?? null;
+            this.sdpMLineIndex = sdpMLineIndex ?? null;
+        }
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeOptional(buf, this.sdp, val => writeString(buf, val));
+        writeOptional(buf, this.sdpMid, val => writeString(buf, val));
+        writeOptional(buf, this.sdpMLineIndex, val => writeVarInt(buf, val));
     }
 }
 
@@ -293,100 +317,6 @@ export class StateInfoPacket extends Packet {
     public encode(buf: ByteBuffer): void {
         writeBoolean(buf, this.muted);
         writeBoolean(buf, this.deafened);
-    }
-}
-
-export class PacketRtcIceCandidate {
-
-    public readonly address: string | null;
-    public readonly candidate: string;
-    public readonly component: string | null;
-    public readonly foundation: string | null;
-    public readonly port: number | null;
-    public readonly priority: number | null;
-    public readonly protocol: string | null;
-    public readonly relatedAddress: string | null;
-    public readonly relatedPort: number | null;
-    public readonly sdpMid: string | null;
-    public readonly sdpMLineIndex: number | null;
-    public readonly tcpType: string | null;
-    public readonly type: string | null;
-    public readonly usernameFragment: string | null;
-
-    constructor(candidate: RTCIceCandidate) {
-        this.address = candidate.address;
-        this.candidate = candidate.candidate;
-        this.component = candidate.component;
-        this.foundation = candidate.foundation;
-        this.port = candidate.port;
-        this.priority = candidate.priority;
-        this.protocol = candidate.protocol;
-        this.relatedAddress = candidate.relatedAddress;
-        this.relatedPort = candidate.relatedPort;
-        this.sdpMid = candidate.sdpMid;
-        this.sdpMLineIndex = candidate.sdpMLineIndex;
-        this.tcpType = candidate.tcpType;
-        this.type = candidate.type;
-        this.usernameFragment = candidate.usernameFragment;
-    }
-
-    public encode(buf: ByteBuffer): void {
-        writeOptional(buf, this.address, val => writeString(buf, val));
-        writeString(buf, this.candidate);
-        writeOptional(buf, this.component, val => writeString(buf, val));
-        writeOptional(buf, this.foundation, val => writeString(buf, val));
-        writeOptional(buf, this.port, val => buf.writeShort(val));
-        writeOptional(buf, this.priority, val => writeVarInt(buf, val));
-        writeOptional(buf, this.protocol, val => writeString(buf, val));
-        writeOptional(buf, this.relatedAddress, val => writeString(buf, val));
-        writeOptional(buf, this.relatedPort, val => buf.writeShort(val));
-        writeOptional(buf, this.sdpMid, val => writeString(buf, val));
-        writeOptional(buf, this.sdpMLineIndex, val => writeVarInt(buf, val));
-        writeOptional(buf, this.tcpType, val => writeString(buf, val));
-        writeOptional(buf, this.type, val => writeString(buf, val));
-        writeOptional(buf, this.usernameFragment, val => writeString(buf, val));
-    }
-}
-
-export class RtcIceCandidatePacket extends Packet {
-
-    public readonly candidate: PacketRtcIceCandidate;
-
-    constructor(candidate: RTCIceCandidate) {
-        super();
-        this.candidate = new PacketRtcIceCandidate(candidate);
-    }
-
-    public encode(buf: ByteBuffer): void {
-        this.candidate.encode(buf);
-    }
-}
-
-export class RtcOfferPacket extends Packet {
-
-    public readonly spd: string;
-
-    constructor(spd: string) {
-        super();
-        this.spd = spd;
-    }
-
-    public encode(buf: ByteBuffer): void {
-        writeString(buf, this.spd);
-    }
-}
-
-export class VoiceActivityPacket extends Packet {
-
-    public readonly active: boolean;
-
-    constructor(active: boolean) {
-        super();
-        this.active = active;
-    }
-
-    public encode(buf: ByteBuffer): void {
-        writeBoolean(buf, this.active);
     }
 }
 
