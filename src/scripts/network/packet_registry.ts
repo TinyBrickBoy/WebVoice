@@ -20,6 +20,7 @@ import {
     StateUpdatePacket,
     VoiceActivityPacket,
     VolumePacket,
+    RtcConnectPacket,
 } from "./packets.ts";
 import ByteBuffer from "bytebuffer";
 import {readVarInt, writeVarInt} from "./buffer.ts";
@@ -52,6 +53,7 @@ const packetCtors = [
     ["state_remove", StateRemovePacket],
     ["state_update", StateUpdatePacket],
     ["voice_activity", VoiceActivityPacket],
+    ["rtc_connect", RtcConnectPacket],
     // commonbound
     ["keep_alive", KeepAlivePacket],
     ["ping", PingPacket],

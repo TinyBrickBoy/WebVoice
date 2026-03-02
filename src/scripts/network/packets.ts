@@ -151,6 +151,13 @@ export class VoiceActivityPacket extends DecodablePacket {
     }
 }
 
+export class RtcConnectPacket extends DecodablePacket {
+
+    constructor(_buf: ByteBuffer) {
+        super();
+    }
+}
+
 // commonbound
 
 export class KeepAlivePacket extends DecodablePacket {
