@@ -1,12 +1,8 @@
 import {
-    AudioEndPacket,
-    AudioPacket,
     CategoryAddPacket,
     CategoryRemovePacket,
     ConnectedPacket,
     DecodablePacket,
-    InputEndPacket,
-    InputSoundPacket,
     KeepAlivePacket,
     type Packet,
     PingPacket,
@@ -17,10 +13,10 @@ import {
     RoomJoinResponsePacket,
     RoomLeavePacket,
     RoomLeaveResponsePacket,
-    RoomRemovePacket,
+    RoomRemovePacket, RtcAnswerPacket, RtcRemoteIceCandidateInitPacket, RtcIceCandidatePacket, RtcOfferPacket,
     StateInfoPacket,
     StateRemovePacket,
-    StateUpdatePacket,
+    StateUpdatePacket, RemoteVoiceActivityPacket, VoiceActivityPacket, VolumePacket,
 } from "./packets.ts";
 import ByteBuffer from "bytebuffer";
 import {readVarInt, writeVarInt} from "./buffer.ts";
@@ -43,7 +39,6 @@ type PacketEntry = [string, PacketConstructor | DecodablePacketConstructor]
 
 const packetCtors = [
     // clientbound
-    ["audio", AudioPacket],
     ["category_add", CategoryAddPacket],
     ["category_remove", CategoryRemovePacket],
     ["connected", ConnectedPacket],
@@ -54,18 +49,21 @@ const packetCtors = [
     ["room_remove", RoomRemovePacket],
     ["state_remove", StateRemovePacket],
     ["state_update", StateUpdatePacket],
+    ["rtc_answer", RtcAnswerPacket],
+    ["rtc_remote_ice_candidate", RtcRemoteIceCandidateInitPacket],
+    ["remote_voice_activity", RemoteVoiceActivityPacket],
     // commonbound
     ["keep_alive", KeepAlivePacket],
     ["ping", PingPacket],
     // servicebound
-    ["input_sound", InputSoundPacket],
     ["room_create", RoomCreatePacket],
     ["room_join_request", RoomJoinRequestPacket],
     ["room_leave", RoomLeavePacket],
     ["state_info", StateInfoPacket],
-    // "newer" packets added at the bottom to increase backwards compat
-    ["audio_end", AudioEndPacket],
-    ["input_end", InputEndPacket],
+    ["rtc_offer", RtcOfferPacket],
+    ["rtc_ice_candidate", RtcIceCandidatePacket],
+    ["voice_activity", VoiceActivityPacket],
+    ["volume", VolumePacket],
 ] as PacketEntry[];
 
 // save packet id in packet constructor to use when writing the packet

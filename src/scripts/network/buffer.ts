@@ -111,3 +111,15 @@ export const readComponentJson = (buf: ByteBuffer): Component =>
     JSON.parse(readString(buf));
 export const writeComponentJson = (buf: ByteBuffer, value: Component) =>
     writeString(buf, JSON.stringify(value));
+
+export const readOptional = <T>(buf: ByteBuffer, reader: () => T) => {
+    return readBoolean(buf) ? reader() : null;
+};
+export const writeOptional = <T>(buf: ByteBuffer, val: T | null, writer: (val: T) => void) => {
+    if (val !== null) {
+        writeBoolean(buf, true);
+        writer(val);
+    } else {
+        writeBoolean(buf, false);
+    }
+};

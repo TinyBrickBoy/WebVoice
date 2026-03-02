@@ -2,7 +2,11 @@ import type {FunctionComponent} from "preact";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
 import PlayerBlob from "./PlayerBlob.tsx";
 import {useEffect, useMemo} from "preact/hooks";
-import {AudioEndPacket, AudioPacket, StateRemovePacket, type StateUpdatePacket} from "../../scripts/network/packets.ts";
+import {
+    type RemoteVoiceActivityPacket,
+    StateRemovePacket,
+    type StateUpdatePacket,
+} from "../../scripts/network/packets.ts";
 import {PlayerState} from "../../scripts/types.ts";
 import {uuidFromString} from "../../scripts/util/uuid.ts";
 
@@ -21,20 +25,6 @@ const PlayerGrid: FunctionComponent = ({children}) => {
     }, [state === "connected"]);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            // periodically tick speaking state of players to ensure
-            // there are no players marked as speaking without actually speaking
-            setPlayers(players => {
-                for (const player of Object.values(players)) {
-                    player.tickSpeaking(undefined);
-                }
-                return players; // no change
-            });
-        }, 1000 / 2);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
         return socket
             .registers()
             .register("open", () => setPlayers({}))
@@ -44,7 +34,6 @@ const PlayerGrid: FunctionComponent = ({children}) => {
                     // transfer old speaking state
                     const oldState = players[playerId];
                     if (oldState) {
-                        state.lastSpeaking = oldState.lastSpeaking;
                         state.speaking = oldState.speaking;
                     }
                     return {...players, [playerId]: state};
@@ -63,11 +52,8 @@ const PlayerGrid: FunctionComponent = ({children}) => {
     useEffect(() => {
         return socket
             .registers()
-            .register("audio", ({detail: {senderId}}: CustomEvent<AudioPacket>) => {
-                players[senderId.name]?.tickSpeaking(true);
-            })
-            .register("audio_end", ({detail: {senderId}}: CustomEvent<AudioEndPacket>) => {
-                players[senderId.name]?.tickSpeaking(false);
+            .register("remote_voice_activity", ({detail: packet}: CustomEvent<RemoteVoiceActivityPacket>) => {
+                players[packet.playerId.name]?.setSpeaking(packet.active);
             })
             .callback();
     }, [socket, players]);
@@ -88,11 +74,7 @@ const PlayerGrid: FunctionComponent = ({children}) => {
                 return mute;
             }
             // @ts-ignore // this is intended and should be a fast method for comparing two bools
-            const speaking = p1.speaking - p2.speaking;
-            if (speaking !== 0) {
-                return speaking;
-            }
-            return p1.lastSpeaking - p2.lastSpeaking;
+            return p1.speaking - p2.speaking;
         });
         return list;
     }, [players, serverId]);

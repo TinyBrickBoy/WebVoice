@@ -64,21 +64,14 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     const devices = useMemo(() => new AudioDeviceManager(), []);
     useEffect(() => devices.registerMediaListener(), [devices]);
     const controls = useMemo(() => new AudioControls(), []);
-    const volumes = useMemo(() => new VolumeManager(), []);
+    const volumes = useMemo(() => new VolumeManager(socket), [socket]);
 
     // create global microphone manager
-    const microphone = useMemo(
-        () => new AudioMicrophoneManager(socket, devices, controls, volumes),
-        [socket],
-    );
+    const microphone = useMemo(() => new AudioMicrophoneManager(socket, devices, controls, volumes), [socket]);
     useEffect(() => (() => microphone.triggerTeardown()), [microphone]);
-    useEffect(() => microphone.registerInputListener(user, players), [microphone, user, players]);
 
     // create global audio player
-    const audio = useMemo(
-        () => new AudioPlayer(microphone, controls, devices, volumes),
-        [microphone],
-    );
+    const audio = useMemo(() => new AudioPlayer(microphone, devices), []);
     useEffect(() => audio.startTasks(socket), [audio]);
 
     return <>

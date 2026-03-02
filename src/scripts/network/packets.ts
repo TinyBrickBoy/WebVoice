@@ -4,15 +4,17 @@ import {CategoryState, PlayerState, RoomState, Vector3d} from "../types.ts";
 import ByteBuffer from "bytebuffer";
 import {
     readBoolean,
-    readByteArray,
     readComponentJson,
+    readOptional,
     readString,
     readUniqueId,
+    readVarInt,
     readVarLong,
     writeBoolean,
-    writeByteArray,
+    writeOptional,
     writeString,
     writeUniqueId,
+    writeVarInt,
     writeVarLong,
 } from "./buffer.ts";
 import type {Component} from "./component.ts";
@@ -28,58 +30,6 @@ export abstract class DecodablePacket extends Packet {
 }
 
 // clientbound
-
-export class AudioEndPacket extends DecodablePacket {
-
-    public readonly channelId: UUID;
-    public readonly senderId: UUID;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        const senderIsChannel = readBoolean(buf);
-        this.channelId = readUniqueId(buf);
-        if (senderIsChannel) {
-            this.senderId = this.channelId;
-        } else {
-            this.senderId = readUniqueId(buf);
-        }
-    }
-}
-
-const AUDIO_FLAG_HAS_CATEGORY = 1 << 0;
-const AUDIO_FLAG_HAS_POSITION = 1 << 1;
-const AUDIO_FLAG_SENDER_IS_CHANNEL = 1 << 2;
-
-export class AudioPacket extends DecodablePacket {
-
-    public readonly channelId: UUID;
-    public readonly senderId: UUID;
-    public readonly audio: Uint8Array;
-    public readonly categoryId: UUID | null;
-    public readonly position: Vector3d | null;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        const flags = buf.readByte();
-        this.channelId = readUniqueId(buf);
-        if ((flags & AUDIO_FLAG_SENDER_IS_CHANNEL) != 0) {
-            this.senderId = this.channelId;
-        } else {
-            this.senderId = readUniqueId(buf);
-        }
-        this.audio = readByteArray(buf);
-        if ((flags & AUDIO_FLAG_HAS_CATEGORY) != 0) {
-            this.categoryId = readUniqueId(buf);
-        } else {
-            this.categoryId = null;
-        }
-        if ((flags & AUDIO_FLAG_HAS_POSITION) != 0) {
-            this.position = new Vector3d(buf);
-        } else {
-            this.position = null;
-        }
-    }
-}
 
 export class CategoryAddPacket extends DecodablePacket {
 
@@ -203,6 +153,46 @@ export class StateUpdatePacket extends DecodablePacket {
     }
 }
 
+export class RtcAnswerPacket extends DecodablePacket {
+
+    public readonly type: string;
+    public readonly sdp: string | null;
+
+    constructor(buf: ByteBuffer) {
+        super();
+        this.type = readString(buf);
+        this.sdp = readOptional(buf, () => readString(buf));
+    }
+}
+
+export class RtcRemoteIceCandidateInitPacket extends DecodablePacket {
+
+    public readonly candidate: string | null;
+    public readonly sdpMid: string | null;
+    public readonly sdpMLineIndex: number | null;
+    public readonly usernameFragment: string | null;
+
+    constructor(buf: ByteBuffer) {
+        super();
+        this.candidate = readOptional(buf, () => readString(buf));
+        this.sdpMid = readOptional(buf, () => readString(buf));
+        this.sdpMLineIndex = readOptional(buf, () => readVarInt(buf));
+        this.usernameFragment = readOptional(buf, () => readString(buf));
+    }
+}
+
+export class RemoteVoiceActivityPacket extends DecodablePacket {
+
+    public readonly playerId: UUID;
+    public readonly active: boolean;
+
+    constructor(buf: ByteBuffer) {
+        super();
+        this.playerId = readUniqueId(buf);
+        this.active = readBoolean(buf);
+    }
+}
+
 // commonbound
 
 export class KeepAlivePacket extends DecodablePacket {
@@ -238,36 +228,6 @@ export class PingPacket extends DecodablePacket {
 }
 
 // servicebound
-
-export class InputEndPacket extends Packet {
-
-    static INSTANCE = new InputEndPacket();
-
-    constructor() {
-        super();
-    }
-
-    public encode(_buf: ByteBuffer) {
-        // NO-OP
-    }
-}
-
-export class InputSoundPacket extends Packet {
-
-    public readonly audio: Uint8Array;
-    public readonly noiseReduction: boolean;
-
-    constructor(audio: Uint8Array, noiseReduction: boolean) {
-        super();
-        this.audio = audio;
-        this.noiseReduction = noiseReduction;
-    }
-
-    public encode(buf: ByteBuffer) {
-        writeByteArray(buf, this.audio);
-        writeBoolean(buf, this.noiseReduction);
-    }
-}
 
 export class RoomCreatePacket extends Packet {
 
@@ -347,5 +307,119 @@ export class StateInfoPacket extends Packet {
     public encode(buf: ByteBuffer): void {
         writeBoolean(buf, this.muted);
         writeBoolean(buf, this.deafened);
+    }
+}
+
+export class PacketRtcIceCandidate {
+
+    public readonly address: string | null;
+    public readonly candidate: string;
+    public readonly component: string | null;
+    public readonly foundation: string | null;
+    public readonly port: number | null;
+    public readonly priority: number | null;
+    public readonly protocol: string | null;
+    public readonly relatedAddress: string | null;
+    public readonly relatedPort: number | null;
+    public readonly sdpMid: string | null;
+    public readonly sdpMLineIndex: number | null;
+    public readonly tcpType: string | null;
+    public readonly type: string | null;
+    public readonly usernameFragment: string | null;
+
+    constructor(candidate: RTCIceCandidate) {
+        this.address = candidate.address;
+        this.candidate = candidate.candidate;
+        this.component = candidate.component;
+        this.foundation = candidate.foundation;
+        this.port = candidate.port;
+        this.priority = candidate.priority;
+        this.protocol = candidate.protocol;
+        this.relatedAddress = candidate.relatedAddress;
+        this.relatedPort = candidate.relatedPort;
+        this.sdpMid = candidate.sdpMid;
+        this.sdpMLineIndex = candidate.sdpMLineIndex;
+        this.tcpType = candidate.tcpType;
+        this.type = candidate.type;
+        this.usernameFragment = candidate.usernameFragment;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeOptional(buf, this.address, val => writeString(buf, val));
+        writeString(buf, this.candidate);
+        writeOptional(buf, this.component, val => writeString(buf, val));
+        writeOptional(buf, this.foundation, val => writeString(buf, val));
+        writeOptional(buf, this.port, val => buf.writeShort(val));
+        writeOptional(buf, this.priority, val => writeVarInt(buf, val));
+        writeOptional(buf, this.protocol, val => writeString(buf, val));
+        writeOptional(buf, this.relatedAddress, val => writeString(buf, val));
+        writeOptional(buf, this.relatedPort, val => buf.writeShort(val));
+        writeOptional(buf, this.sdpMid, val => writeString(buf, val));
+        writeOptional(buf, this.sdpMLineIndex, val => writeVarInt(buf, val));
+        writeOptional(buf, this.tcpType, val => writeString(buf, val));
+        writeOptional(buf, this.type, val => writeString(buf, val));
+        writeOptional(buf, this.usernameFragment, val => writeString(buf, val));
+    }
+}
+
+export class RtcIceCandidatePacket extends Packet {
+
+    public readonly candidate: PacketRtcIceCandidate;
+
+    constructor(candidate: RTCIceCandidate) {
+        super();
+        this.candidate = new PacketRtcIceCandidate(candidate);
+    }
+
+    public encode(buf: ByteBuffer): void {
+        this.candidate.encode(buf);
+    }
+}
+
+export class RtcOfferPacket extends Packet {
+
+    public readonly spd: string;
+
+    constructor(spd: string) {
+        super();
+        this.spd = spd;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeString(buf, this.spd);
+    }
+}
+
+export class VoiceActivityPacket extends Packet {
+
+    public readonly active: boolean;
+
+    constructor(active: boolean) {
+        super();
+        this.active = active;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeBoolean(buf, this.active);
+    }
+}
+
+export class VolumePacket extends Packet {
+
+    public readonly type: "category" | "player";
+    public readonly entryId: UUID;
+    public readonly volume: number;
+
+    constructor(type: "category" | "player", entryId: UUID, volume: number) {
+        super();
+        this.type = type;
+        this.entryId = entryId;
+        this.volume = volume;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeBoolean(buf, this.type === "player");
+        writeUniqueId(buf, this.entryId);
+        buf.writeFloat(this.volume);
     }
 }

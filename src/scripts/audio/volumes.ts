@@ -1,16 +1,40 @@
 import {EventManager} from "../util/events.ts";
+import type {VoiceSocket} from "../socket.ts";
+import {VolumePacket} from "../network/packets.ts";
+import {uuidFromString} from "../util/uuid.ts";
 
 export type VolumeType = "category" | "player" | "input" | "output";
 type VolumeStorage = { [type in VolumeType]?: { [id: string]: number | undefined; }; };
 
 export class VolumeManager extends EventManager {
 
+    private readonly socket: VoiceSocket;
     private readonly volumes: VolumeStorage;
 
-    constructor() {
+    constructor(socket: VoiceSocket) {
         super();
+        this.socket = socket;
         const volumes = localStorage.getItem("volumes");
         this.volumes = volumes ? JSON.parse(volumes) : {};
+        // send data to remote
+        this.sendAll("category");
+        this.sendAll("player");
+    }
+
+    private sendAll(type: "category" | "player") {
+        const data = this.volumes[type];
+        if (!data) {
+            return; // no data
+        }
+        Object.entries(data).forEach(([id, value]) => {
+            if (value !== undefined) {
+                this.send(type, id, value);
+            }
+        });
+    }
+
+    private send(type: "category" | "player", id: string, volume: number) {
+        this.socket.sendPacket(new VolumePacket(type, uuidFromString(id), volume));
     }
 
     private save() {
@@ -36,8 +60,10 @@ export class VolumeManager extends EventManager {
             this.save();
         }
         if (!noChange) {
-            // fire volume updates
             this.fire(new CustomEvent(type));
+            if (type === "category" || type === "player") {
+                this.send(type, id, volume);
+            }
         }
     }
 }

@@ -107,7 +107,6 @@ export class PlayerState extends EventManager {
     public readonly deafened: boolean;
     public readonly primaryRoomId: UUID | null;
     public readonly serverId: UUID | null;
-    public lastSpeaking: number = 0;
     public speaking: boolean = false;
 
     constructor(uniqueId: UUID, name: Component, textureHash: string | null, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
@@ -158,12 +157,7 @@ export class PlayerState extends EventManager {
         return this.serverId?.name === serverId?.name;
     }
 
-    public tickSpeaking(speaking?: boolean) {
-        if (speaking === undefined) {
-            speaking = Date.now() - this.lastSpeaking <= 130;
-        } else if (speaking) {
-            this.lastSpeaking = Date.now();
-        }
+    public setSpeaking(speaking: boolean) {
         if (this.speaking !== speaking) {
             if (speaking) {
                 this.speaking = true;

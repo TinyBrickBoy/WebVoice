@@ -1,20 +1,14 @@
-import {CHANNEL_COUNT, FRAME_SIZE, SAMPLE_RATE} from "./audio_constants.ts";
+import {SAMPLE_RATE} from "./audio_constants.ts";
 import {loadRnnoise, NoiseGateWorkletNode, RnnoiseWorkletNode} from "@sapphi-red/web-noise-suppressor";
-import {OpusApplication, OpusEncoderWebWorker} from "@minceraftmc/opus-encoder";
-import {getHighestAudioPercent} from "../util/util.ts";
-import {InputEndPacket, InputSoundPacket} from "../network/packets.ts";
 import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWorklet.js?url";
 import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
-import audioQueueTransmitterWorkletUrl from "./audio_queue_transmitter.ts?worker&url";
-import libSamplerateWorkletUrl from "@alexanderolsen/libsamplerate-js/dist/libsamplerate.worklet.js?worker&url";
-import type {VoiceSocket} from "../socket.ts";
 import type {AudioControls} from "./audio_controls.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {VolumeManager} from "./volumes.ts";
 import {EventManager} from "../util/events.ts";
-import type {PlayerState, StateType, UserInfo} from "../types.ts";
+import type {VoiceSocket} from "../socket.ts";
 
 const GAIN_MULTIPLIER = 0.2;
 
@@ -98,8 +92,18 @@ const setupMicrophonePipeline = async (
     applyVolume();
     freeCallbacks.push(volumes.register("input", () => applyVolume()));
 
-    // setup packet transmitter at the end of the pipeline
-    freeCallbacks.push(await pushTransmitter(socket, controls, microphone, ctx, pipeline, microphone.resampleManually));
+    // create final media stream which will be sent via webrtc
+    const destNode = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
+    pipeline.push(destNode);
+
+    // apply mute state instantly
+    const applyMute = () => {
+        destNode.stream.getTracks().forEach(track => track.enabled = !controls.muted);
+    };
+    applyMute();
+    freeCallbacks.push(controls.register("update_muted", () => applyMute()));
+
+    // TODO send own voice activity
 
     // connect all nodes in pipeline together
     for (let i = 1; i < pipeline.length; i++) {
@@ -107,64 +111,7 @@ const setupMicrophonePipeline = async (
     }
 
     console.log("Audio pipeline nodes have been built", pipeline);
-    return freeCallbacks;
-};
-
-const INPUT_EVENT_ON = new CustomEvent("input", {detail: true});
-const INPUT_EVENT_OFF = new CustomEvent("input", {detail: false});
-
-const pushTransmitter = async (
-    socket: VoiceSocket,
-    controls: AudioControls,
-    microphone: AudioMicrophoneManager,
-    ctx: AudioContext,
-    pipeline: AudioNode[],
-    resampleManually: boolean,
-) => {
-    // create channel for receiving voice data from worker
-    const channel = new MessageChannel();
-    // send microphone input to server, opus-encoded
-    const transmitterNode = new AudioWorkletNode(ctx, "audio-queue-transmitter", {
-        numberOfInputs: 1,
-        numberOfOutputs: 0,
-    });
-    transmitterNode.port.postMessage(resampleManually, [channel.port2]);
-    pipeline.push(transmitterNode);
-
-    // pre-allocate microphone opus encoder
-    const encoder = new OpusEncoderWebWorker({sampleRate: SAMPLE_RATE, application: OpusApplication.VOIP});
-    await encoder.ready;
-    const frameSamples = new Float32Array(FRAME_SIZE * CHANNEL_COUNT);
-
-    // receive voice frames from worker via messaging channel
-    channel.port1.onmessage = async ({data}: MessageEvent<number[] | null>) => {
-        if (!data || controls.muted) {
-            microphone.fire(INPUT_EVENT_OFF);
-            return; // don't send any data if muted
-        }
-        frameSamples.set(data);
-
-        const inputVol = getHighestAudioPercent(frameSamples);
-        if (inputVol < 0.01) { // skip if quieter than 1%
-            microphone.fire(INPUT_EVENT_OFF);
-            return;
-        }
-        microphone.fire(INPUT_EVENT_ON);
-
-        const opus = await encoder.encodeFrame(frameSamples);
-        socket.sendPacket(new InputSoundPacket(opus, controls.noiseReduction));
-    };
-
-    // reset encoder state if microphone input ends
-    const listenerCallback = microphone.register("input_end", () => {
-        encoder.reset().catch(error => console.error(error));
-    });
-
-    return () => {
-        encoder.free().catch(error => console.error(error));
-        channel.port1.close();
-        listenerCallback();
-    };
+    return [freeCallbacks, destNode.stream] as [(() => void)[], MediaStream];
 };
 
 export const ANALYZER_FFT_SIZE = 256;
@@ -187,6 +134,7 @@ export class AudioMicrophoneManager extends EventManager {
     private teardown: (() => void)[] = [];
     private pipelineTeardown: (() => void)[] = [];
     private _analyzers: AnalyserNode[] | null = null;
+    private _micStream: MediaStream | null = null;
 
     constructor(
         socket: VoiceSocket,
@@ -213,6 +161,8 @@ export class AudioMicrophoneManager extends EventManager {
     public destroyContext() {
         this.pipelineTeardown.forEach(fn => fn());
         this.pipelineTeardown = [];
+        this._micStream?.getTracks().forEach(track => track.stop());
+        this._micStream = null;
 
         if (this._ctx) {
             this._ctx.close()
@@ -231,12 +181,6 @@ export class AudioMicrophoneManager extends EventManager {
         // even though noise reduction is optional, always load RNNoise
         // to allow enabling/disabling it dynamically
         await ctx.audioWorklet.addModule(rnnoiseWorkletPath);
-        if (this.resampleManually) {
-            // add libsamplerate worklet to audio context, which will be
-            // used in audio queue transmitter processor
-            await ctx.audioWorklet.addModule(libSamplerateWorkletUrl);
-        }
-        await ctx.audioWorklet.addModule(audioQueueTransmitterWorkletUrl);
     }
 
     public async createContext() {
@@ -270,11 +214,12 @@ export class AudioMicrophoneManager extends EventManager {
         // create new analyzer nodes
         this._analyzers && this.injectAnalyzers();
 
-        setupMicrophonePipeline(this.socket, this._ctx!!,
-            this.controls, this.devices, this.volumes, this)
-            .then(teardown => {
+        setupMicrophonePipeline(this.socket, this._ctx!!, this.controls, this.devices, this.volumes, this)
+            .then(([teardown, stream]) => {
                 this.pipelineTeardown.forEach(fn => fn());
                 this.pipelineTeardown = teardown;
+                this._micStream = stream;
+                this.fire(new CustomEvent("mic_stream_update"));
             })
             .catch(error => console.error(error));
     }
@@ -306,29 +251,6 @@ export class AudioMicrophoneManager extends EventManager {
         }
     }
 
-    public registerInputListener(
-        [user]: StateType<UserInfo>,
-        [players]: StateType<Record<string, PlayerState>>,
-    ) {
-        return this.register(
-            "input",
-            ({detail: speaking}: CustomEvent<boolean>) => {
-                const player = players[user.uniqueId.name];
-                if (!player) {
-                    return; // own player state isn't known
-                }
-                const prevSpeaking = player.speaking;
-                player.tickSpeaking(speaking || undefined);
-
-                if (prevSpeaking && !player.speaking) {
-                    // if we stopped speaking, send audio end packet
-                    this.socket.sendPacket(InputEndPacket.INSTANCE);
-                    this.fire(new CustomEvent("input_end"));
-                }
-            },
-        );
-    }
-
     public hasContext() {
         return !!this._ctx;
     }
@@ -339,5 +261,9 @@ export class AudioMicrophoneManager extends EventManager {
 
     public get analyzers() {
         return this._analyzers || [];
+    }
+
+    public get micStream() {
+        return this._micStream;
     }
 }
