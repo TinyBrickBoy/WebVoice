@@ -1,6 +1,6 @@
 import type {UUID} from "../util/uuid.ts";
 import Long from "long";
-import {CategoryState, PlayerState, RoomState, Vector3d} from "../types.ts";
+import {CategoryState, PlayerState, RoomState} from "../types.ts";
 import ByteBuffer from "bytebuffer";
 import {
     readBoolean,
@@ -72,20 +72,6 @@ export class ConnectedPacket extends DecodablePacket {
             this.serverName = null;
             this.serverType = null;
         }
-    }
-}
-
-export class PositionUpdatePacket extends DecodablePacket {
-
-    public readonly position: Vector3d;
-    public readonly yaw: number;
-    public readonly pitch: number;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        this.position = new Vector3d(buf);
-        this.yaw = buf.readFloat();
-        this.pitch = buf.readFloat();
     }
 }
 
