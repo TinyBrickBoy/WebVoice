@@ -143,13 +143,13 @@ export default class AudioPlayer {
                 await this.peer.setLocalDescription(offer);
                 socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
             })
-            .register("rtc_answer", async ({detail: {type, sdp}}: CustomEvent<RtcOfferPacket>) => {
+            .register("rtc_offer", async ({detail: {type, sdp}}: CustomEvent<RtcOfferPacket>) => {
                 await this.peer?.setRemoteDescription({
                     type: type as RTCSdpType,
                     sdp: sdp ?? undefined,
                 });
             })
-            .register("rtc_remote_ice_candidate", async ({detail: packet}: CustomEvent<RtcIceCandidatePacket>) => {
+            .register("rtc_ice_candidate", async ({detail: packet}: CustomEvent<RtcIceCandidatePacket>) => {
                 await this.peer?.addIceCandidate(new RTCIceCandidate({
                     candidate: packet.sdp ?? undefined,
                     sdpMid: packet.sdpMid,
@@ -157,5 +157,9 @@ export default class AudioPlayer {
                 }));
             })
             .callback();
+    }
+
+    public getState() {
+        return this.peer?.connectionState ?? null;
     }
 }
