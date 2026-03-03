@@ -48,7 +48,7 @@ const PlayerGrid: FunctionComponent = ({children}) => {
     useEffect(() => {
         return socket
             .registers()
-            .register("remote_voice_activity", ({detail: packet}: CustomEvent<VoiceActivityPacket>) => {
+            .register("voice_activity", ({detail: packet}: CustomEvent<VoiceActivityPacket>) => {
                 players[packet.playerId.name]?.setSpeaking(packet.active);
             })
             .callback();
