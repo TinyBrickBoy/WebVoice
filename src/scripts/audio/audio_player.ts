@@ -125,13 +125,14 @@ export default class AudioPlayer {
                 });
                 // handle ice candidates
                 this.peer.addEventListener("icecandidate", ({candidate}) => {
-                    if (candidate) {
+                    if (candidate && candidate.candidate) {
                         socket.sendPacket(new RtcIceCandidatePacket(candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex));
                     }
                 });
                 // log messages
                 this.peer.addEventListener("negotiationneeded", async () => {
                     // create offer
+                    console.log("Renegotiating with server peer...")
                     const offer = await this.peer!.createOffer({offerToReceiveAudio: true});
                     await this.peer!.setLocalDescription(offer);
                     socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
@@ -140,6 +141,7 @@ export default class AudioPlayer {
                 const tracks = this.microphone.micStream?.getTracks();
                 tracks?.forEach(track => this.peer?.addTrack(track));
                 // create offer
+                console.log("Negotiating with server peer...")
                 const offer = await this.peer.createOffer({offerToReceiveAudio: true});
                 await this.peer.setLocalDescription(offer);
                 socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
