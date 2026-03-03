@@ -130,14 +130,15 @@ export default class AudioPlayer {
                     }
                 });
                 // log messages
-                this.peer.addEventListener("connectionstatechange", () => {
-                    console.log("rtc peer connection state change received", this.peer?.connectionState);
+                this.peer.addEventListener("negotiationneeded", async () => {
+                    // create offer
+                    const offer = await this.peer!.createOffer({offerToReceiveAudio: true});
+                    await this.peer!.setLocalDescription(offer);
+                    socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
                 });
                 // add microphone track
                 const tracks = this.microphone.micStream?.getTracks();
                 tracks?.forEach(track => this.peer?.addTrack(track));
-                // register listener stream
-                this.peer.addTransceiver("audio", {direction: "recvonly"});
                 // create offer
                 const offer = await this.peer.createOffer({offerToReceiveAudio: true});
                 await this.peer.setLocalDescription(offer);
