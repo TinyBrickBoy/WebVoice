@@ -57,8 +57,8 @@ export class VoiceSocket extends EventManager {
         socket.onmessage = event => this.fire(event);
         socket.onerror = event => this.fire(event);
         socket.onopen = event => {
-            this.fire(event);
             this.socket = socket;
+            this.fire(event);
         };
         socket.onclose = event => {
             this.fire(event);

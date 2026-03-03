@@ -16,9 +16,12 @@ export class VolumeManager extends EventManager {
         this.socket = socket;
         const volumes = localStorage.getItem("volumes");
         this.volumes = volumes ? JSON.parse(volumes) : {};
-        // send data to remote
-        this.sendAll("category");
-        this.sendAll("player");
+
+        socket.register("open", () => {
+            // send data to remote
+            this.sendAll("category");
+            this.sendAll("player");
+        });
     }
 
     private sendAll(type: "category" | "player") {
