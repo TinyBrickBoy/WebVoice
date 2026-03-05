@@ -1,5 +1,5 @@
 import type {FunctionComponent} from "preact";
-import {useEffect, useRef} from "preact/hooks";
+import {useEffect, useMemo, useRef} from "preact/hooks";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {ANALYZER_FREQ_BIN_COUNT} from "../scripts/audio/audio_mic.ts";
 
@@ -17,6 +17,10 @@ const MicAnalyzer: FunctionComponent = () => {
     }, [microphone]);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const preNoiseData = useMemo<Uint8Array>(() => new Uint8Array(ANALYZER_FREQ_BIN_COUNT), []);
+    const postNoiseData = useMemo<Uint8Array>(() => new Uint8Array(ANALYZER_FREQ_BIN_COUNT), []);
+    const postGateData = useMemo<Uint8Array>(() => new Uint8Array(ANALYZER_FREQ_BIN_COUNT), []);
+    const finalData = useMemo<Uint8Array>(() => new Uint8Array(ANALYZER_FREQ_BIN_COUNT), []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -36,14 +40,9 @@ const MicAnalyzer: FunctionComponent = () => {
             const [startAnalyzer, rnnoiseAnalyzer, noiseGateAnalyzer, finalAnalyzer] = microphone.analyzers;
 
             // extract data from audio analyzer nodes
-            const bufferLength = ANALYZER_FREQ_BIN_COUNT;
-            const preNoiseData = new Uint8Array(bufferLength);
             startAnalyzer?.getByteFrequencyData(preNoiseData);
-            const postNoiseData = new Uint8Array(bufferLength);
             rnnoiseAnalyzer?.getByteFrequencyData(postNoiseData);
-            const postGateData = new Uint8Array(bufferLength);
             noiseGateAnalyzer?.getByteFrequencyData(postGateData);
-            const finalData = new Uint8Array(bufferLength);
             finalAnalyzer?.getByteFrequencyData(finalData);
 
             // create canvas drawing context
@@ -54,8 +53,8 @@ const MicAnalyzer: FunctionComponent = () => {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // draw each bar
-            const barWidth = canvas.width / bufferLength;
-            for (let i = 0; i < bufferLength; ++i) {
+            const barWidth = canvas.width / ANALYZER_FREQ_BIN_COUNT;
+            for (let i = 0; i < ANALYZER_FREQ_BIN_COUNT; ++i) {
                 const startHeight = preNoiseData[i];
                 const rnnoiseHeight = postNoiseData[i];
                 const noiseGateHeight = postGateData[i];
