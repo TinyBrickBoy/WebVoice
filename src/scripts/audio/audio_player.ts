@@ -115,8 +115,11 @@ export default class AudioPlayer {
                 });
                 // handle tracks sent by remote peer
                 this.peer.addEventListener("track", event => {
+                    if (event.streams.length !== 1) {
+                        return;
+                    }
                     // create media source
-                    this.remoteStream = new MediaStream([event.track]);
+                    this.remoteStream = event.streams[0];
                     const source = this.ctx!.createMediaStreamSource(this.remoteStream);
                     // connect to sink
                     const output = this.ctx!.destination;
