@@ -1,8 +1,9 @@
-import {useEffect, useState} from "preact/hooks";
+import {useState} from "preact/hooks";
 import type {FunctionComponent} from "preact";
 import SliderInput from "./SliderInput.tsx";
 import type {VolumeType} from "../../scripts/audio/volumes.ts";
 import {useVoiceStateContext} from "../VoiceStateProvider.tsx";
+import {useUpdateEffect} from "../../scripts/util/hooks.ts";
 
 interface Props {
     type: VolumeType;
@@ -13,7 +14,7 @@ const VolumeSlider: FunctionComponent<Props> = ({type, name}) => {
     const {volumes} = useVoiceStateContext();
 
     const [volumeSlider, setVolumeSlider] = useState<number>(() => volumes.get(type, name) * 100);
-    useEffect(() => volumes.set(type, name, volumeSlider / 100, false), [volumeSlider, volumes]);
+    useUpdateEffect(() => volumes.set(type, name, volumeSlider / 100, false), [volumeSlider, volumes]);
 
     return <>
         <SliderInput
