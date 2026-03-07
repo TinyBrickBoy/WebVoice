@@ -194,42 +194,42 @@ export class PingPacket extends DecodablePacket {
 
 export class RtcOfferPacket extends DecodablePacket {
 
-    public readonly type: string;
-    public readonly sdp: string | null;
+    public readonly answer: boolean;
+    public readonly sdp: string;
 
-    constructor(type: string, sdp: string | null);
+    constructor(answer: boolean, sdp: string);
     constructor(buf: ByteBuffer);
-    constructor(param: ByteBuffer | string, sdp?: string | null) {
+    constructor(param: ByteBuffer | boolean, sdp?: string) {
         super();
-        if (typeof param !== "string") {
-            this.type = readString(param);
-            this.sdp = readOptional(param, () => readString(param));
+        if (typeof param !== "boolean") {
+            this.answer = readBoolean(param);
+            this.sdp = readString(param);
         } else {
-            this.type = param;
-            this.sdp = sdp ?? null;
+            this.answer = param;
+            this.sdp = sdp!;
         }
     }
 
     public encode(buf: ByteBuffer): void {
-        writeString(buf, this.type);
-        writeOptional(buf, this.sdp, val => writeString(buf, val));
+        writeBoolean(buf, this.answer);
+        writeString(buf, this.sdp);
     }
 }
 
 export class RtcIceCandidatePacket extends DecodablePacket {
 
-    public readonly sdp: string | null;
+    public readonly sdp: string;
     public readonly sdpMid: string | null;
     public readonly sdpMLineIndex: number | null;
 
-    constructor(sdp: string | null, sdpMid: string | null, sdpMLineIndex: number | null);
+    constructor(sdp: string, sdpMid: string | null, sdpMLineIndex: number | null);
     constructor(buf: ByteBuffer);
-    constructor(param: ByteBuffer | string | null, sdpMid?: string | null, sdpMLineIndex?: number | null) {
+    constructor(param: ByteBuffer | string, sdpMid?: string | null, sdpMLineIndex?: number | null) {
         super();
         if (param && typeof param !== "string") {
-            this.sdp = readOptional(param, () => readString(param));
+            this.sdp = readString(param);
             this.sdpMid = readOptional(param, () => readString(param));
-            this.sdpMLineIndex = readOptional(param, () => readVarInt(param));
+            this.sdpMLineIndex = readOptional(param, () => param.readShort());
         } else {
             this.sdp = param;
             this.sdpMid = sdpMid ?? null;
@@ -238,9 +238,9 @@ export class RtcIceCandidatePacket extends DecodablePacket {
     }
 
     public encode(buf: ByteBuffer): void {
-        writeOptional(buf, this.sdp, val => writeString(buf, val));
+        writeString(buf, this.sdp);
         writeOptional(buf, this.sdpMid, val => writeString(buf, val));
-        writeOptional(buf, this.sdpMLineIndex, val => writeVarInt(buf, val));
+        writeOptional(buf, this.sdpMLineIndex, val => buf.writeShort(val));
     }
 }
 

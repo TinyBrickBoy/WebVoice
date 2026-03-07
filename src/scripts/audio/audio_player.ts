@@ -135,25 +135,24 @@ export default class AudioPlayer {
                 // log messages
                 this.peer.addEventListener("negotiationneeded", async () => {
                     // create offer
-                    console.log("Renegotiating with server peer...")
+                    console.log("Renegotiating with server peer...");
                     const offer = await this.peer!.createOffer({offerToReceiveAudio: true});
                     await this.peer!.setLocalDescription(offer);
-                    socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
+                    socket.sendPacket(new RtcOfferPacket(false, offer.sdp!!));
                 });
                 // add microphone track
                 const tracks = this.microphone.micStream?.getTracks();
                 tracks?.forEach(track => this.peer?.addTrack(track));
                 // create offer
-                console.log("Negotiating with server peer...")
+                console.log("Negotiating with server peer...");
                 const offer = await this.peer.createOffer({offerToReceiveAudio: true});
                 await this.peer.setLocalDescription(offer);
-                socket.sendPacket(new RtcOfferPacket(offer.type, offer.sdp ?? null));
+                socket.sendPacket(new RtcOfferPacket(false, offer.sdp!!));
             })
-            .register("rtc_offer", async ({detail: {type, sdp}}: CustomEvent<RtcOfferPacket>) => {
-                await this.peer?.setRemoteDescription({
-                    type: type as RTCSdpType,
-                    sdp: sdp ?? undefined,
-                });
+            .register("rtc_offer", async ({detail: {answer, sdp}}: CustomEvent<RtcOfferPacket>) => {
+                if (answer) {
+                    await this.peer?.setRemoteDescription({type: "answer", sdp});
+                }
             })
             .register("rtc_ice_candidate", async ({detail: packet}: CustomEvent<RtcIceCandidatePacket>) => {
                 await this.peer?.addIceCandidate(new RTCIceCandidate({
