@@ -1,76 +1,45 @@
-import audioQueueReceiverWorkletUrl from "./audio_queue_receiver.ts?worker&url";
-import {CHANNEL_COUNT, SAMPLE_RATE} from "./audio_constants.ts";
-import {OpusDecoderWebWorker} from "@minceraftmc/opus-decoder";
+import {SAMPLE_RATE} from "./audio_constants.ts";
 import type {VoiceSocket} from "../socket.ts";
-import type {AudioEndPacket, AudioPacket, PositionUpdatePacket} from "../network/packets.ts";
-import {type AudioQueueData, type Position3d, Vector3d} from "../types.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
-import type {AudioControls} from "./audio_controls.ts";
-import type {VolumeManager} from "./volumes.ts";
 import type {AudioMicrophoneManager} from "./audio_mic.ts";
-
-const GARBAGE_COLLECTOR_INTERVAL = 5 * 1000;
-const CHANNEL_TIMEOUT_TIME = 15 * 1000;
-
-type ChannelData = {
-    worklet: MessagePort;
-    decoder: OpusDecoderWebWorker<typeof SAMPLE_RATE>;
-    node: AudioWorkletNode;
-    lastTouch: number;
-}
+import {ICE_SERVER, ICE_SERVER_AUTH, ICE_SERVER_USER} from "astro:env/client";
+import {RtcIceCandidatePacket, RtcOfferPacket} from "../network/packets.ts";
 
 export default class AudioPlayer {
 
     private readonly microphone: AudioMicrophoneManager;
-    private readonly controls: AudioControls;
     private readonly devices: AudioDeviceManager;
-    private readonly volumes: VolumeManager;
 
     private ctx: AudioContext | null = null;
-    private readonly channels: Record<string, ChannelData> = {};
+
+    private peer: RTCPeerConnection | null = null;
+    private localSender: RTCRtpSender | null = null;
+    private peerTeardown: (() => void)[] = [];
 
     constructor(
         microphone: AudioMicrophoneManager,
-        controls: AudioControls,
         devices: AudioDeviceManager,
-        volumes: VolumeManager,
     ) {
         this.microphone = microphone;
-        this.controls = controls;
         this.devices = devices;
-        this.volumes = volumes;
     }
 
-    private position: Position3d = {
-        pos: new Vector3d(0, 0, 0),
-        yaw: 0, pitch: 0,
-    };
-
-    private async closeChannel(channel: string) {
-        const data = this.channels[channel];
-        if (data) {
-            data.node.disconnect();
-            await data.decoder.free();
-            delete this.channels[channel];
-        }
-    }
-
-    public startGarbageCollector() {
-        // run garbage collector periodically
-        const timer = setInterval(() => this.runGarbageCollector(), GARBAGE_COLLECTOR_INTERVAL);
-        return () => clearInterval(timer);
-    }
-
-    // periodically clean up unused channels to reduce
-    // memory allocation and prevent accidental "leaks"
-    public async runGarbageCollector() {
-        const now = Date.now();
-        for (const channel of Object.keys(this.channels)) {
-            const data = this.channels[channel];
-            if (now - data.lastTouch > CHANNEL_TIMEOUT_TIME) {
-                await this.closeChannel(channel);
+    public registerMicListener() {
+        return this.microphone.register("mic_stream_update", async () => {
+            const tracks = this.microphone.micStream?.getTracks();
+            if (!tracks || tracks.length !== 1) {
+                console.error("Received unexpected mic stream update", this.microphone.micStream);
+                return;
+            } else if (!this.peer) {
+                return; // not connected yet, ignore
             }
-        }
+            if (this.localSender) {
+                this.localSender.replaceTrack(tracks[0])
+                    .catch(error => console.error("Error while replacing mic stream", error));
+            } else {
+                this.localSender = this.peer.addTrack(tracks[0]);
+            }
+        });
     }
 
     public registerSpeakerListener() {
@@ -81,12 +50,12 @@ export default class AudioPlayer {
     }
 
     public startTasks(socket: VoiceSocket) {
-        const timerCallback = this.startGarbageCollector();
-        const listenerCallback = this.registerSpeakerListener();
+        const micListenerCallback = this.registerMicListener();
+        const speakerListenerCallback = this.registerSpeakerListener();
         const socketCallback = this.registerSocket(socket);
         return () => {
-            timerCallback();
-            listenerCallback();
+            micListenerCallback();
+            speakerListenerCallback();
             socketCallback();
         };
     }
@@ -109,12 +78,7 @@ export default class AudioPlayer {
                 .catch(error => console.error(error));
         }
         this.ctx = null;
-
-        // await proper closing
-        for (const channel of Object.keys(this.channels)) {
-            this.closeChannel(channel)
-                .catch(error => console.error(error));
-        }
+        this.destroyRtc();
     }
 
     public async createContext() {
@@ -129,88 +93,83 @@ export default class AudioPlayer {
             this.ctx = this.microphone.ctx;
         }
 
-        await this.ctx.audioWorklet.addModule(audioQueueReceiverWorkletUrl);
-
         this.refreshSpeaker();
     }
 
-    private async resolveExistingChannel(channel: string): Promise<ChannelData | null> {
-        const existingData = this.channels[channel];
-        if (existingData) {
-            await existingData.decoder.ready;
-            existingData.lastTouch = Date.now();
-            return existingData;
+    private destroyRtc() {
+        if (this.peer) {
+            this.peerTeardown.forEach(callback => callback());
+            this.peerTeardown = [];
+            this.peer.close();
+            this.peer = null;
+            this.localSender = null;
         }
-        return null;
-    }
-
-    private async resolveChannel(channel: string): Promise<ChannelData> {
-        const existingData = this.channels[channel];
-        if (existingData) {
-            await existingData.decoder.ready;
-            existingData.lastTouch = Date.now();
-            return existingData;
-        }
-        // create audio worklet node for separate thread
-        const receiverNode = new AudioWorkletNode(this.ctx!!, "audio-queue-receiver", {
-            numberOfInputs: 0,
-            numberOfOutputs: 1,
-            // although we only play mono audio, we use stereo for spatial audio calculation
-            outputChannelCount: [2],
-        });
-        receiverNode.connect(this.ctx!!.destination); // connect to default speaker
-        const decoder = new OpusDecoderWebWorker({sampleRate: SAMPLE_RATE, channels: CHANNEL_COUNT});
-        // prevent race condition by saving data before waiting for WASM to load
-        const data = {worklet: receiverNode.port, node: receiverNode, decoder, lastTouch: Date.now()};
-        this.channels[channel] = data;
-        await decoder.ready;
-        return data;
-    }
-
-    public async playFrame(channel: string, volume: number, opus: Uint8Array, position: Vector3d | null) {
-        if (!this.ctx) {
-            throw new Error("Can't play frame before creation of audio context");
-        } else if (this.controls.deafened) {
-            return; // skip playing if deafened
-        }
-        const source = this.position;
-
-        // get or create audio pipeline
-        const data = await this.resolveChannel(channel);
-        // decode opus audio frame to signed pcm audio frame
-        const pcmAudio = await data.decoder.decodeFrame(opus);
-
-        const frame = {data: pcmAudio.channelData[0], volume, channel: channel} as AudioQueueData;
-        // set positional data if present
-        if (position) {
-            frame.source = source;
-            frame.position = position;
-        }
-        // move audio frame to audio worklet processing
-        data.worklet.postMessage(frame);
     }
 
     public registerSocket(socket: VoiceSocket) {
         return socket.registers()
-            .register("audio", ({detail: packet}: CustomEvent<AudioPacket>) => {
-                const outputVolume = this.volumes.get("output", "");
-                const playerVolume = this.volumes.get("player", packet.senderId.name);
-                const categoryVolume = packet.categoryId ? this.volumes.get("category", packet.categoryId.name) : 1;
-                const totalVolume = outputVolume * playerVolume * categoryVolume;
-
-                this.playFrame(packet.channelId.name, totalVolume, packet.audio, packet.position)
-                    .catch(error => console.error(error));
+            .register("rtc_connect", async () => {
+                if (this.peer) {
+                    this.destroyRtc();
+                }
+                this.peer = new RTCPeerConnection({
+                    iceServers: [{
+                        urls: ICE_SERVER,
+                        username: ICE_SERVER_USER,
+                        credential: ICE_SERVER_AUTH,
+                    }],
+                });
+                // handle tracks sent by remote peer
+                this.peer.addEventListener("track", event => {
+                    if (event.streams.length !== 1) {
+                        return;
+                    }
+                    // create media source and connect to sink
+                    const source = this.ctx!.createMediaStreamSource(event.streams[0]);
+                    source.connect(this.ctx!.destination);
+                    this.peerTeardown.push(() => source.disconnect());
+                });
+                // handle ice candidates
+                this.peer.addEventListener("icecandidate", ({candidate}) => {
+                    if (candidate && candidate.candidate) {
+                        socket.sendPacket(new RtcIceCandidatePacket(candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex));
+                    }
+                });
+                // log messages
+                this.peer.addEventListener("negotiationneeded", async () => {
+                    // create offer
+                    console.log("Renegotiating with server peer...");
+                    const offer = await this.peer!.createOffer({offerToReceiveAudio: true});
+                    await this.peer!.setLocalDescription(offer);
+                    socket.sendPacket(new RtcOfferPacket(false, offer.sdp!!));
+                });
+                // add microphone track
+                const tracks = this.microphone.micStream?.getTracks();
+                if (tracks && tracks.length === 1) {
+                    this.localSender = this.peer.addTrack(tracks[0]);
+                }
+                // create offer
+                console.log("Negotiating with server peer...");
+                const offer = await this.peer.createOffer({offerToReceiveAudio: true});
+                await this.peer.setLocalDescription(offer);
+                socket.sendPacket(new RtcOfferPacket(false, offer.sdp!!));
             })
-            .register("audio_end", ({detail: packet}: CustomEvent<AudioEndPacket>) => {
-                console.log("audio end packet received");
-                // reset decoder state when receiving audio end packet
-                this.resolveExistingChannel(packet.channelId.name)
-                    .then(channel => channel?.decoder.reset())
-                    .catch(error => console.error(error));
+            .register("rtc_offer", async ({detail: {answer, sdp}}: CustomEvent<RtcOfferPacket>) => {
+                if (answer) {
+                    await this.peer?.setRemoteDescription({type: "answer", sdp});
+                }
             })
-            .register("position_update", ({detail: {position, yaw, pitch}}: CustomEvent<PositionUpdatePacket>) => {
-                this.position = {pos: position, yaw, pitch};
+            .register("rtc_ice_candidate", async ({detail: packet}: CustomEvent<RtcIceCandidatePacket>) => {
+                await this.peer?.addIceCandidate(new RTCIceCandidate({
+                    candidate: packet.sdp ?? undefined,
+                    sdpMid: packet.sdpMid,
+                    sdpMLineIndex: packet.sdpMLineIndex,
+                }));
             })
             .callback();
+    }
+
+    public getState() {
+        return this.peer?.connectionState ?? null;
     }
 }

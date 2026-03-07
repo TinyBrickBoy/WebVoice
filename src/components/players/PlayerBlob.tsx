@@ -33,11 +33,16 @@ const PlayerBlob: FunctionComponent<Props> = ({state}) => {
     const {uniqueId, name, textureHash, muted, deafened} = state;
 
     const [color, setColor] = useState<JSX.CSSProperties["background-color"]>("var(--color-neutral-800)");
-    const signal = useAbortSignal([textureHash, uniqueId]);
+    const signal = useAbortSignal([textureHash, uniqueId.name]);
     useEffect(() => {
         fetchColor(textureHash, uniqueId, signal)
             .then(color => setColor(color))
-            .catch(error => console.error(error));
+            .catch(error => {
+                // don't log errors about the fetch being aborted
+                if (!error?.message?.includes("aborted")) {
+                    console.error(error);
+                }
+            });
     }, [signal]);
 
     return <>

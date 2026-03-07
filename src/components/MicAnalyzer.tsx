@@ -1,5 +1,5 @@
 import type {FunctionComponent} from "preact";
-import {useEffect, useRef} from "preact/hooks";
+import {useEffect, useMemo, useRef} from "preact/hooks";
 import {useVoiceStateContext} from "./VoiceStateProvider.tsx";
 import {ANALYZER_FREQ_BIN_COUNT} from "../scripts/audio/audio_mic.ts";
 
@@ -8,7 +8,7 @@ const MicAnalyzer: FunctionComponent = () => {
 
     // inject analyzer nodes into audio graph while this component is visible
     useEffect(() => {
-        microphone.injectAnalyzers();
+        microphone.injectAnalyzer();
         microphone.rebuildPipeline();
         return () => {
             microphone.uninjectAnalyzers();
@@ -17,6 +17,7 @@ const MicAnalyzer: FunctionComponent = () => {
     }, [microphone]);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const data = useMemo<Uint8Array>(() => new Uint8Array(ANALYZER_FREQ_BIN_COUNT), []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -33,56 +34,25 @@ const MicAnalyzer: FunctionComponent = () => {
             // immediately request drawing new animation frame
             frameId = requestAnimationFrame(draw);
 
-            const [startAnalyzer, rnnoiseAnalyzer, noiseGateAnalyzer, finalAnalyzer] = microphone.analyzers;
+            const analyzer = microphone.analyzer;
 
-            // extract data from audio analyzer nodes
-            const bufferLength = ANALYZER_FREQ_BIN_COUNT;
-            const preNoiseData = new Uint8Array(bufferLength);
-            startAnalyzer?.getByteFrequencyData(preNoiseData);
-            const postNoiseData = new Uint8Array(bufferLength);
-            rnnoiseAnalyzer?.getByteFrequencyData(postNoiseData);
-            const postGateData = new Uint8Array(bufferLength);
-            noiseGateAnalyzer?.getByteFrequencyData(postGateData);
-            const finalData = new Uint8Array(bufferLength);
-            finalAnalyzer?.getByteFrequencyData(finalData);
+            // extract data from audio analyze node
+            analyzer?.getByteFrequencyData(data);
 
             // create canvas drawing context
             const ctx = canvas.getContext("2d")!!;
 
-            // draw black background
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // clear background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // draw each bar
-            const barWidth = canvas.width / bufferLength;
-            for (let i = 0; i < bufferLength; ++i) {
-                const startHeight = preNoiseData[i];
-                const rnnoiseHeight = postNoiseData[i];
-                const noiseGateHeight = postGateData[i];
-                const finalHeight = finalData[i];
-                // draw start bar in dark gray
-                ctx.fillStyle = "#444";
-                ctx.fillRect(
-                    i * barWidth, canvas.height - startHeight,
-                    barWidth + 1, startHeight - rnnoiseHeight,
-                );
-                // draw rnnoise bar in light gray
-                ctx.fillStyle = "#aaa";
-                ctx.fillRect(
-                    i * barWidth, canvas.height - rnnoiseHeight,
-                    barWidth + 1, rnnoiseHeight - noiseGateHeight,
-                );
-                // draw noise gate bar in white
-                ctx.fillStyle = "#fff";
-                ctx.fillRect(
-                    i * barWidth, canvas.height - noiseGateHeight,
-                    barWidth + 1, noiseGateHeight - finalHeight,
-                );
-                // draw final bar in white
+            const barWidth = canvas.width / ANALYZER_FREQ_BIN_COUNT;
+            for (let i = 0; i < ANALYZER_FREQ_BIN_COUNT; ++i) {
+                const height = data[i];
                 ctx.fillStyle = "#b273e6";
                 ctx.fillRect(
-                    i * barWidth, canvas.height - finalHeight,
-                    barWidth + 1, finalHeight,
+                    i * barWidth, canvas.height - height,
+                    barWidth + 1, height,
                 );
             }
         };
@@ -100,7 +70,7 @@ const MicAnalyzer: FunctionComponent = () => {
 
     return <>
         <canvas
-            className={"w-full rounded-md h-15"}
+            className={"w-full rounded-md h-15 bg-neutral-900 border border-neutral-700"}
             ref={canvasRef}
         />
     </>;

@@ -6,7 +6,7 @@ interface Props extends Omit<JSX.HTMLAttributes, "onContextMenu"> {
     content: ComponentChildren;
 }
 
-type Pos = [number, number] | null
+type Pos = ["left" | "right", number, "top" | "bottom", number] | null
 
 const ContextMenu: FunctionComponent<Props> = ({className, children, attributes, content, ...other}) => {
     const [pos, setPos] = useState<Pos>(null);
@@ -15,7 +15,14 @@ const ContextMenu: FunctionComponent<Props> = ({className, children, attributes,
     const onClick = useCallback((event: MouseEvent) => {
         if (!contextRef.current?.contains(event.target as Node)) {
             event.preventDefault();
-            setPos([event.pageX, event.pageY]);
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            setPos([
+                event.pageX < width / 2 ? "left" : "right",
+                event.pageX < width / 2 ? event.pageX : width - event.pageX,
+                event.pageY < height / 2 ? "top" : "bottom",
+                event.pageY < height / 2 ? event.pageY : height - event.pageY,
+            ]);
         }
     }, []);
 
@@ -48,8 +55,8 @@ const ContextMenu: FunctionComponent<Props> = ({className, children, attributes,
                 {...(attributes ?? {})}
                 ref={contextRef}
                 style={{
-                    left: `${pos[0]}px`,
-                    top: `${pos[1]}px`,
+                    [pos[0]]: `${pos[1]}px`,
+                    [pos[2]]: `${pos[3]}px`,
                 }}
                 className={`cursor-auto border-neutral-800 border-2 fixed p-5 rounded-xl bg-neutral-900 z-10 ${attributes?.className || ""}`}
             >

@@ -1,18 +1,20 @@
 import type {UUID} from "../util/uuid.ts";
 import Long from "long";
-import {CategoryState, PlayerState, RoomState, Vector3d} from "../types.ts";
+import {CategoryState, PlayerState, RoomState} from "../types.ts";
 import ByteBuffer from "bytebuffer";
 import {
     readBoolean,
-    readByteArray,
     readComponentJson,
+    readOptional,
     readString,
     readUniqueId,
+    readVarInt,
     readVarLong,
     writeBoolean,
-    writeByteArray,
+    writeOptional,
     writeString,
     writeUniqueId,
+    writeVarInt,
     writeVarLong,
 } from "./buffer.ts";
 import type {Component} from "./component.ts";
@@ -28,58 +30,6 @@ export abstract class DecodablePacket extends Packet {
 }
 
 // clientbound
-
-export class AudioEndPacket extends DecodablePacket {
-
-    public readonly channelId: UUID;
-    public readonly senderId: UUID;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        const senderIsChannel = readBoolean(buf);
-        this.channelId = readUniqueId(buf);
-        if (senderIsChannel) {
-            this.senderId = this.channelId;
-        } else {
-            this.senderId = readUniqueId(buf);
-        }
-    }
-}
-
-const AUDIO_FLAG_HAS_CATEGORY = 1 << 0;
-const AUDIO_FLAG_HAS_POSITION = 1 << 1;
-const AUDIO_FLAG_SENDER_IS_CHANNEL = 1 << 2;
-
-export class AudioPacket extends DecodablePacket {
-
-    public readonly channelId: UUID;
-    public readonly senderId: UUID;
-    public readonly audio: Uint8Array;
-    public readonly categoryId: UUID | null;
-    public readonly position: Vector3d | null;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        const flags = buf.readByte();
-        this.channelId = readUniqueId(buf);
-        if ((flags & AUDIO_FLAG_SENDER_IS_CHANNEL) != 0) {
-            this.senderId = this.channelId;
-        } else {
-            this.senderId = readUniqueId(buf);
-        }
-        this.audio = readByteArray(buf);
-        if ((flags & AUDIO_FLAG_HAS_CATEGORY) != 0) {
-            this.categoryId = readUniqueId(buf);
-        } else {
-            this.categoryId = null;
-        }
-        if ((flags & AUDIO_FLAG_HAS_POSITION) != 0) {
-            this.position = new Vector3d(buf);
-        } else {
-            this.position = null;
-        }
-    }
-}
 
 export class CategoryAddPacket extends DecodablePacket {
 
@@ -122,20 +72,6 @@ export class ConnectedPacket extends DecodablePacket {
             this.serverName = null;
             this.serverType = null;
         }
-    }
-}
-
-export class PositionUpdatePacket extends DecodablePacket {
-
-    public readonly position: Vector3d;
-    public readonly yaw: number;
-    public readonly pitch: number;
-
-    constructor(buf: ByteBuffer) {
-        super();
-        this.position = new Vector3d(buf);
-        this.yaw = buf.readFloat();
-        this.pitch = buf.readFloat();
     }
 }
 
@@ -203,6 +139,25 @@ export class StateUpdatePacket extends DecodablePacket {
     }
 }
 
+export class VoiceActivityPacket extends DecodablePacket {
+
+    public readonly playerId: UUID;
+    public readonly active: boolean;
+
+    constructor(buf: ByteBuffer) {
+        super();
+        this.playerId = readUniqueId(buf);
+        this.active = readBoolean(buf);
+    }
+}
+
+export class RtcConnectPacket extends DecodablePacket {
+
+    constructor(_buf: ByteBuffer) {
+        super();
+    }
+}
+
 // commonbound
 
 export class KeepAlivePacket extends DecodablePacket {
@@ -237,37 +192,59 @@ export class PingPacket extends DecodablePacket {
     }
 }
 
+export class RtcOfferPacket extends DecodablePacket {
+
+    public readonly answer: boolean;
+    public readonly sdp: string;
+
+    constructor(answer: boolean, sdp: string);
+    constructor(buf: ByteBuffer);
+    constructor(param: ByteBuffer | boolean, sdp?: string) {
+        super();
+        if (typeof param !== "boolean") {
+            this.answer = readBoolean(param);
+            this.sdp = readString(param);
+        } else {
+            this.answer = param;
+            this.sdp = sdp!;
+        }
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeBoolean(buf, this.answer);
+        writeString(buf, this.sdp);
+    }
+}
+
+export class RtcIceCandidatePacket extends DecodablePacket {
+
+    public readonly sdp: string;
+    public readonly sdpMid: string | null;
+    public readonly sdpMLineIndex: number | null;
+
+    constructor(sdp: string, sdpMid: string | null, sdpMLineIndex: number | null);
+    constructor(buf: ByteBuffer);
+    constructor(param: ByteBuffer | string, sdpMid?: string | null, sdpMLineIndex?: number | null) {
+        super();
+        if (param && typeof param !== "string") {
+            this.sdp = readString(param);
+            this.sdpMid = readOptional(param, () => readString(param));
+            this.sdpMLineIndex = readOptional(param, () => param.readShort());
+        } else {
+            this.sdp = param;
+            this.sdpMid = sdpMid ?? null;
+            this.sdpMLineIndex = sdpMLineIndex ?? null;
+        }
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeString(buf, this.sdp);
+        writeOptional(buf, this.sdpMid, val => writeString(buf, val));
+        writeOptional(buf, this.sdpMLineIndex, val => buf.writeShort(val));
+    }
+}
+
 // servicebound
-
-export class InputEndPacket extends Packet {
-
-    static INSTANCE = new InputEndPacket();
-
-    constructor() {
-        super();
-    }
-
-    public encode(_buf: ByteBuffer) {
-        // NO-OP
-    }
-}
-
-export class InputSoundPacket extends Packet {
-
-    public readonly audio: Uint8Array;
-    public readonly noiseReduction: boolean;
-
-    constructor(audio: Uint8Array, noiseReduction: boolean) {
-        super();
-        this.audio = audio;
-        this.noiseReduction = noiseReduction;
-    }
-
-    public encode(buf: ByteBuffer) {
-        writeByteArray(buf, this.audio);
-        writeBoolean(buf, this.noiseReduction);
-    }
-}
 
 export class RoomCreatePacket extends Packet {
 
@@ -347,5 +324,25 @@ export class StateInfoPacket extends Packet {
     public encode(buf: ByteBuffer): void {
         writeBoolean(buf, this.muted);
         writeBoolean(buf, this.deafened);
+    }
+}
+
+export class VolumePacket extends Packet {
+
+    public readonly type: "category" | "player";
+    public readonly entryId: UUID;
+    public readonly volume: number;
+
+    constructor(type: "category" | "player", entryId: UUID, volume: number) {
+        super();
+        this.type = type;
+        this.entryId = entryId;
+        this.volume = volume;
+    }
+
+    public encode(buf: ByteBuffer): void {
+        writeBoolean(buf, this.type === "player");
+        writeUniqueId(buf, this.entryId);
+        buf.writeFloat(this.volume);
     }
 }

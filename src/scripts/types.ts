@@ -5,33 +5,6 @@ import {readBoolean, readComponentJson, readString, readUniqueId} from "./networ
 import type {Dispatch, StateUpdater} from "preact/hooks";
 import {EventManager} from "./util/events.ts";
 
-export class Vector3d {
-
-    public readonly x: number;
-    public readonly y: number;
-    public readonly z: number;
-
-    constructor(buf: ByteBuffer);
-    constructor(x: number, y: number, z: number);
-    constructor(param: ByteBuffer | number, y?: number, z?: number) {
-        if (typeof param == "number") {
-            this.x = param;
-            this.y = y || 0;
-            this.z = z || 0;
-        } else {
-            this.x = param.readDouble();
-            this.y = param.readDouble();
-            this.z = param.readDouble();
-        }
-    }
-}
-
-export type Position3d = {
-    pos: Vector3d,
-    yaw: number,
-    pitch: number,
-}
-
 export class CategoryState {
 
     public readonly uniqueId: UUID;
@@ -107,7 +80,6 @@ export class PlayerState extends EventManager {
     public readonly deafened: boolean;
     public readonly primaryRoomId: UUID | null;
     public readonly serverId: UUID | null;
-    public lastSpeaking: number = 0;
     public speaking: boolean = false;
 
     constructor(uniqueId: UUID, name: Component, textureHash: string | null, muted: boolean, deafened: boolean, primaryRoomId: UUID | null, serverId: UUID | null);
@@ -158,12 +130,7 @@ export class PlayerState extends EventManager {
         return this.serverId?.name === serverId?.name;
     }
 
-    public tickSpeaking(speaking?: boolean) {
-        if (speaking === undefined) {
-            speaking = Date.now() - this.lastSpeaking <= 130;
-        } else if (speaking) {
-            this.lastSpeaking = Date.now();
-        }
+    public setSpeaking(speaking: boolean) {
         if (this.speaking !== speaking) {
             if (speaking) {
                 this.speaking = true;
@@ -182,14 +149,6 @@ export interface UserInfo {
     serverId: UUID | null;
     serverName: Component | null;
     serverType: string | null;
-}
-
-export type AudioQueueData = {
-    data: Float32Array,
-    volume: number,
-    source: Position3d | null,
-    position: Vector3d | null,
-    channel: string,
 }
 
 export type StateType<S> = [S, Dispatch<StateUpdater<S>>];

@@ -29,8 +29,6 @@ export default defineConfig({
             SKIN_ENDPOINT: envField.string({
                 context: "server",
                 access: "public",
-                // I would rather use crafthead.net, but they have some weird SSL things going on;
-                // the default NodeJS runtime doesn't recognize Cloudflare-Signed SSL Certificates
                 default: "https://crafthead.net/helm/%s/8.png",
             }),
             GLOBAL_CACHE: envField.boolean({
@@ -40,6 +38,21 @@ export default defineConfig({
                 // because of this; promises which are started by one request are not allowed to be resolved
                 // by another request, which completely breaks a cross-request cache without a proper replacement...
                 default: false,
+            }),
+            ICE_SERVER: envField.string({
+                context: "client",
+                access: "public",
+                default: "stun:stun.l.google.com:19302",
+            }),
+            ICE_SERVER_USER: envField.string({
+                context: "client",
+                access: "public",
+                optional: true,
+            }),
+            ICE_SERVER_AUTH: envField.string({
+                context: "client",
+                access: "public",
+                optional: true,
             }),
         },
     },

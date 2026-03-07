@@ -5,13 +5,6 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@alexanderolsen/libsamplerate-js@npm:^2.1.2":
-  version: 2.1.2
-  resolution: "@alexanderolsen/libsamplerate-js@npm:2.1.2"
-  checksum: 10c0/39f9b8201ac775fafdaecbfdb8fe91f89fa86b3811cff911c150a76a755b9a94ee97f4c3d6a1835ea2e393e15c016c1b061dbf246df44563b7aad4bdbc616518
-  languageName: node
-  linkType: hard
-
 "@ampproject/remapping@npm:^2.2.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -1364,13 +1357,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eshaz/web-worker@npm:1.2.2":
-  version: 1.2.2
-  resolution: "@eshaz/web-worker@npm:1.2.2"
-  checksum: 10c0/4f1ad8287587d294af3c9dabfa88f7ffea54b958cf89ee50d928406436f10b7c4d733bf47e6566a57988c24f3773144fc1ba540dc4a7dd8031e6abb85ba76ba2
-  languageName: node
-  linkType: hard
-
 "@fontsource/poppins@npm:^5.2.7":
   version: 5.2.7
   resolution: "@fontsource/poppins@npm:5.2.7"
@@ -1916,34 +1902,6 @@ __metadata:
     "@jridgewell/resolve-uri": "npm:^3.1.0"
     "@jridgewell/sourcemap-codec": "npm:^1.4.14"
   checksum: 10c0/4b30ec8cd56c5fd9a661f088230af01e0c1a3888d11ffb6b47639700f71225be21d1f7e168048d6d4f9449207b978a235c07c8f15c07705685d16dc06280e9d9
-  languageName: node
-  linkType: hard
-
-"@minceraftmc/opus-common@npm:9.0.7-rc.1":
-  version: 9.0.7-rc.1
-  resolution: "@minceraftmc/opus-common@npm:9.0.7-rc.1"
-  dependencies:
-    "@eshaz/web-worker": "npm:1.2.2"
-    simple-yenc: "npm:^1.0.4"
-  checksum: 10c0/5c7037ff2c24fb10f24c2dfa565046e3ca899e54543819fbd1b379b03ed715ae7fded7539a78be3a041e70648ad951894f853b4ec2f5874d6ce058bd2b060e17
-  languageName: node
-  linkType: hard
-
-"@minceraftmc/opus-decoder@npm:^0.7.11-rc.1":
-  version: 0.7.11-rc.1
-  resolution: "@minceraftmc/opus-decoder@npm:0.7.11-rc.1"
-  dependencies:
-    "@minceraftmc/opus-common": "npm:9.0.7-rc.1"
-  checksum: 10c0/18d8fbd3baaad4f09b7103e99bf4953cc3834a0e4a8683e89a27f16af75fe6d3101c6863233a62043716733307c0d8d9d0e9763ac5bbf41fe17d59cbcde7b2eb
-  languageName: node
-  linkType: hard
-
-"@minceraftmc/opus-encoder@npm:^0.0.7-rc.1":
-  version: 0.0.7-rc.1
-  resolution: "@minceraftmc/opus-encoder@npm:0.0.7-rc.1"
-  dependencies:
-    "@minceraftmc/opus-common": "npm:9.0.7-rc.1"
-  checksum: 10c0/f6c9665fa1c10bebd75d69d3b76193bee0512b4db6548b69d6dbd9194348c2cf3a95d1c6ee42991972d6c179522b8b29151c36315456870edd042a2abec57ba6
   languageName: node
   linkType: hard
 
@@ -7118,13 +7076,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-yenc@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "simple-yenc@npm:1.0.4"
-  checksum: 10c0/5a476cf328e5e5b6006ac44af01daeda8a9832d3d2205c80d71fbdf3a9ff1ee5092ed41b909c77532c80b9f6db65b577e2c1283fcbb5a9b194f1e96b0077de73
-  languageName: node
-  linkType: hard
-
 "sisteransi@npm:^1.0.5":
   version: 1.0.5
   resolution: "sisteransi@npm:1.0.5"
@@ -7188,7 +7139,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "sonus-web@workspace:."
   dependencies:
-    "@alexanderolsen/libsamplerate-js": "npm:^2.1.2"
     "@astrojs/check": "npm:0.9.6"
     "@astrojs/cloudflare": "npm:^12.6.12"
     "@astrojs/node": "npm:9.5.4"
@@ -7196,8 +7146,6 @@ __metadata:
     "@fontsource/poppins": "npm:^5.2.7"
     "@iconify-json/ph": "npm:^1.2.2"
     "@iconify-json/tabler": "npm:^1.2.23"
-    "@minceraftmc/opus-decoder": "npm:^0.7.11-rc.1"
-    "@minceraftmc/opus-encoder": "npm:^0.0.7-rc.1"
     "@sapphi-red/web-noise-suppressor": "npm:^0.3.5"
     "@svgr/core": "npm:^8.1.0"
     "@svgr/plugin-jsx": "npm:^8.1.0"
@@ -7209,7 +7157,6 @@ __metadata:
     bytebuffer: "npm:^5.0.1"
     fast-png: "npm:^7.0.1"
     preact: "npm:^10.25.1"
-    symbl-opus-encdec: "npm:^0.1.2"
     tailwindcss: "npm:^4.1.17"
     typescript: "npm:^5.6.3"
     unplugin-icons: "npm:^22.5.0"
@@ -7364,13 +7311,6 @@ __metadata:
   bin:
     svgo: ./bin/svgo.js
   checksum: 10c0/2b01c910d59d10bb15e17714181a8fa96531b09a4e2cf2ca1abe24dbcb8400725b6d542d6e456c62222546e334d5b344799c170c5b6be0c48e31b02c23297275
-  languageName: node
-  linkType: hard
-
-"symbl-opus-encdec@npm:^0.1.2":
-  version: 0.1.2
-  resolution: "symbl-opus-encdec@npm:0.1.2"
-  checksum: 10c0/240992a5910d5d6c6734003f0bfa9befdba51e48c216c3ccd0220136b0aa24ebf33bf8195fe810e8a80b9b1aa52d91c15953fbc3e26233d0b0dee8170556900c
   languageName: node
   linkType: hard
 
