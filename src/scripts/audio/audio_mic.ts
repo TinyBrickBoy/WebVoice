@@ -8,7 +8,6 @@ import type {AudioControls} from "./audio_controls.ts";
 import type {AudioDeviceManager} from "./audio_devices.ts";
 import type {VolumeManager} from "./volumes.ts";
 import {EventManager} from "../util/events.ts";
-import type {VoiceSocket} from "../socket.ts";
 
 const GAIN_MULTIPLIER = 0.2;
 
@@ -32,7 +31,6 @@ const getMicrophoneStream = async (
 };
 
 const setupMicrophonePipeline = async (
-    socket: VoiceSocket,
     ctx: AudioContext,
     controls: AudioControls,
     devices: AudioDeviceManager,
@@ -56,7 +54,6 @@ const setupMicrophonePipeline = async (
 
     // push microphone source as first entry in pipeline
     pipeline.push(ctx.createMediaStreamSource(monoDestNode.stream));
-    microphone.analyzers[0] && pipeline.push(microphone.analyzers[0]);
 
     // apply rnnoise (if enabled)
     if (controls.noiseReduction) {
@@ -66,7 +63,6 @@ const setupMicrophonePipeline = async (
         });
         pipeline.push(rnnoise);
         freeCallbacks.push(rnnoise.destroy.bind(rnnoise));
-        microphone.analyzers[1] && pipeline.push(microphone.analyzers[1]);
     }
 
     // apply noise gate
@@ -76,12 +72,10 @@ const setupMicrophonePipeline = async (
         holdMs: 150,
         maxChannels: 1,
     }));
-    microphone.analyzers[2] && pipeline.push(microphone.analyzers[2]);
 
     // push gain modifier
     const gainNode = new GainNode(ctx, {gain: GAIN_MULTIPLIER});
     pipeline.push(gainNode);
-    microphone.analyzers[3] && pipeline.push(microphone.analyzers[3]);
 
     // apply volume to pipeline and listen for updates from controller
     const applyVolume = () => {
@@ -91,6 +85,11 @@ const setupMicrophonePipeline = async (
     };
     applyVolume();
     freeCallbacks.push(volumes.register("input", () => applyVolume()));
+
+    // add microphone analyzer node
+    if (microphone.analyzer) {
+        pipeline.push(microphone.analyzer);
+    }
 
     // create final media stream which will be sent via webrtc
     const destNode = new MediaStreamAudioDestinationNode(ctx, {
@@ -105,8 +104,6 @@ const setupMicrophonePipeline = async (
     };
     applyMute();
     freeCallbacks.push(controls.register("update_muted", () => applyMute()));
-
-    // TODO send own voice activity
 
     // connect all nodes in pipeline together
     for (let i = 1; i < pipeline.length; i++) {
@@ -123,7 +120,6 @@ export const ANALYZER_FREQ_BIN_COUNT = ANALYZER_FFT_SIZE / 2;
 
 export class AudioMicrophoneManager extends EventManager {
 
-    private readonly socket: VoiceSocket;
     private readonly devices: AudioDeviceManager;
     private readonly controls: AudioControls;
     private readonly volumes: VolumeManager;
@@ -136,17 +132,15 @@ export class AudioMicrophoneManager extends EventManager {
     private _ctx: AudioContext | null = null;
     private teardown: (() => void)[] = [];
     private pipelineTeardown: (() => void)[] = [];
-    private _analyzers: AnalyserNode[] | null = null;
+    private _analyzer: AnalyserNode | null | undefined = undefined;
     private _micStream: MediaStream | null = null;
 
     constructor(
-        socket: VoiceSocket,
         devices: AudioDeviceManager,
         controls: AudioControls,
         volumes: VolumeManager,
     ) {
         super();
-        this.socket = socket;
         this.devices = devices;
         this.controls = controls;
         this.volumes = volumes;
@@ -172,9 +166,9 @@ export class AudioMicrophoneManager extends EventManager {
                 .catch(error => console.error(error));
             this._ctx = null;
         }
-        if (this._analyzers) {
+        if (this._analyzer) {
             // clear analyzers without firing event, audio context is destroyed anyway
-            this._analyzers = [];
+            this._analyzer = null;
         }
     }
 
@@ -215,9 +209,11 @@ export class AudioMicrophoneManager extends EventManager {
         console.log("Rebuilding audio pipeline...");
 
         // create new analyzer nodes
-        this._analyzers && this.injectAnalyzers();
+        if (this._analyzer !== undefined) {
+            this.injectAnalyzer();
+        }
 
-        setupMicrophonePipeline(this.socket, this._ctx!!, this.controls, this.devices, this.volumes, this)
+        setupMicrophonePipeline(this._ctx!!, this.controls, this.devices, this.volumes, this)
             .then(([teardown, stream]) => {
                 this.pipelineTeardown.forEach(fn => fn());
                 this.pipelineTeardown = teardown;
@@ -237,20 +233,20 @@ export class AudioMicrophoneManager extends EventManager {
         return analyzer;
     }
 
-    public injectAnalyzers() {
+    public injectAnalyzer() {
         if (!this._ctx) {
-            // audio context isn't ready yet, just mark analyzers
+            // audio context isn't ready yet, just mark analyzer
             // as "existent" and wait for audio context creation
-            this._analyzers = [];
+            this._analyzer = null;
         } else {
             // setup three analyzers: start, post noise reduction, post noise gate and final
-            this._analyzers = [0, 0, 0, 0].map(() => this.setupAudioAnalyzer());
+            this._analyzer = this.setupAudioAnalyzer();
         }
     }
 
     public uninjectAnalyzers() {
-        if (this._analyzers) {
-            this._analyzers = null;
+        if (this._analyzer) {
+            this._analyzer = undefined;
         }
     }
 
@@ -262,8 +258,8 @@ export class AudioMicrophoneManager extends EventManager {
         return this._ctx!!;
     }
 
-    public get analyzers() {
-        return this._analyzers || [];
+    public get analyzer() {
+        return this._analyzer ?? null;
     }
 
     public get micStream() {

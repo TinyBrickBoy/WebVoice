@@ -62,17 +62,17 @@ const VoiceStateProvider: FunctionComponent<Props> = ({socketUrl}) => {
     // global manager states
     const socket = useMemo(() => new VoiceSocket(socketUrl), [socketUrl]);
     const devices = useMemo(() => new AudioDeviceManager(), []);
-    useEffect(() => devices.registerMediaListener(), [devices]);
+    useEffect(() => devices.registerMediaListener(), []);
     const controls = useMemo(() => new AudioControls(), []);
     const volumes = useMemo(() => new VolumeManager(socket), [socket]);
 
     // create global microphone manager
-    const microphone = useMemo(() => new AudioMicrophoneManager(socket, devices, controls, volumes), [socket]);
-    useEffect(() => (() => microphone.triggerTeardown()), [microphone]);
+    const microphone = useMemo(() => new AudioMicrophoneManager(devices, controls, volumes), []);
+    useEffect(() => (() => microphone.triggerTeardown()), []);
 
     // create global audio player
     const audio = useMemo(() => new AudioPlayer(microphone, devices), []);
-    useEffect(() => audio.startTasks(socket), [audio]);
+    useEffect(() => audio.startTasks(socket), []);
 
     return <>
         <VoiceStateContext.Provider
