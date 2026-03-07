@@ -93,7 +93,10 @@ const setupMicrophonePipeline = async (
     freeCallbacks.push(volumes.register("input", () => applyVolume()));
 
     // create final media stream which will be sent via webrtc
-    const destNode = new MediaStreamAudioDestinationNode(ctx, {channelCount: 1});
+    const destNode = new MediaStreamAudioDestinationNode(ctx, {
+        channelCount: 1,
+        channelCountMode: "explicit",
+    });
     pipeline.push(destNode);
 
     // apply mute state instantly
