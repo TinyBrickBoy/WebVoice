@@ -13,7 +13,7 @@ export default class AudioPlayer {
     private ctx: AudioContext | null = null;
 
     private peer: RTCPeerConnection | null = null;
-    private remoteStream: MediaStream | null = null;
+    private localSender: RTCRtpSender | null = null;
     private peerTeardown: (() => void)[] = [];
 
     constructor(
@@ -25,12 +25,19 @@ export default class AudioPlayer {
     }
 
     public registerMicListener() {
-        return this.microphone.register("mic_stream_update", () => {
-            if (this.peer) {
-                const senders = [...this.peer.getSenders()];
-                senders.forEach(sender => this.peer?.removeTrack(sender));
-                const tracks = this.microphone.micStream?.getTracks();
-                tracks?.forEach(track => this.peer?.addTrack(track));
+        return this.microphone.register("mic_stream_update", async () => {
+            const tracks = this.microphone.micStream?.getTracks();
+            if (!tracks || tracks.length !== 1) {
+                console.error("Received unexpected mic stream update", this.microphone.micStream);
+                return;
+            } else if (!this.peer) {
+                return; // not connected yet, ignore
+            }
+            if (this.localSender) {
+                this.localSender.replaceTrack(tracks[0])
+                    .catch(error => console.error("Error while replacing mic stream", error));
+            } else {
+                this.localSender = this.peer.addTrack(tracks[0]);
             }
         });
     }
@@ -93,10 +100,9 @@ export default class AudioPlayer {
         if (this.peer) {
             this.peerTeardown.forEach(callback => callback());
             this.peerTeardown = [];
-            this.remoteStream?.getTracks().forEach(track => track.stop());
-            this.remoteStream = null;
             this.peer.close();
             this.peer = null;
+            this.localSender = null;
         }
     }
 
@@ -118,13 +124,10 @@ export default class AudioPlayer {
                     if (event.streams.length !== 1) {
                         return;
                     }
-                    // create media source
-                    this.remoteStream = event.streams[0];
-                    const source = this.ctx!.createMediaStreamSource(this.remoteStream);
-                    // connect to sink
-                    const output = this.ctx!.destination;
-                    source.connect(output);
-                    this.peerTeardown.push(() => source.disconnect(output));
+                    // create media source and connect to sink
+                    const source = this.ctx!.createMediaStreamSource(event.streams[0]);
+                    source.connect(this.ctx!.destination);
+                    this.peerTeardown.push(() => source.disconnect());
                 });
                 // handle ice candidates
                 this.peer.addEventListener("icecandidate", ({candidate}) => {
@@ -142,7 +145,9 @@ export default class AudioPlayer {
                 });
                 // add microphone track
                 const tracks = this.microphone.micStream?.getTracks();
-                tracks?.forEach(track => this.peer?.addTrack(track));
+                if (tracks && tracks.length === 1) {
+                    this.localSender = this.peer.addTrack(tracks[0]);
+                }
                 // create offer
                 console.log("Negotiating with server peer...");
                 const offer = await this.peer.createOffer({offerToReceiveAudio: true});
