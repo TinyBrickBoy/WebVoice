@@ -42,9 +42,8 @@ const MicAnalyzer: FunctionComponent = () => {
             // create canvas drawing context
             const ctx = canvas.getContext("2d")!!;
 
-            // draw black background
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // clear background
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // draw each bar
             const barWidth = canvas.width / ANALYZER_FREQ_BIN_COUNT;
@@ -71,7 +70,7 @@ const MicAnalyzer: FunctionComponent = () => {
 
     return <>
         <canvas
-            className={"w-full rounded-md h-15"}
+            className={"w-full rounded-md h-15 bg-neutral-900 border border-neutral-700"}
             ref={canvasRef}
         />
     </>;
