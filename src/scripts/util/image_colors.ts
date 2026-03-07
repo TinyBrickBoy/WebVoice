@@ -107,5 +107,5 @@ export const getAverageHSL = (image: DecodedPng, ignoreEdges = true): number[] =
 };
 
 export const boostVibrance = (hue: number, saturation: number, lightness: number) => {
-    return [hue, Math.min(saturation * 1.15, 100), Math.min(lightness * 1.05, 100)];
+    return [hue, Math.min(saturation * 1.15, 100), Math.max(10, Math.min(lightness * 1.05, 100))];
 };
