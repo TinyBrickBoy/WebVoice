@@ -12,7 +12,6 @@
     "wrangler": "wrangler"
   },
   "dependencies": {
-    "@alexanderolsen/libsamplerate-js": "^2.1.2",
     "@astrojs/check": "0.9.6",
     "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/node": "9.5.4",
@@ -20,8 +19,6 @@
     "@fontsource/poppins": "^5.2.7",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/tabler": "^1.2.23",
-    "@minceraftmc/opus-decoder": "^0.7.11-rc.1",
-    "@minceraftmc/opus-encoder": "^0.0.7-rc.1",
     "@sapphi-red/web-noise-suppressor": "^0.3.5",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
@@ -30,7 +27,6 @@
     "bytebuffer": "^5.0.1",
     "fast-png": "^7.0.1",
     "preact": "^10.25.1",
-    "symbl-opus-encdec": "^0.1.2",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.6.3",
     "unplugin-icons": "^22.5.0"
