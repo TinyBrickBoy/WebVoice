@@ -125,7 +125,9 @@ export default class AudioPlayer {
                         return;
                     }
                     // create media source and connect to sink
-                    const source = this.ctx!.createMediaStreamSource(event.streams[0]);
+                    const [stream] = event.streams;
+                    const source = this.ctx!.createMediaStreamSource(stream);
+                    new Audio().srcObject = stream; // chrome requires an audio element before creating the stream
                     source.connect(this.ctx!.destination);
                     this.peerTeardown.push(() => source.disconnect());
                 });
