@@ -10,6 +10,12 @@ import poppins500 from "@fontsource/poppins/files/poppins-latin-500-normal.woff2
 import "@fontsource/poppins/600.css";
 import poppins600 from "@fontsource/poppins/files/poppins-latin-600-normal.woff2?url";
 
+// import images
+import faviconAppleTouchIconImage from "../../assets/apple-touch-icon.png";
+import favicon32x32Image from "../../assets/favicon-32x32.png";
+import favicon16x16Image from "../../assets/favicon-16x16.png";
+import logoImage from "../../assets/logo.png";
+
 export interface HeadProps {
     title?: string;
     description?: string;
@@ -49,7 +55,7 @@ keywords.push("Minecraft", "Minecraft Server", "Minecraft Audio", "Minecraft Voi
 <meta property="og:title" content={title}/>
 <meta property="og:description" content={description}/>
 <meta property="og:site_name" content="Sonus"/>
-<meta property="og:image" content="/logo.png"/>
+<meta property="og:image" content={logoImage.src}/>
 
 <meta property="twitter:card" content="summary"/>
 <meta property="twitter:site" content="Sonus"/>
@@ -57,13 +63,13 @@ keywords.push("Minecraft", "Minecraft Server", "Minecraft Audio", "Minecraft Voi
 <meta property="twitter:url" content={Astro.url}/>
 <meta property="twitter:title" content={title}/>
 <meta property="twitter:description" content={description}/>
-<meta property="twitter:image" content="/logo.png"/>
+<meta property="twitter:image" content={logoImage.src}/>
 
 <meta name="google" content="nositelinkssearchbox">
 
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href={faviconAppleTouchIconImage.src}>
+<link rel="icon" type="image/png" sizes="32x32" href={favicon32x32Image.src}>
+<link rel="icon" type="image/png" sizes="16x16" href={favicon16x16Image.src}>
 <link rel="manifest" href="/site.webmanifest">
 <link rel="shortcut icon" href="/favicon.ico">
 <meta name="msapplication-TileColor" content="#040302">

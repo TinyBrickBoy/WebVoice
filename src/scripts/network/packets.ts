@@ -8,13 +8,11 @@ import {
     readOptional,
     readString,
     readUniqueId,
-    readVarInt,
     readVarLong,
     writeBoolean,
     writeOptional,
     writeString,
     writeUniqueId,
-    writeVarInt,
     writeVarLong,
 } from "./buffer.ts";
 import type {Component} from "./component.ts";

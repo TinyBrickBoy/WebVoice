@@ -5,13 +5,13 @@ import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
 import {execSync} from "node:child_process";
 
-const GIT_COMMIT_HASH = (process.env.GITHUB_SHA || "").trim().slice(0, 7) || execSync("git rev-parse --short HEAD").toString().trim();
+const GIT_COMMIT_HASH = (import.meta.env.GITHUB_SHA || "").trim().slice(0, 7) || execSync("git rev-parse --short HEAD").toString().trim();
 
 // https://astro.build/config
 export default defineConfig({
-    site: "https://sonus.minceraft.dev/",
+    site: import.meta.env.ASTRO_SITE ?? "https://sonus.minceraft.dev/",
     output: "server",
-    compressHTML: process.env.NODE_ENV === "production",
+    compressHTML: import.meta.env.NODE_ENV === "production",
     trailingSlash: "ignore",
     integrations: [preact()],
 
