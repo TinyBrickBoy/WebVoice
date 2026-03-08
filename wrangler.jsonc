@@ -16,12 +16,14 @@
     "env": {
         "froglight": {
             "vars": {
-                "DEFAULT_WEBSOCKET_URL": "wss://sonus.froglight.net/api"
+                "DEFAULT_WEBSOCKET_URL": "wss://sonus.froglight.net/api",
+                "ICE_SERVER": "stun:stun.froglight.net:3478"
             }
         },
         "froglight-test": {
             "vars": {
-                "DEFAULT_WEBSOCKET_URL": "wss://sonus.froglight.eu/api"
+                "DEFAULT_WEBSOCKET_URL": "wss://sonus.froglight.eu/api",
+                "ICE_SERVER": "stun:stun.froglight.net:3478"
             }
         }
     }
