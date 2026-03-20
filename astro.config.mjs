@@ -21,6 +21,11 @@ export default defineConfig({
 
     env: {
         schema: {
+            DESIGNER_MODE: envField.boolean({
+                context: "server",
+                access: "public",
+                default: false,
+            }),
             DEFAULT_WEBSOCKET_URL: envField.string({
                 context: "client",
                 access: "public",

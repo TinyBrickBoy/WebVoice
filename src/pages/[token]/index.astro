@@ -18,7 +18,7 @@ if (!token || !apiUrl || token.length !== TOKEN_LENGTH) {
 
 <Layout>
     {token && apiUrl && token.length === TOKEN_LENGTH ?
-        <VoiceStateProvider client:only socketUrl={constructSocketUrl(apiUrl, token)} token={token}/> :
+        <VoiceStateProvider client:only="preact" socketUrl={constructSocketUrl(apiUrl, token)} token={token}/> :
         <ErrorPage error={404}/>
     }
 </Layout>
