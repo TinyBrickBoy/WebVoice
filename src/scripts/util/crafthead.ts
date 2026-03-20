@@ -4,9 +4,6 @@ import {GLOBAL_CACHE, SKIN_ENDPOINT} from "astro:env/server";
 import {CachedMap} from "./cached_map.ts";
 import {uuidFromString} from "./uuid.ts";
 
-const skinEndpoint = process?.env?.SKIN_ENDPOINT ?? SKIN_ENDPOINT;
-const globalCache = (process?.env?.GLOBAL_CACHE ?? `${GLOBAL_CACHE}`) === "true";
-
 const TEXTURE_SHA256_HASH_BYTES = 256 / 8;
 
 export const validateInput = (input?: string) => {
@@ -29,7 +26,7 @@ export const validateInput = (input?: string) => {
     }
 };
 
-export const buildHeadUrl = (input: string) => skinEndpoint.replace("%s", input);
+export const buildHeadUrl = (input: string) => SKIN_ENDPOINT.replace("%s", input);
 
 export type HeadResponse = {
     image: Buffer | null,
@@ -42,8 +39,8 @@ export type HeadColorResponse = HeadResponse & {
 
 export const CACHE_DURATION_SEC = 60n * 3n; // cache for 3min
 export const CACHE_DURATION_MS = 1000n * CACHE_DURATION_SEC;
-const heads = globalCache ? new CachedMap<string, HeadResponse>(CACHE_DURATION_MS) : null;
-const colors = globalCache ? new CachedMap<string, HeadColorResponse>(CACHE_DURATION_MS) : null;
+const heads = GLOBAL_CACHE ? new CachedMap<string, HeadResponse>(CACHE_DURATION_MS) : null;
+const colors = GLOBAL_CACHE ? new CachedMap<string, HeadColorResponse>(CACHE_DURATION_MS) : null;
 
 const generateHeadColor = (head: HeadResponse): HeadColorResponse => {
     if (!head.image) {

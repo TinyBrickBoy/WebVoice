@@ -1,6 +1,7 @@
 import {defineConfig, envField} from "astro/config";
 import preact from "@astrojs/preact";
 import cloudflare from "@astrojs/cloudflare";
+import node from "@astrojs/node";
 import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
 import {execSync} from "node:child_process";
@@ -15,7 +16,9 @@ export default defineConfig({
     trailingSlash: "ignore",
     integrations: [preact()],
 
-    adapter: cloudflare({
+    adapter: process.env.DOCKER ? node({
+        mode: "standalone"
+    }) : cloudflare({
         imageService: "compile",
     }),
 

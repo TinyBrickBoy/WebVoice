@@ -1,0 +1,11 @@
+.idea/
+.astro/
+.wrangler/
+.yarn/*.gz
+dist/
+node_modules/
+.dockerignore
+.gitignore
+.editorconfig
+.env
+Dockerfile
