@@ -8,7 +8,7 @@ export const prerender = false;
 ---
 
 <Layout>
-    {DESIGNER_MODE ?
+    {!DESIGNER_MODE ?
         <ErrorPage error={404}/> :
         <VoiceStateProvider client:only="preact" socketUrl={new URL(`wss:///example`)} token={"example"}/>
     }
