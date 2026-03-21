@@ -15,6 +15,7 @@
     },
     "env": {
         "froglight": {
+            "name": "sonus-froglight",
             "vars": {
                 "ASTRO_SITE": "https://audio.froglight.eu/",
                 "DEFAULT_WEBSOCKET_URL": "wss://sonus.froglight.net/api",
@@ -22,6 +23,7 @@
             }
         },
         "froglight-test": {
+            "name": "sonus-froglight-test",
             "vars": {
                 "ASTRO_SITE": "https://daudio.froglight.eu/",
                 "DEFAULT_WEBSOCKET_URL": "wss://sonus.froglight.eu/api",
