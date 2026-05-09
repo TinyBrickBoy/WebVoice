@@ -6,7 +6,14 @@ import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
 import {execSync} from "node:child_process";
 
-const GIT_COMMIT_HASH = (import.meta.env.GITHUB_SHA || "").trim().slice(0, 7) || execSync("git rev-parse --short HEAD").toString().trim();
+let GIT_COMMIT_HASH = (import.meta.env.GITHUB_SHA || "").trim().slice(0, 7);
+if (!GIT_COMMIT_HASH) {
+    try {
+        GIT_COMMIT_HASH = execSync("git rev-parse --short HEAD").toString().trim();
+    } catch {
+        GIT_COMMIT_HASH = "dev-build";
+    }
+}
 
 // https://astro.build/config
 export default defineConfig({
