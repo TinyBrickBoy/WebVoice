@@ -10,72 +10,22 @@ import poppins500 from "@fontsource/poppins/files/poppins-latin-500-normal.woff2
 import "@fontsource/poppins/600.css";
 import poppins600 from "@fontsource/poppins/files/poppins-latin-600-normal.woff2?url";
 
-// import images
-import faviconAppleTouchIconImage from "../../assets/apple-touch-icon.png";
-import favicon32x32Image from "../../assets/favicon-32x32.png";
-import favicon16x16Image from "../../assets/favicon-16x16.png";
-import logoImage from "../../assets/logo.png";
-
 export interface HeadProps {
     title?: string;
-    description?: string;
-    keywords?: string[];
 }
 interface Props extends HeadProps {
 }
 
 const {
-    title = "Sonus",
-    description = "Multi-server cross-compatible voicechat supporting PlasmoVoice, SimpleVoiceChat and the web",
-    keywords = [],
+    title = "Audio System",
 } = Astro.props;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-
-keywords.push("Minecraft", "Minecraft Server", "Minecraft Audio", "Minecraft Voicechat", "Proximity Chat", "Proximity Voice", "Simple Voice Chat", "SVC", "Plasmo Voice", "Plasmo", "Audio", "Voicechat", "Sonus", "Minceraft", "MinceraftMC");
 ---
 
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-<meta name="HandheldFriendly" content="True"/>
-
-<meta name="generator" content={Astro.generator}/>
-
-<link rel="canonical" href={canonicalURL}/>
+<meta name="color-scheme" content="dark"/>
 
 <title>{title}</title>
-<meta itemprop="name" content={title}/>
-<meta name="title" content={title}/>
-<meta itemprop="description" content={description}/>
-<meta name="description" content={description}/>
-<meta name="keywords" content={keywords.join(", ")}/>
-
-<meta property="og:type" content="website"/>
-<meta property="og:url" content={Astro.url}/>
-<meta property="og:title" content={title}/>
-<meta property="og:description" content={description}/>
-<meta property="og:site_name" content="Sonus"/>
-<meta property="og:image" content={logoImage.src}/>
-
-<meta property="twitter:card" content="summary"/>
-<meta property="twitter:site" content="Sonus"/>
-<meta property="twitter:domain" content={import.meta.env.SITE}/>
-<meta property="twitter:url" content={Astro.url}/>
-<meta property="twitter:title" content={title}/>
-<meta property="twitter:description" content={description}/>
-<meta property="twitter:image" content={logoImage.src}/>
-
-<meta name="google" content="nositelinkssearchbox">
-
-<link rel="apple-touch-icon" sizes="180x180" href={faviconAppleTouchIconImage.src}>
-<link rel="icon" type="image/png" sizes="32x32" href={favicon32x32Image.src}>
-<link rel="icon" type="image/png" sizes="16x16" href={favicon16x16Image.src}>
-<link rel="manifest" href="/site.webmanifest">
-<link rel="shortcut icon" href="/favicon.ico">
-<meta name="msapplication-TileColor" content="#040302">
-<meta name="theme-color" content="#040302">
-<meta name="color-scheme" content="dark">
-<meta name="darkreader-lock">
 
 <link rel="prefetch" href={poppins400}/>
 <link rel="prefetch" href={poppins500}/>
