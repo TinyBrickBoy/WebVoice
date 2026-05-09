@@ -33,7 +33,7 @@ const Modal: FunctionComponent<Props> = ({visible: [visible, setVisible], dismis
 
     return !visible ? <></> : <>
         <dialog
-            className={"fixed top-0 left-0 z-10 flex w-full h-full bg-[rgba(0,0,0,0.8)]"}
+            className={"fixed top-0 left-0 z-10 flex w-full h-full bg-stone-950"}
             onClick={event => event.stopPropagation()}
             onContextMenu={event => event.stopPropagation()}
             onMouseDown={event => {
